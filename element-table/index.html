@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="utf-8">
+    <title>table</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <link rel="shortcut icon" href="" type="image/x-icon" />
+    <meta name="format-detection" content="telephone=no">
+    <link href="https://cdn.bootcdn.net/ajax/libs/element-ui/2.15.1/theme-chalk/index.min.css" rel="stylesheet">
+    <script src="https://cdn.bootcss.com/vue/2.6.11/vue.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/vue-resource/1.5.2/vue-resource.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/element-ui/2.15.1/index.min.js"></script>
+    <script src="tableData.js"></script>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app" class="app">
+        <el-card class="box-card">
+            <div slot="header" class="clearfix">
+                <el-button type="danger" size="small" disabled>删除</el-button>
+                <el-popover placement="bottom" width="200" trigger="click">
+                    <div>
+                        <el-checkbox :indeterminate="isIndeterminate" v-model="showListAll" @change="handleshowListAllChange">全部</el-checkbox>
+                        <div style="margin: 15px 0;"></div>
+                        <el-checkbox-group v-model="showList" @change="handleshowListChange">
+                            <template v-for="(item,index) in showTableKeyList">
+                                <el-checkbox :label="item.key" :key="index" :disabled="item.disabled">{{item.name}}</el-checkbox>
+                                <br />
+                                <br />
+                            </template>
+                        </el-checkbox-group>
+                    </div>
+                    <el-button style="float:right;" type="text" size="small" slot="reference">操作按钮</el-button>
+                </el-popover>
+            </div>
+            <el-table :data="tableData" stripe>
+                <el-table-column type="selection" width="55" fixed="left"></el-table-column>
+                <el-table-column prop="userId" label="ID" width="50" align="center" fixed="left"></el-table-column>
+                <el-table-column prop="userName" label="用户名" width="150" fixed="left"></el-table-column>
+                <el-table-column label="头像" width="80" align="center" v-if="showList.indexOf('avatar') != -1">
+                    <template slot-scope="scope">
+                        <el-avatar :size="35" v-if="scope.row.avatar" :src="'https://crm.yplm.cn'+scope.row.avatar"></el-avatar>
+                        <el-avatar v-else :size="35" icon="el-icon-user-solid"></el-avatar>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="jobNumber" label="工号" v-if="showList.indexOf('jobNumber') != -1"></el-table-column>
+                <el-table-column prop="nickName" label="昵称" v-if="showList.indexOf('nickName') != -1"></el-table-column>
+                <el-table-column prop="realName" label="真实姓名" v-if="showList.indexOf('realName') != -1"></el-table-column>
+                <el-table-column prop="phonenumber" label="手机号码" v-if="showList.indexOf('phonenumber') != -1"></el-table-column>
+                <el-table-column prop="officePhone" label="办公电话" v-if="showList.indexOf('officePhone') != -1"></el-table-column>
+                <el-table-column prop="email" label="用户邮箱" v-if="showList.indexOf('email') != -1"></el-table-column>
+                <el-table-column label="用户类型" width="90" align="center" v-if="showList.indexOf('userType') != -1">
+                    <template slot-scope="scope">
+                        <el-tag v-if="scope.row.userType=='00'" type="warning" size="small">管理员</el-tag>
+                        <el-tag v-else-if="scope.row.userType=='11'" type="success" size="small">业务员</el-tag>
+                        <el-tag v-else type="danger" size="small">未知</el-tag>
+                    </template>
+                </el-table-column>
+                <el-table-column label="性别" width="80" align="center" v-if="showList.indexOf('sex') != -1">
+                    <template slot-scope="scope">
+                        <el-tag v-if="scope.row.sex=='0'" type="warning" size="small">男</el-tag>
+                        <el-tag v-else-if="scope.row.sex=='1'" type="success" size="small">女</el-tag>
+                        <el-tag v-else type="danger" size="small">未知</el-tag>
+                    </template>
+                </el-table-column>
+                <el-table-column label="状态" width="100" align="center" v-if="showList.indexOf('status') != -1">
+                    <div slot-scope="scope" style="position: relative;">
+                        <el-tag type="success" v-if="scope.row.status=='0'" size="small">正常</el-tag>
+                        <el-tag type="danger" v-else size="small">停用</el-tag>
+                    </div>
+                </el-table-column>
+                <el-table-column prop="createTime" label="创建时间" width="160" v-if="showList.indexOf('createTime') != -1"></el-table-column>
+                <el-table-column label="操作" width="200" fixed="right">
+                    <template slot-scope="scope">
+                        <el-button type="text" size="small">查看</el-button>
+                        <el-divider direction="vertical"></el-divider>
+                        <el-button type="text" size="small">编辑</el-button>
+                        <el-divider direction="vertical"></el-divider>
+                        <el-button type="text" size="small">删除</el-button>
+                    </template>
+                </el-table-column>
+            </el-table>
+        </el-card>
+    </div>
+    <script>
+        var vue = new Vue({
+            el: '#app',
+            data: {
+                src: "",
+                loading: false,
+                tableData,
+                showListAll: false,
+                showList: [ "userId", "userName", "avatar", "jobNumber", "nickName", "realName", "phonenumber", "officePhone", "email", "userType", "sex", "status", "createTime" ],
+                showTableKeyList: [
+                    {
+                        name:"ID",
+                        key:"userId",
+                        disabled:true,
+                    },
+                    {
+                        name:"用户名",
+                        key:"userName",
+                        disabled:true,
+                    },
+                    {
+                        name:"头像",
+                        key:"avatar",
+                    },
+                    {
+                        name:"工号",
+                        key:"jobNumber",
+                    },
+                    {
+                        name:"昵称",
+                        key:"nickName",
+                    },
+                    {
+                        name:"真实姓名",
+                        key:"realName",
+                    },
+                    {
+                        name:"手机号码",
+                        key:"phonenumber",
+                    },
+                    {
+                        name:"办公电话",
+                        key:"officePhone",
+                    },
+                    {
+                        name:"用户邮箱",
+                        key:"email",
+                    },
+                    {
+                        name:"用户类型",
+                        key:"userType",
+                    },
+                    {
+                        name:"性别",
+                        key:"sex",
+                    },
+                    {
+                        name:"状态",
+                        key:"status",
+                    },
+                    {
+                        name:"创建时间",
+                        key:"createTime",
+                    },
+                ],
+                isIndeterminate: true
+            },
+            mounted() {
+                this.showListInit();
+            },
+            watch: {
+                showList(v){
+                    window.localStorage.setItem('showList',JSON.stringify(v));
+                },
+            },
+            methods: {
+                showListInit(){
+                    try {
+                        var showList = JSON.parse(window.localStorage.getItem('showList')||"[]");
+                        if(showList.length>0){
+                            this.showList = showList;
+                        }
+                    } catch (error) {
+
+                    }
+                },
+                handleshowListAllChange(val) {
+                    let arr = this.showTableKeyList.map(e=>e.key);
+                    let defaultArr = this.showTableKeyList.filter(e=>e.disabled===true).map(e=>e.key);
+                    this.showList = val ? arr : defaultArr;
+                    this.isIndeterminate = false;
+                },
+                handleshowListChange(value) {
+                    let showListCount = this.showList.length;
+                    let showTableKeyListCount = this.showTableKeyList.length;
+
+                    this.showListAll = showListCount === showTableKeyListCount;
+
+                    this.isIndeterminate = showListCount > 0 && showListCount < showTableKeyListCount;
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

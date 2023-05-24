@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="utf-8">
+    <title>谷歌ReCaptcha</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <link rel="shortcut icon" href="" type="image/x-icon" />
+    <meta name="format-detection" content="telephone=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+</head>
+
+<body>
+    <div id="google-reCaptcha"></div>
+    <button>验证后提交</button>
+    <script src="https://www.recaptcha.net/recaptcha/api.js?onload=onloadCallback&render=explicit" async defer></script>
+    <script type="text/javascript">
+        var verifyCallback = function(token) {
+            document.querySelector('button').addEventListener('click', () => {
+                console.log('客户端token:', token);
+                const formdata = new FormData();
+                formdata.append('response',token)
+                formdata.append('secret','6LeVL50cAAAAANAPCrg4U6vJHpl-eazXVsfD1isD')
+                fetch('https://www.recaptcha.net/recaptcha/api/siteverify', {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    body:formdata
+                }).then(response => {
+                    if (response.ok) {
+                        response.json().then(res => {
+                            console.log('服务端验证');
+                            console.log(res);
+                            if(res.success){
+                                alert(`验证成功`)
+                            }else{
+                                alert('验证失败')
+                            }
+                        });
+                    }else{
+                        console.log(response);
+                        alert('验证失败')
+                    }
+                }).catch(err=>{
+                    console.log(err);
+                    alert('验证失败')
+                });
+            });
+        };
+        var onloadCallback = function() {
+            grecaptcha.render('google-reCaptcha', {
+                'sitekey': '6LeVL50cAAAAANZSvTSK8lFuCogVeqlQJbLV1Z5A',
+                'callback': verifyCallback,
+                'theme': 'light'
+            });
+        };
+    </script>
+
+</body>
+
+</html>

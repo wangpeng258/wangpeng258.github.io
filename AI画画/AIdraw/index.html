@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=no">
+        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🖌️</text></svg>">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <title>AI自动画画</title>
+        <style>
+            html,
+            body {
+                height: 100%;
+                width: 100%;
+                overflow: hidden;
+                margin: 0;
+                padding: 0;
+                position: fixed;
+                overscroll-behavior-y: contain;
+            }
+
+            body {
+                -webkit-font-smoothing: antialiased;
+                display: flex;
+                flex-direction: column;
+                --primary: #1e80ff;
+                --secondary: #8EE3C8;
+            }
+
+            * {
+                box-sizing: border-box;
+            }
+
+            h1 {
+                color: var(--primary);
+                font-size: 60px;
+            }
+
+            p {
+                padding: 24px 0;
+                font-size: 20px;
+                line-height: 1.5;
+            }
+
+            a:link,
+            a:visited {
+                text-decoration: none;
+                color: white;
+                font-weight: bold;
+                border-bottom: 4px solid var(--secondary);
+            }
+
+            a:hover {
+                background: var(--secondary);
+                color: var(--primary);
+            }
+
+            header {
+                background-color: #F19CC5;
+                width: 100%;
+                padding: 0 10px;
+                border-bottom: 8px solid var(--secondary);
+            }
+
+            #splash {
+                background-color: #F19CC5;
+                position: absolute;
+                top: 0;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                padding: 40px;
+                border-top: 10px solid var(--secondary);
+                overflow: auto;
+                transition: 1s transform;
+                transform: translate3d(0, 0, 0);
+                z-index: 2;
+            }
+
+            #splash.hidden {
+                transform: translate3d(0, -200%, 0);
+            }
+
+            #splash .content {
+                color: white;
+                width: 100%;
+                max-width: 700px;
+                margin: 0 auto;
+                text-align: center;
+            }
+
+            #loaded {
+                display: flex;
+                flex-direction: column;
+                width: 100%;
+                height: 100%;
+            }
+
+            #loaded.hidden {
+                display: none;
+                pointer-events: none;
+            }
+
+            header .wrapper {
+                display: flex;
+                flex-direction: row;
+                justify-content: center;
+                align-items: center;
+            }
+
+            header .top {
+                height: 84px;
+            }
+
+            #colorsContainer {
+                display: flex;
+                flex-direction: row;
+                justify-content: center;
+                align-items: flex-end;
+                padding-bottom: 14px;
+                flex-wrap: wrap;
+                max-width: 1000px;
+            }
+
+            #colorsContainer button {
+                min-width: 30px;
+                min-height: 30px;
+                border: 4px solid transparent;
+                border-radius: 50%;
+                margin: 5px;
+                padding: 0;
+                transition: transform 0.2s ease;
+            }
+
+            #colorsContainer button.active {
+                border: 4px solid white;
+            }
+
+            #colorsContainer button:hover {
+                transform: scale(1.4);
+            }
+
+            .controls {
+                display: flex;
+                flex-direction: row;
+            }
+
+            .box {
+                border: solid var(--primary) 2px;
+                color: var(--primary);
+                fill: var(--primary);
+                background: white;
+                box-shadow: 4px 4px 0 var(--primary);
+                height: 40px;
+                border-radius: 5px;
+                transition: top 0.2s ease;
+                position: relative;
+                top: 0;
+                vertical-align: middle;
+                cursor: pointer;
+                text-transform: uppercase;
+                font-family: inherit;
+                font-weight: bold;
+                margin: 0 4px;
+            }
+            .box[disabled]{
+                opacity:0.7;
+                pointer-events: none;
+            }
+            .big {
+                margin: 24px 0;
+                font-size: 24px;
+                padding: 14px 32px;
+                height: auto;
+            }
+
+            .box:active {
+                top: 4px;
+                box-shadow: none;
+            }
+
+            .select-wrapper {
+                display: inline-block;
+                width: 255px;
+                overflow: hidden;
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+                padding-left: 4px;
+            }
+
+            select {
+                -webkit-appearance: none;
+                -moz-appearance: none;
+                text-transform: lowercase;
+                font-family: inherit;
+                font-size: 22px;
+                background: transparent;
+                border: none;
+                color: var(--primary);
+                width: 100%;
+            }
+
+            #sketch {
+                flex-grow: 1;
+                overflow: hidden;
+                position: relative;
+            }
+
+            #sketch.loading::before {
+                content: '加载模型中';
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: #fff;
+                color: #000;
+                pointer-events: none;
+                font-size: 25px;
+                transition: 0.25s;
+            }
+
+            @media screen and (max-width: 700px) {
+                h1 {
+                    font-size: 32px;
+                }
+
+                p {
+                    padding: 14px 0;
+                    text-align: left;
+                    font-size: 18px;
+                }
+
+                #splash {
+                    padding: 24px;
+                }
+
+                .box {
+                    height: 40px;
+                    margin: 0 4px;
+                }
+
+                .big {
+                    height: auto;
+                }
+
+                header .top {
+                    flex-direction: column;
+                    margin-bottom: 14px;
+                    height: auto;
+                }
+
+                .controls {
+                    width: 100%;
+                    display: flex;
+                    flex-direction: row;
+                    align-items: center;
+                    justify-content: space-around;
+                }
+
+                .controls .select-wrapper {
+                    min-width: 0;
+                    font-size: 20px;
+                    flex-grow: 1;
+                }
+            }
+        </style>
+    </head>
+
+    <body>
+        <div id="splash">
+            <div class="content">
+                <h1>AI自动画画</h1>
+                <p>依不同的主题来绘画，画到一半停下来，AI会根据你的形状帮你提示再来如何画!</p>
+                <button class="box big" id="btnGo" type="button">开始吧</button>
+            </div>
+        </div>
+        <header>
+            <div class="wrapper top">
+                <div>
+                    <h1></h1>
+                </div>
+                <div class="controls">
+                    <button class="box" id="btnClear" alt="清除画布" title="清除画布" type="button">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                            <path fill="none" d="M0 0h24v24H0V0z" />
+                            <path
+                                d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zm2.46-7.12l1.41-1.41L12 12.59l2.12-2.12 1.41 1.41L13.41 14l2.12 2.12-1.41 1.41L12 15.41l-2.12 2.12-1.41-1.41L10.59 14l-2.13-2.12zM15.5 4l-1-1h-5l-1 1H5v2h14V4z" />
+                            <path fill="none" d="M0 0h24v24H0z" />
+                        </svg>
+                    </button>
+                    <button class="box" id="btnRetry" alt="重新绘图" title="重新绘图" type="button">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                            <path d="M0 0h24v24H0z" fill="none" />
+                            <path
+                                d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z" />
+                        </svg>
+                    </button>
+
+                    <div class="box select-wrapper">
+                        <select id="selectModels"></select>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                            <path d="M7 10l5 5 5-5z" />
+                            <path d="M0 0h24v24H0z" fill="none" />
+                        </svg>
+                    </div>
+                    <button class="box" id="btnSave" alt="保存" title="保存" type="button">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                            <path d="M0 0h24v24H0z" fill="none" />
+                            <path
+                                d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z" />
+                        </svg>
+                    </button>
+                    <button class="box" id="btnShare" alt="分享" title="分享" type="button">
+                        <svg t="1668831921705" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" width="24" height="24">
+                            <path d="M397.184 642.112a192 192 0 1 1-10.144-270.464L554.592 262.4a144 144 0 1 1 36.8 52.416l-165.44 107.84c14.08 26.72 22.016 57.12 22.016 89.376a191.36 191.36 0 0 1-15.808 76.384l241.056 135.584a144 144 0 1 1-28.992 57.12l-247.072-138.976z" p-id="2677"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="wrapper">
+                <div>
+                    <h1></h1>
+                </div>
+                <div id="colorsContainer">
+                    <button data-index="0" style="background-color: rgb(0, 0, 0)" class="active"
+                        onclick="changeColor(event)" type="button"></button>
+                    <button data-index="1" style="background-color: rgb(244, 67, 54)" onclick="changeColor(event)"
+                        type="button"></button>
+                    <button data-index="2" style="background-color: rgb(233, 30, 99)" onclick="changeColor(event)"
+                        type="button"></button>
+                    <button data-index="3" style="background-color: rgb(156, 39, 176)" onclick="changeColor(event)"
+                        type="button"></button>
+                    <button data-index="4" style="background-color: rgb(103, 58, 183)" onclick="changeColor(event)"
+                        type="button"></button>
+                    <button data-index="5" style="background-color: rgb(63, 81, 181)" onclick="changeColor(event)"
+                        type="button"></button>
+                    <button data-index="6" style="background-color: rgb(33, 150, 243)" onclick="changeColor(event)"
+                        type="button"></button>
+                    <button data-index="7" style="background-color: rgb(0, 188, 212)" onclick="changeColor(event)"
+                        type="button"></button>
+                    <button data-index="8" style="background-color: rgb(0, 150, 136)" onclick="changeColor(event)"
+                        type="button"></button>
+                    <button data-index="9" style="background-color: rgb(76, 175, 80)" onclick="changeColor(event)"
+                        type="button"></button>
+                    <button data-index="10" style="background-color: rgb(139, 195, 74)" onclick="changeColor(event)"
+                        type="button"></button>
+                    <button data-index="11" style="background-color: rgb(205, 220, 57)" onclick="changeColor(event)"
+                        type="button"></button>
+                    <button data-index="12" style="background-color: rgb(255, 235, 59)" onclick="changeColor(event)"
+                        type="button"></button>
+                    <button data-index="13" style="background-color: rgb(255, 193, 7)" onclick="changeColor(event)"
+                        type="button"></button>
+                    <button data-index="14" style="background-color: rgb(255, 152, 0)" onclick="changeColor(event)"
+                        type="button"></button>
+                    <button data-index="15" style="background-color: rgb(255, 87, 34)" onclick="changeColor(event)"
+                        type="button"></button>
+                    <button data-index="16" style="background-color: rgb(121, 85, 72)" onclick="changeColor(event)"
+                        type="button"></button>
+                    <button data-index="17" style="background-color: rgb(158, 158, 158)" onclick="changeColor(event)"
+                        type="button"></button>
+                </div>
+            </div>
+        </header>
+        <div id="sketch" class="loading"></div>
+    </body>
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.6.1/p5.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@magenta/sketch@0.1.3/dist/magentasketch.min.js"></script> -->
+    <script src="https://dcdn.it120.cc/2022/11/18/2ab5e9cb-49f8-4335-90b6-6bc8900a4a64.js"></script>
+    <script src="https://dcdn.it120.cc/2022/11/18/ef0e9ae2-fe9b-49fe-be2d-9adbdd852aff.js"></script>
+    <script>
+        const shareIcon = `data:image/png;base64,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`;
+        document.addEventListener('DOMContentLoaded', _ => {
+            if(typeof navigator.share === 'undefined'){
+                btnShare.style.display="none";
+            }
+            const sketch = function (p) {
+                const BASE_URL = 'https://storage.googleapis.com/quickdraw-models/sketchRNN/models/';
+                const availableModels = [ { "label": "闹钟", "value": "alarm_clock" }, { "label": "救护车", "value": "ambulance" }, { "label": "天使", "value": "angel" }, { "label": "蚂蚁", "value": "ant" }, { "label": "反瑜伽", "value": "antyoga" }, { "label": "背包", "value": "backpack" }, { "label": "谷仓", "value": "barn" }, { "label": "篮子", "value": "basket" }, { "label": "熊", "value": "bear" }, { "label": "蜜蜂", "value": "bee" }, { "label": "蜂花", "value": "beeflower" }, { "label": "自行车", "value": "bicycle" }, { "label": "鸟", "value": "bird" }, { "label": "书", "value": "book" }, { "label": "脑", "value": "brain" }, { "label": "桥", "value": "bridge" }, { "label": "推土机", "value": "bulldozer" }, { "label": "公共汽车", "value": "bus" }, { "label": "蝴蝶", "value": "butterfly" }, { "label": "仙人掌", "value": "cactus" }, { "label": "日历", "value": "calendar" }, { "label": "城堡", "value": "castle" }, { "label": "猫", "value": "cat" }, { "label": "猫巴士", "value": "catbus" }, { "label": "猫猪", "value": "catpig" }, { "label": "椅子", "value": "chair" }, { "label": "长椅", "value": "couch" }, { "label": "螃蟹", "value": "crab" }, { "label": "蟹椅", "value": "crabchair" }, { "label": "蟹兔脸猪", "value": "crabrabbitfacepig" }, { "label": "游轮", "value": "cruise_ship" }, { "label": "跳水台", "value": "diving_board" }, { "label": "狗", "value": "dog" }, { "label": "小兔兔", "value": "dogbunny" }, { "label": "海豚", "value": "dolphin" }, { "label": "鸭", "value": "duck" }, { "label": "大象", "value": "elephant" }, { "label": "大象猪", "value": "elephantpig" }, { "label": "眼睛", "value": "eye" }, { "label": "脸", "value": "face" }, { "label": "扇子", "value": "fan" }, { "label": "消防栓", "value": "fire_hydrant" }, { "label": "消防车", "value": "firetruck" }, { "label": "火烈鸟", "value": "flamingo" }, { "label": "花", "value": "flower" }, { "label": "花卉瑜伽", "value": "floweryoga" }, { "label": "青蛙", "value": "frog" }, { "label": "青蛙沙发", "value": "frogsofa" }, { "label": "花园", "value": "garden" }, { "label": "手", "value": "hand" }, { "label": "树莓", "value": "hedgeberry" }, { "label": "刺猬", "value": "hedgehog" }, { "label": "直升机", "value": "helicopter" }, { "label": "袋鼠", "value": "kangaroo" }, { "label": "钥匙", "value": "key" }, { "label": "灯笼", "value": "lantern" }, { "label": "灯塔", "value": "lighthouse" }, { "label": "狮子", "value": "lion" }, { "label": "狮子羊", "value": "lionsheep" }, { "label": "龙虾", "value": "lobster" }, { "label": "地图", "value": "map" }, { "label": "美人鱼", "value": "mermaid" }, { "label": "莫纳护照", "value": "monapassport" }, { "label": "猴", "value": "monkey" }, { "label": "蚊子", "value": "mosquito" }, { "label": "章鱼", "value": "octopus" }, { "label": "猫头鹰", "value": "owl" }, { "label": "画笔", "value": "paintbrush" }, { "label": "棕榈树", "value": "palm_tree" }, { "label": "鹦鹉", "value": "parrot" }, { "label": "护照", "value": "passport" }, { "label": "豌豆", "value": "peas" }, { "label": "企鹅", "value": "penguin" }, { "label": "猪", "value": "pig" }, { "label": "猪羊", "value": "pigsheep" }, { "label": "菠萝", "value": "pineapple" }, { "label": "水池", "value": "pool" }, { "label": "明信片", "value": "postcard" }, { "label": "电源插座", "value": "power_outlet" }, { "label": "兔子", "value": "rabbit" }, { "label": "兔龟", "value": "rabbitturtle" }, { "label": "收音机", "value": "radio" }, { "label": "辐射面", "value": "radioface" }, { "label": "雨", "value": "rain" }, { "label": "犀牛", "value": "rhinoceros" }, { "label": "步枪", "value": "rifle" }, { "label": "过山车", "value": "roller_coaster" }, { "label": "三明治", "value": "sandwich" }, { "label": "蝎", "value": "scorpion" }, { "label": "海龟", "value": "sea_turtle" }, { "label": "羊", "value": "sheep" }, { "label": "颅骨", "value": "skull" }, { "label": "蜗牛", "value": "snail" }, { "label": "雪花", "value": "snowflake" }, { "label": "快艇", "value": "speedboat" }, { "label": "蜘蛛", "value": "spider" }, { "label": "松鼠", "value": "squirrel" }, { "label": "牛扒", "value": "steak" }, { "label": "火炉", "value": "stove" }, { "label": "草莓", "value": "strawberry" }, { "label": "天鹅", "value": "swan" }, { "label": "秋千椅", "value": "swing_set" }, { "label": "蒙娜丽莎", "value": "the_mona_lisa" }, { "label": "老虎", "value": "tiger" }, { "label": "牙刷", "value": "toothbrush" }, { "label": "牙膏", "value": "toothpaste" }, { "label": "拖拉机", "value": "tractor" }, { "label": "长号", "value": "trombone" }, { "label": "卡车", "value": "truck" }, { "label": "鲸", "value": "whale" }, { "label": "风车", "value": "windmill" }, { "label": "瑜伽", "value": "yoga" }, { "label": "瑜伽自行车", "value": "yogabicycle" }, { "label": "全部", "value": "everything" } ];
+                let model;
+                let modelState;
+                const temperature = 0.1;
+                let modelLoaded = false;
+                let modelIsActive = false;
+
+
+                let dx, dy;
+                let x, y;
+                let startX, startY;  // 跟踪最后一个原始行的第一个点。
+                let pen = [0, 0, 0]; // 模型笔状态, [pen_down, pen_up, pen_end].
+                let previousPen = [1, 0, 0]; // Previous 模型笔状态.
+                const PEN = { DOWN: 0, UP: 1, END: 2 };
+                const epsilon = 2.0; // 忽略来自用户笔的数据停留在一个地方。
+
+                // 人绘画
+                let strokes = [];
+                let currentRawLine = [];
+                let userPen = 0; //高于=0或低于=1的文件。
+                let previousUserPen = 0;
+                let currentColor = 'black';
+
+                // 追踪每个人的最后一次尝试，以便我们能够逆转他们。
+                let lastHumanStroke;  // 将人类的绘画编码为[dx, dy, penState]的笔画序列
+                let lastHumanDrawing; // 人类所画的实际线条序列，所以我们可以重放它们。
+                let lastModelDrawing = []; // 模型所画的实际线条序列，这样我们就可以擦除它们。
+
+                // 当飞溅物被打开时，不要记录鼠标事件。
+                let splashIsOpen = true;
+
+                /*
+                * Main p5 code
+                */
+                p.setup = function () {
+                    const containerSize = document.getElementById('sketch').getBoundingClientRect();
+                    const screenWidth = Math.floor(containerSize.width);
+                    const screenHeight = Math.floor(containerSize.height);
+                    p.createCanvas(screenWidth, screenHeight);
+                    p.frameRate(60);
+
+                    restart();
+                    initModel('face');  // face!
+
+                    selectModels.innerHTML = availableModels.map(m => `<option value="${m.value}">${m.label}</option>`).join('');
+                    selectModels.value = 'face';
+                    selectModels.addEventListener('change', () => initModel(selectModels.value));
+                    btnClear.addEventListener('click', restart);
+                    btnRetry.addEventListener('click', retryMagic);
+                    btnGo.addEventListener('click', () => {
+                        splashIsOpen = false;
+                        splash.classList.add('hidden');
+                    });
+                    btnSave.addEventListener('click', () => {
+                        btnShare.disabled = true;
+                        try {
+
+                            let canvas = p.canvas;
+                            let data = canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height);
+                            let isEmpty = data.data.every(e=>e===255);
+                            if(isEmpty){
+                                alert('画板为空');
+                            }else{
+                                p.saveCanvas('drawingBoard_'+selectModels.value, 'jpg');
+                            }
+                        } catch (error) {
+                            console.error(error);
+                        } finally{
+                            btnShare.disabled = false;
+                        }
+
+                    });
+                    btnShare.addEventListener('click', () => {
+                        btnShare.disabled = true;
+                        try {
+                            const files = [Base64UrlToBlob(shareIcon)];
+                            const { host, search, href } = location;
+                            const { projectId } = Object.fromEntries(new URLSearchParams(search));
+                            navigator.share({
+                                url: host === "code.devrank.cn" ? `https://code.juejin.cn/pen/${projectId}` : href,
+                                title: `AI自动画画，依不同的主题来绘画，画到一半停下来，AI会根据你的形状帮你提示再来如何画!`,
+                                text: `AI自动画画，依不同的主题来绘画，画到一半停下来，AI会根据你的形状帮你提示再来如何画!`,
+                                files
+                            }).then(res => {
+                                 btnShare.disabled = false;
+                            }).catch(err => {
+                                 alert('分享失败-' + err)
+                                 btnShare.disabled = false;
+                            })
+                        } catch (error) {
+                            btnShare.disabled = false;
+                            alert('分享失败-' + error)
+                        }
+
+                    });
+                };
+
+                p.windowResized = function () {
+                    console.log('resize canvas');
+                    const containerSize = document.getElementById('sketch').getBoundingClientRect();
+                    const screenWidth = Math.floor(containerSize.width);
+                    const screenHeight = Math.floor(containerSize.height);
+                    p.resizeCanvas(screenWidth, screenHeight);
+                };
+
+                /*
+                * 人类在绘画
+                */
+                p.mousePressed = function () {
+                    if (!splashIsOpen && p.isInBounds()) {
+                        x = startX = p.mouseX;
+                        y = startY = p.mouseY;
+                        userPen = 1; // down!
+
+                        modelIsActive = false;
+                        currentRawLine = [];
+                        lastHumanDrawing = [];
+                        previousUserPen = userPen;
+                        p.stroke(currentColor);
+                    }
+                }
+
+                p.mouseReleased = function () {
+                    if (!splashIsOpen && p.isInBounds()) {
+                        userPen = 0;  // Up!
+                        const currentRawLineSimplified = model.simplifyLine(currentRawLine);
+
+                        if (currentRawLineSimplified.length > 1) {
+                            // 将这条线编码为一个笔画，并将其送入模型。
+                            lastHumanStroke = model.lineToStroke(currentRawLineSimplified, [startX, startY]);
+                            encodeStrokes(lastHumanStroke);
+                        }
+                        currentRawLine = [];
+                        previousUserPen = userPen;
+                    }
+                }
+
+                p.mouseDragged = function () {
+                    if (!splashIsOpen && !modelIsActive && p.isInBounds()) {
+                        const dx0 = p.mouseX - x;
+                        const dy0 = p.mouseY - y;
+                        if (dx0 * dx0 + dy0 * dy0 > epsilon * epsilon) { // 只有在笔不在同一地区的情况下。
+                            dx = dx0;
+                            dy = dy0;
+                            userPen = 1;
+                            if (previousUserPen == 1) {
+                                p.line(x, y, x + dx, y + dy); // 绘制连接前点和当前点的直线。
+                                lastHumanDrawing.push([x, y, x + dx, y + dy]);
+                            }
+                            x += dx;
+                            y += dy;
+                            currentRawLine.push([x, y]);
+                        }
+                        previousUserPen = userPen;
+                    }
+                    return false;
+                }
+
+                /*
+                * Model is drawing.
+                */
+                p.draw = function () {
+                    if (!modelLoaded || !modelIsActive) {
+                        return;
+                    }
+
+                    // New state.
+                    pen = previousPen;
+                    modelState = model.update([dx, dy, ...pen], modelState);
+                    const pdf = model.getPDF(modelState, temperature);
+                    [dx, dy, ...pen] = model.sample(pdf);
+
+                    // 如果我们完成了之前的绘图，就开始新的绘图。
+                    if (pen[PEN.END] === 1) {
+                        console.log('finished this one');
+                        modelIsActive = false;
+                    } else {
+                        // 只有在笔还接触到纸的情况下才在纸上画。
+                        if (previousPen[PEN.DOWN] === 1) {
+                            p.line(x, y, x + dx, y + dy);
+                            lastModelDrawing.push([x, y, x + dx, y + dy]);
+                        }
+                        // Update.
+                        x += dx;
+                        y += dy;
+                        previousPen = pen;
+                    }
+                };
+
+                p.isInBounds = function () {
+                    return p.mouseX >= 0 && p.mouseY >= 0 && p.mouseX < p.width && p.mouseY < p.height;
+                }
+
+                function Base64UrlToBlob(base64, type = "image/png", filename = "icon.png") {
+                    // 获取到base64编码
+                    const base64_str = base64.split(',');
+                    // 将base64编码转为字符串
+                    const decode_str = atob(base64_str[1]);
+                    let n = decode_str.length;
+                    // 创建初始化为0的，包含length个元素的无符号整型数组
+                    const u8arr = new Uint8Array(n);
+                    while (n--) {
+                        u8arr[n] = decode_str.charCodeAt(n);
+                    }
+                    return new File([u8arr], filename, {
+                        type,
+                    });
+                }
+                /*
+                * Helpers.
+                */
+                function retryMagic() {
+                    try {
+                        p.stroke('white');
+                        p.strokeWeight(6);
+
+                        // 撤销模型之前所画的线。
+                        for (let i = 0; i < lastModelDrawing.length; i++) {
+                            p.line(...lastModelDrawing[i]);
+                        }
+
+                        // 撤销之前绘制的人类。
+                        for (let i = 0; i < lastHumanDrawing.length; i++) {
+                            p.line(...lastHumanDrawing[i]);
+                        }
+
+                        p.strokeWeight(3.0);
+                        p.stroke(currentColor);
+
+                        // 重新绘制。
+                        for (let i = 0; i < lastHumanDrawing.length; i++) {
+                            p.line(...lastHumanDrawing[i]);
+                        }
+
+                        // 重新开始。
+                        encodeStrokes(lastHumanStroke);
+                    } catch (error) {
+                        console.error(error);
+                    }
+                }
+
+                function restart() {
+                    p.background(255, 255, 255, 255);
+                    p.strokeWeight(3.0);
+
+                    // 在屏幕的中间部分开始画画
+                    startX = x = p.width / 2.0;
+                    startY = y = p.height / 3.0;
+
+                    // 重置用户绘图状态。
+                    userPen = 1;
+                    previousUserPen = 0;
+                    currentRawLine = [];
+                    strokes = [];
+
+                    // 重置模型绘制状态。
+                    modelIsActive = false;
+                    previousPen = [0, 1, 0];
+                };
+
+                function initModel(value) {
+                    modelLoaded = false;
+                    document.getElementById('sketch').classList.add('loading');
+
+                    if (model) {
+                        model.dispose();
+                    }
+
+                    model = new ms.SketchRNN(`${BASE_URL}${value}.gen.json`);
+                    model.initialize().then(() => {
+                        modelLoaded = true;
+                        document.getElementById('sketch').classList.remove('loading');
+                        console.log(`🤖${value} loaded.`);
+                        model.setPixelFactor(5.0);  // Bigger -> large outputs
+                    });
+                };
+
+                function encodeStrokes(sequence) {
+                    if (sequence.length <= 5) {
+                        return;
+                    }
+
+                    // 对模型中的笔画进行编码。
+                    let newState = model.zeroState();
+                    newState = model.update(model.zeroInput(), newState);
+                    newState = model.updateStrokes(sequence, newState, sequence.length - 1);
+
+                    // 将我们实际使用的模型重置为这个有编码笔画的模型。
+                    modelState = model.copyState(newState);
+
+                    const lastHumanLine = lastHumanDrawing[lastHumanDrawing.length - 1];
+                    x = lastHumanLine[0];
+                    y = lastHumanLine[1];
+
+                    // 更新笔的状态。
+                    const s = sequence[sequence.length - 1];
+                    dx = s[0];
+                    dy = s[1];
+                    previousPen = [s[2], s[3], s[4]];
+
+                    lastModelDrawing = [];
+                    modelIsActive = true;
+                }
+
+                /*
+                * Colours.
+                */
+                const COLORS = [
+                    { name: 'black', hex: '#000000' },
+                    { name: 'red', hex: '#f44336' },
+                    { name: 'pink', hex: '#E91E63' },
+                    { name: 'purple', hex: '#9C27B0' },
+                    { name: 'deeppurple', hex: '#673AB7' },
+                    { name: 'indigo', hex: '#3F51B5' },
+                    { name: 'blue', hex: '#2196F3' },
+                    { name: 'cyan', hex: '#00BCD4' },
+                    { name: 'teal', hex: '#009688' },
+                    { name: 'green', hex: '#4CAF50' },
+                    { name: 'lightgreen', hex: '#8BC34A' },
+                    { name: 'lime', hex: '#CDDC39' },
+                    { name: 'yellow', hex: '#FFEB3B' },
+                    { name: 'amber', hex: '#FFC107' },
+                    { name: 'orange', hex: '#FF9800' },
+                    { name: 'deeporange', hex: '#FF5722' },
+                    { name: 'brown', hex: '#795548' },
+                    { name: 'grey', hex: '#9E9E9E' }
+                ];
+
+                function randomColor() {
+                    return COLORS[Math.floor(Math.random() * COLORS.length)].hex
+                }
+                function randomColorIndex() {
+                    return Math.floor(Math.random() * COLORS.length);
+                }
+                p.updateCurrentColor = function (index) {
+                    currentColor = COLORS[index].hex;
+                }
+
+            };
+
+            const p5Sketch = new p5(sketch, 'sketch');
+            function changeColor(event) {
+                const btn = event.target;
+                p5Sketch.updateCurrentColor(btn.dataset.index);
+                document.querySelector('.active').classList.remove('active');
+                btn.classList.add('active');
+            };
+            window['changeColor']=changeColor;
+        })
+    </script>
+
+</html>

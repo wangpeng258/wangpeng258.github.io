@@ -1,0 +1,33 @@
+// ==UserScript==
+// @name         自动登录
+// @namespace    http://tampermonkey.net/
+// @version      0.1
+// @description  try to take over the world!
+// @author       You
+// @match        https://iam.pt.ouchn.cn/am/UI/Login?**
+// @icon         http://ouchn.cn/favicon.ico
+// @grant        none
+// ==/UserScript==
+
+(function() {
+    'use strict';
+
+    $('#loginName')[0].addEventListener('paste',e=>{
+        if (!(e.clipboardData && e.clipboardData.items) ) {
+            return;
+        }
+        e.preventDefault();
+        var contentOnBlur = (e.originalEvent || e).clipboardData.getData('text/plain')
+        var infoArr = contentOnBlur.split('\t');
+        if(infoArr.length===2){
+            $('#loginName').val(infoArr[0]);
+            $('#password').val(infoArr[1]);
+            // $('.form-group>button[value="login"]').trigger('click')
+        }else{
+            $('#loginName').val(contentOnBlur);
+            $('[data-type="userpwd"] a').css('color','red')
+        }
+        console.log(infoArr)
+    })
+    // Your code here...
+})();

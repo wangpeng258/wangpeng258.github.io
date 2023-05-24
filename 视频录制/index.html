@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="utf-8">
+    <title>录制视频</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <link rel="shortcut icon" href="" type="image/x-icon" />
+    <meta name="format-detection" content="telephone=no">
+    <link href="https://cdn.bootcdn.net/ajax/libs/element-ui/2.15.9/theme-chalk/index.min.css" rel="stylesheet">
+    <script src="https://cdn.bootcdn.net/ajax/libs/vue/2.7.4/vue.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/vue-resource/1.5.3/vue-resource.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/element-ui/2.15.9/index.min.js"></script>
+    <script src="https://mrdoob.github.io/stats.js/build/stats.min.js"></script>
+    <script src="jsQR.js"></script>
+    <script src="videoMonitor.js"></script>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <style>
+        html {
+            overflow-y: scroll;
+        }
+
+        :root {
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        :root body {
+            position: absolute;
+        }
+
+        body {
+            width: 100vw;
+            overflow: hidden;
+        }
+        ::-webkit-scrollbar {
+            height: 18px;
+            width: 18px;
+        }
+
+        ::-webkit-scrollbar-button,
+        ::-webkit-scrollbar-corner {
+            background: transparent;
+            cursor: pointer;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            border-radius: 9px;
+            border: solid 6px transparent;
+            background-color: #c8c6c4;
+            background-clip: content-box;
+            cursor: pointer;
+            transition: all 0.4s;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: #383838;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-button:horizontal:increment {
+            background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAABlBMVEXM09b///8OmaLeAAAAAnRSTlP/AOW3MEoAAAAgSURBVHgBY2BEA+QLMGAIMGAIMGAIMBAUIGQoZU5HAwB+ZgDtGYq3fgAAAABJRU5ErkJggg==)
+        }
+
+        ::-webkit-scrollbar-button:horizontal:increment:hover {
+            background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAABlBMVEWdtMT///8YSU3FAAAAAnRSTlP/AOW3MEoAAAAgSURBVHgBY2BEA+QLMGAIMGAIMGAIMBAUIGQoZU5HAwB+ZgDtGYq3fgAAAABJRU5ErkJggg==)
+        }
+
+        ::-webkit-scrollbar-button:horizontal:decrement {
+            background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAABlBMVEXM09b///8OmaLeAAAAAnRSTlP/AOW3MEoAAAAiSURBVHgBY2BEAxQJMKAJMKAJMKAJMOATgIkQMBTBooZfAH56AO2yINTrAAAAAElFTkSuQmCC)
+        }
+
+        ::-webkit-scrollbar-button:horizontal:decrement:hover {
+            background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAABlBMVEWdtMT///8YSU3FAAAAAnRSTlP/AOW3MEoAAAAiSURBVHgBY2BEAxQJMKAJMKAJMKAJMOATgIkQMBTBooZfAH56AO2yINTrAAAAAElFTkSuQmCC)
+        }
+
+        ::-webkit-scrollbar-button:vertical:increment {
+            background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAABlBMVEXM09b///8OmaLeAAAAAnRSTlP/AOW3MEoAAAAfSURBVHgBY2BEA7QTYIAChAoYH6EFxkeYwQBj0MelAH3GAO2C9+AaAAAAAElFTkSuQmCC)
+        }
+
+        ::-webkit-scrollbar-button:vertical:increment:hover {
+            background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAABlBMVEWdtMT///8YSU3FAAAAAnRSTlP/AOW3MEoAAAAfSURBVHgBY2BEA7QTYIAChAoYH6EFxkeYwQBj0MelAH3GAO2C9+AaAAAAAElFTkSuQmCC)
+        }
+
+        ::-webkit-scrollbar-button:vertical:decrement {
+            background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAABlBMVEXM09b///8OmaLeAAAAAnRSTlP/AOW3MEoAAAAgSURBVHgBY2BEAzQVYIAzYHwGGAvOZ4AyIXyECH1cCgB/GgDtpWTgqAAAAABJRU5ErkJggg==)
+        }
+
+        ::-webkit-scrollbar-button:vertical:decrement:hover {
+            background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAABlBMVEWdtMT///8YSU3FAAAAAnRSTlP/AOW3MEoAAAAgSURBVHgBY2BEAzQVYIAzYHwGGAvOZ4AyIXyECH1cCgB/GgDtpWTgqAAAAABJRU5ErkJggg==)
+        }
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+        }
+        [v-cloak] {
+            opacity: 0 !important;
+        }
+
+        .el-image__error,
+        .el-image__inner,
+        .el-image__placeholder {
+            background: #d1d1d1;
+        }
+        .pictureView>video{
+           display: block;
+           background-color: #000;
+        }
+        .playPause{
+            display: inline-block;
+            margin-right:10px;
+            cursor: pointer;
+        }
+        .playPause>i{
+            font-size: 20px;
+        }
+        .pictureView{
+            width: 100%;
+            height: 100%;
+        }
+        .pictureView video{
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        .el-card{
+            margin: 20px 10px;
+        }
+        .el-card .processing{
+            display: none;
+        }
+        .current{
+            background-color: #c1dfff;
+        }
+        .current .processing{
+            display: block;
+            color: #f56c6c;
+            font-weight: bold;
+        }
+        .el-card__body{
+            position: relative;
+        }
+        .pictureView{
+            position: relative;
+        }
+        .pictureView .record{
+            position: absolute;
+            top: 0;
+            left: 0;
+            background: #ff3d3d;
+            color: #fff;
+            font-size: 13px;
+            padding: 5px 10px;
+            transition: 0.3s;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        .processingImg{
+            margin:20px 10px;
+        }
+        .processingImg .el-image{
+            width: 400px;
+        }
+        .processingImg .processingImg-text{
+            margin:5px 0;
+            color: #494949;
+            font-weight: bold;
+        }
+        .collectionComplete .card{
+            text-align: center;
+        }
+        .collectionComplete .card h4{
+            font-size: 20px;
+            margin: 10px 4px;
+        }
+        .collectionComplete .card p{
+            font-size: 15px;
+            font-weight: bold;
+            margin: 10px 4px;
+        }
+        .collectionComplete .card .el-image,
+        .collectionComplete .card video{
+            width:100%;
+            display: block;
+            margin-bottom:5px;
+        }
+        .config{
+            position: fixed;
+            bottom:0;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #F56C6C;
+            font-size: 13px;
+            color: #fff;
+            border-radius: 5px 5px 0 0;
+            padding: 5px 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .config:hover{
+            opacity: 0.8;
+        }
+        .pictureView-video{
+            position: relative;
+            overflow: hidden;
+        }
+        .scanningLine{
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-top: 4px solid #3fefef;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            opacity:0.8;
+            /* animation: animate_line 3s linear infinite; */
+            animation: animate_line 3s ease-in-out infinite;
+        };
+
+        @-webkit-keyframes animate_line {
+            0%, 100% {
+                transform: translateY(-5px);
+            }
+            50% {
+                transform: translateY(100%);
+            }
+        }
+
+        @keyframes animate_line {
+            0%, 100% {
+                transform: translateY(-5px);
+            }
+            50% {
+                transform: translateY(100%);
+            }
+        }
+    </style>
+</head>
+
+<body onbeforeunload="return false">
+    <!-- chrome://flags/#unsafely-treat-insecure-origin-as-secure
+    在输入框中输入需要访问的地址，多个地址使用“,”隔开，然后点击右下角弹出的Relaunch按钮，自动重启浏览器之后就可以在添加的http地址下调用摄像头和麦克风了。 -->
+
+    <div id="app" class="app" v-cloak>
+        <el-row>
+            <el-col :span="8">
+                <el-card :shadow="schedule==1?'always':'never'" :class="{'current':schedule==1}">
+                    <div slot="header" class="clearfix">
+                      <span>开始采集摄像头</span>
+                      <el-button class="processing" style="float: right; padding: 3px 0" type="text">进行中</el-button>
+                    </div>
+                    <video-monitor @ready="monitorReady" ref="startMonitor" picturetype="开始" :qrcode="true" @result="startQrCodeResult"></video-monitor>
+                  </el-card>
+            </el-col>
+            <el-col :span="8">
+                <el-card :shadow="processing&&(schedule==2||schedule==3)?'always':'never'" :class="{'current':processing&&(schedule==2||schedule==3)}">
+                    <div slot="header" class="clearfix">
+                      <span>视频录制摄像头</span>
+                      <el-button class="processing" style="float: right; padding: 3px 0" type="text">进行中</el-button>
+                    </div>
+                    <video-monitor @ready="monitorReady" ref="monitor" picturetype="视频" :record="true" @result="monitorResult"></video-monitor>
+                  </el-card>
+            </el-col>
+            <el-col :span="8">
+                <el-card :shadow="schedule==3?'always':'never'" :class="{'current':schedule==3}">
+                    <div slot="header" class="clearfix">
+                      <span>结束采集摄像头</span>
+                      <el-button v-if="viedoMinTimes>0" style="float: right; padding: 3px 0;color:#F56C6C" type="text">{{viedoMinTimes}}秒开始采集</el-button>
+                      <el-button class="processing" style="float: right; padding: 3px 0" type="text">进行中</el-button>
+                    </div>
+                    <video-monitor @ready="monitorReady" ref="endMonitor" picturetype="结束" :qrcode="true" @result="endQrCodeResult"></video-monitor>
+                  </el-card>
+            </el-col>
+        </el-row>
+        <div>
+            <el-card shadow="never">
+                <div style="text-align: center;">
+                    <el-button type="primary"  @click="start" :disabled="processing" :loading="butLoading" native-type="button">开始</el-button>
+                    <transition name="el-zoom-in-top">
+                        <div class="processingImg" v-if="!isObjEmpty(startQcode)">
+                            <el-image :src="startQcode.url" :preview-src-list="[startQcode.url]" fit="contain"></el-image>
+                            <div class="processingImg-text" v-text="'ID：'+startQcode.id"></div>
+                            <div class="processingImg-text" v-text="startQcode.time"></div>
+                        </div>
+                    </transition>
+                </div>
+            </el-card>
+        </div>
+
+        <el-dialog
+            class="collectionComplete"
+            :title="'采集完成['+startQcode.id+']'"
+            :visible.sync="collectionCompleteVisible"
+            top="5vh"
+            :close-on-click-modal="false"
+            :close-on-press-escape="false"
+            :show-close="false"
+            :destroy-on-close="true"
+            center>
+            <el-row>
+                <el-col :span="8">
+                    <div class="card">
+                        <h4>开始采集照片</h4>
+                        <el-image @click="closeAlert" :src="startQcode.url" :preview-src-list="[startQcode.url,eddQcode.url]" fit="contain"></el-image>
+                        <p v-text="startQcode.time"></p>
+                        <!-- <pre>{{startQcode}}</pre> -->
+                    </div>
+                </el-col>
+                <el-col :span="8">
+                    <div class="card">
+                        <h4>录制视频</h4>
+                        <video @click="closeAlert" @play="closeAlert" :src="recordVideo.url"  controls="controls" ref="video" webkit-playsinline="true" playsinline="true"></video>
+                        <p v-text="recordVideo.time"></p>
+                        <!-- <pre>{{recordVideo}}</pre> -->
+                    </div>
+                </el-col>
+                <el-col :span="8">
+                    <div class="card">
+                        <h4>结束采集照片</h4>
+                        <el-image @click="closeAlert" :src="eddQcode.url" :preview-src-list="[eddQcode.url,startQcode.url]" fit="contain"></el-image>
+                        <p v-text="eddQcode.time"></p>
+                        <!-- <pre>{{eddQcode}}</pre> -->
+                    </div>
+                </el-col>
+            </el-row>
+            <p>点击图片或视频关闭定时器</p>
+            <br />
+            <el-alert :title="completeTimes+' 秒后自动启动下一个'" @close="closeAlert" type="success" close-text="取消定时" center></el-alert>
+            <br />
+            <div slot="footer" class="dialog-footer">
+                <el-button @click="clearAutoNext">取消</el-button>
+                <el-button @click="startAutoNext" type="primary">直接启动下一个</el-button>
+            </div>
+        </el-dialog>
+        <div style="height:80px"></div>
+        <div class="config" @click="configVisible=!configVisible">配置</div>
+        <el-dialog
+            class="configVisible"
+            title="参数配置"
+            :visible.sync="configVisible"
+            top="5vh"
+            width="360px"
+            center>
+            <el-form :model="configForm" label-position="top" size="mini">
+                <el-form-item label="视频最小长度（单位：秒）">
+                    <el-input-number v-model="configForm.viedoMinTime" :precision="0" :step="1" :min="1" :max="30*60"></el-input-number>
+                </el-form-item>
+                <el-form-item label="识别二维码频率（单位：秒）">
+                    <el-input-number v-model="configForm.qrcodeTime" :precision="1" :step="0.1" :min="0.2" :max="2"></el-input-number>
+                </el-form-item>
+                <el-form-item label="采集结果以后再次启动的时间间隔（单位：秒）">
+                    <el-input-number v-model="configForm.completeTime" :precision="0" :step="1" :min="10" :max="5*60"></el-input-number>
+                </el-form-item>
+                <el-form-item label="视频的比特率(数值越大视频越清晰)">
+                    <el-input-number v-model="configForm.videoBitsPerSecond" :precision="1" :step="0.5" :min="1" :max="8"></el-input-number>
+                </el-form-item>
+                <el-form-item label="二维码占画面比例(单位：半分比 当二维码面积超过设置值时无法继续)">
+                    <el-input-number v-model="configForm.IdentifyTheScale" :precision="0" :step="5" :min="10" :max="100"></el-input-number>
+                </el-form-item>
+                <el-form-item label="自动下载">
+                    <el-switch v-model="configForm.autoDownloadFile" active-value="open" inactive-value="close"></el-switch>
+                </el-form-item>
+                <el-form-item label="显示二维码辅助线">
+                    <el-switch v-model="configForm.showQrcodeLine" active-value="open" inactive-value="close"></el-switch>
+                </el-form-item>
+                <el-form-item label="开始和结束采集显示水印">
+                    <el-switch v-model="configForm.watermarkShow" active-value="open" inactive-value="close"></el-switch>
+                </el-form-item>
+                <el-form-item label="清除摄像头记录">
+                    <el-button @click="clearCameraLog" native-type="button" type="danger" size="small" round>清除</el-button>
+                </el-form-item>
+            </el-form>
+        </el-dialog>
+    </div>
+    <script>
+        "use strict";
+        new Vue({
+            el: '#app',
+            data: {
+                query:getQuery(),
+                readyNum:0,
+                schedule:'', //进度
+                resultList:[], //结果列表
+                butLoading:true, //按钮加载状态
+                processing:false,
+                startQcode:{}, //开始采集二维码
+                recordVideo:{}, //录制视频
+                eddQcode:{}, //结束采集二维码
+                collectionCompleteVisible:false, //采集完成弹窗
+                configVisible:false, //配置弹窗
+                configForm:{
+                    viedoMinTime:window.localStorage.getItem(`viedoMinTime`)||10, //视频最小长度
+                    qrcodeTime:window.localStorage.getItem(`qrcodeTime`)||0.5, //识别二维码频率
+                    completeTime:window.localStorage.getItem(`completeTime`)||30, //采集结果以后再次启动的时间间隔
+                    IdentifyTheScale:window.localStorage.getItem(`IdentifyTheScale`)||60, //二维码占画面比例
+                    autoDownloadFile:window.localStorage.getItem(`autoDownloadFile`)||'open', //自动下载
+                    showQrcodeLine:window.localStorage.getItem(`showQrcodeLine`)||'open', //自动下载
+                    watermarkShow:window.localStorage.getItem(`watermarkShow`)||'close', //自动下载
+                    videoBitsPerSecond:window.localStorage.getItem(`videoBitsPerSecond`)||2, //视频的比特率
+                },
+                viedoMinTimes:0, //视频最小长度计时器
+                completeTimes:0, //采集结果以后再次启动的时间间隔计时器
+            },
+            watch: {
+                configForm: {
+                    handler(val, oldVal) {
+                        this.setItemConfigForm();
+                    },
+                    deep: true
+                }
+            },
+            mounted() {
+                this.initStats();
+                this.prompt();
+                this.setItemConfigForm();
+            },
+            methods: {
+                initStats() {
+                    const stats = new Stats();
+                    // window['discernCount'] = stats.addPanel( new Stats.Panel( 'count', '#ff8', '#221' ) );
+                    console.log(stats);
+                    stats.showPanel(1); // 0: fps, 1: ms, 2: mb, 3+: custom
+                    stats.domElement.style = `
+                        position: fixed;
+                        left: 0px;
+                        cursor: pointer;
+                        opacity: 0.9;
+                        z-index: 20;
+                        bottom: 0px;
+                    `;
+                    document.body.appendChild(stats.dom);
+                    requestAnimationFrame(function loop() {
+                        stats.update();
+                        requestAnimationFrame(loop)
+                    });
+                },
+                isObjEmpty(obj) {
+                    return isObjEmpty(obj)
+                },
+                setItemConfigForm(){
+                    window.localStorage.setItem(`viedoMinTime`, this.configForm.viedoMinTime);
+                    window.localStorage.setItem(`qrcodeTime`, this.configForm.qrcodeTime);
+                    window.localStorage.setItem(`completeTime`, this.configForm.completeTime);
+                    window.localStorage.setItem(`IdentifyTheScale`, this.configForm.IdentifyTheScale);
+                    window.localStorage.setItem(`autoDownloadFile`, this.configForm.autoDownloadFile);
+                    window.localStorage.setItem(`showQrcodeLine`, this.configForm.showQrcodeLine);
+                    window.localStorage.setItem(`watermarkShow`, this.configForm.watermarkShow);
+                    window.localStorage.setItem(`videoBitsPerSecond`, this.configForm.videoBitsPerSecond);
+                },
+                clearCameraLog(){
+                    window.localStorage.removeItem('开始_deviceId');
+                    window.localStorage.removeItem('视频_deviceId');
+                    window.localStorage.removeItem('结束_deviceId');
+                    this.$alert('清除成功', '提示', {
+                        confirmButtonText: '确定',
+                        type: 'success ',
+                        showClose: false,
+                        center: true
+                    }).then(() => {
+                        document.querySelector("body").removeAttribute('onbeforeunload');//移除离开页面提示
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 100);
+                    })
+                },
+                //fmt  YYYY-mm-dd HH:MM:SS
+                dateFormat(fmt, date) {
+                    return dateFormat(fmt, date)
+                },
+                //blod=>url
+                toUrl(blob){
+                     return window.URL && window.URL.createObjectURL(blob);
+                },
+                //释放内存
+                releaseUrl(url){
+                    window.URL && window.URL.revokeObjectURL(url);
+                },
+                //下载文件
+                downloadFile(url,fileName){
+                    if(window.localStorage.getItem(`autoDownloadFile`)==='open'){
+                        var a = document.createElement('a');
+                        a.href = url;
+                        a.download = fileName;
+                        a.click();
+                    }
+                },
+                monitorReady(){
+                    this.readyNum++;
+                    if(this.readyNum===3){
+                        this.butLoading = false;
+                        const AutoNext = window.sessionStorage.getItem('AutoNext');
+                        if(!this.isObjEmpty(AutoNext)){
+                            window.sessionStorage.removeItem('AutoNext');
+                            setTimeout(()=>{
+                                speakText(`开始识别`); //语音提示
+                                this.start();
+                            },500);
+                        }
+                    }
+                },
+                //开始任务
+                start(){
+                    const deviceId1 = this.$refs.startMonitor.deviceId;
+                    const deviceId2 = this.$refs.monitor.deviceId;
+                    const deviceId3 = this.$refs.endMonitor.deviceId;
+                    if(this.isObjEmpty(deviceId1)){
+                        this.$message.error('请选择采集摄像头');
+                        return;
+                    }else if(this.isObjEmpty(deviceId2)){
+                        this.$message.error('请选择视频录制摄像头');
+                        return;
+                    }else if(this.isObjEmpty(deviceId3)){
+                        this.$message.error('请选择结束采集摄像头');
+                        return;
+                    }else{
+                        document.addEventListener('visibilitychange',_=>{
+                            // 用户息屏、或者切到后台运行 （离开页面）
+                            if (document.visibilityState === 'hidden') {
+                                document.title = `🚫 录制视频`;
+                                if(this.processing){
+                                    speakText(`请勿离开画面`); //语音提示
+                                    sendNotify(`警告`,`请勿离开画面！可能会导致录制失败！`); //发送通知
+                                }
+                            }
+                            // 用户打开或回到页面
+                            if (document.visibilityState === 'visible') {
+                                document.title = `✔️ 录制视频`;
+                            };
+                        });
+                        if(!this.isObjEmpty(this.startQcode.url)){
+                            this.releaseUrl(this.startQcode.url);
+                        };
+                        if(!this.isObjEmpty(this.recordVideo.url)){
+                            this.releaseUrl(this.recordVideo.url);
+                        };
+                        if(!this.isObjEmpty(this.eddQcode.url)){
+                            this.releaseUrl(this.eddQcode.url);
+                        };
+                        this.startQcode = {};
+                        this.recordVideo = {};
+                        this.eddQcode = {};
+
+                        this.schedule = '1';
+                        this.butLoading = false;
+                        this.processing = true; //进行中
+                        this.$refs.startMonitor.startDiscern(); //开始识别二维码
+                        console.log('开始任务');
+                    }
+                },
+                //结束
+                end(){},
+                //第一个摄像头二维码是被结果
+                async startQrCodeResult(obj){
+                    console.log(`[采集开始]`,obj);
+                    if(obj.blob && !this.isObjEmpty(obj.id)){
+                        speakText(`识别成功！开始录制视频`); //语音提示
+                        this.$notify({
+                            title: '识别成功！',
+                            message: '开始录制视频',
+                            duration:2000,
+                            type: 'success'
+                        });
+                        obj.time = new Date().toLocaleString();
+                        obj.url = this.toUrl(obj.blob);
+                        if(obj.picturetype=="开始"){
+                            this.startQcode = obj;
+                            var fileName = `${obj.id}_${this.dateFormat('YYYYmmddHHMMSS',new Date())}_${obj.picturetype || obj.type}.${obj.type=='viedo'?'webm':'png'}`;
+                            this.downloadFile(obj.url,fileName);
+                            obj.upurl  = await this.upload(obj.blob,fileName,obj.id);
+                        };
+                        this.schedule='2';
+                        this.$refs.monitor.openMedia(true,obj.id); //开始录像
+                        //启动第三个摄像头识别二维码
+                        var viedoMinTime = +(window.localStorage.getItem(`viedoMinTime`)||10);
+                        this.viedoMinTimes = viedoMinTime;
+                        if(window['viedoMinTimesTask']){
+                            clearInterval(window['viedoMinTimesTask']);
+                        };
+                        window['viedoMinTimesTask'] = setInterval(()=>{
+                            this.viedoMinTimes--;
+                            if(this.viedoMinTimes<=0){
+                                clearInterval(window['viedoMinTimesTask']);
+                                window['viedoMinTimesTask'] = null;
+                                this.schedule='3';
+                                this.$refs.endMonitor.startDiscern(obj.id); //开始识别二维码
+                            }
+                        },1000);
+                        // setTimeout(() => {
+                        //     this.schedule='3';
+                        //     this.$refs.endMonitor.startDiscern(obj.id); //开始识别二维码
+                        // }, viedoMinTime*1000);
+                    }else{
+                        speakText(`开始采集二维码识别失败，请重试！`); //语音提示
+                        this.$notify.error({
+                            title: '错误',
+                            message: `开始采集二维码识别失败，请重试！`,
+                            duration:0,
+                        });
+                    }
+                },
+                //结束采集摄像头
+                async endQrCodeResult(obj){
+                    console.log(`[采集结束]`,obj);
+                    if(obj.blob && !this.isObjEmpty(obj.id)){
+                        speakText(`识别成功 结束录制并上传`); //语音提示
+                        this.$notify({
+                            title: '识别成功！',
+                            message: '结束录制视频并上传',
+                            duration:2000,
+                            type: 'success'
+                        });
+                        obj.time = new Date().toLocaleString();
+                        obj.url = this.toUrl(obj.blob);
+                        if(obj.picturetype=="结束"){
+                            this.eddQcode = obj;
+                            var fileName = `${obj.id}_${this.dateFormat('YYYYmmddHHMMSS',new Date())}_${obj.picturetype || obj.type}.${obj.type=='viedo'?'webm':'png'}`;
+                            this.downloadFile(obj.url,fileName);
+                            obj.upurl  = await this.upload(obj.blob,fileName,obj.id);
+                        };
+                        this.$refs.monitor.endRecord(); //停止录像
+                    }else{
+                        speakText(`结束采集二维码识别失败，请重试！`); //语音提示
+                        this.$notify.error({
+                            title: '错误',
+                            duration:0,
+                            message: `结束采集二维码识别失败，请重试！`,
+                        });
+                    }
+                },
+                //视频
+                async monitorResult(obj){
+                    this.processing = false; //进行中
+                    console.log(`[保存视频]`,obj);
+                    obj.time = new Date().toLocaleString();
+                    obj.url = this.toUrl(obj.blob);
+                    this.recordVideo = obj;
+                    var fileName = `${obj.id}_${this.dateFormat('YYYYmmddHHMMSS',new Date())}_${obj.picturetype || obj.type}.${obj.type=='viedo'?'webm':'png'}`;
+                    this.downloadFile(obj.url,fileName);
+                    obj.upurl  = await this.upload(obj.blob,fileName,obj.id);
+                    this.uploadData();
+                },
+                async uploadData(){
+                    this.schedule='';
+                    const startQcode = this.startQcode;//开始采集二维码
+                    const recordVideo = this.recordVideo;//录制视频
+                    const eddQcode = this.eddQcode;//结束采集二维码
+                    if(this.isObjEmpty(startQcode.upurl)||this.isObjEmpty(recordVideo.upurl)||this.isObjEmpty(eddQcode.upurl)){
+                        speakText(`上传失败！请稍后再试！`); //语音提示
+                        this.$notify.error({
+                            title: '错误',
+                            duration:0,
+                            message: `上传失败！请稍后再试！`,
+                        });
+                    }else{
+                        console.log(`uploadData[开始采集二维码]`,startQcode.id,startQcode.upurl);
+                        console.log(`uploadData[录制视频]`,recordVideo.id,recordVideo.upurl);
+                        console.log(`uploadData[结束采集二维码]`,eddQcode.id,eddQcode.upurl);
+                        this.collectionCompleteVisible = true;
+                        this.autoNext();
+                        setTimeout(() => {
+                            speakText(`上传成功`); //语音提示
+                        }, 3000);
+                    };
+                },
+                autoNext(){
+                    var completeTime = +(window.localStorage.getItem(`completeTime`)||30);
+                    this.completeTimes = completeTime;
+                    if(window['completeTimeTask']){
+                        clearInterval(window['completeTimeTask']);
+                    };
+                    window['completeTimeTask'] = setInterval(()=>{
+                        this.completeTimes--;
+                        if(this.completeTimes<=0){
+                            clearInterval(window['completeTimeTask']);
+                            window['completeTimeTask'] = null;
+                            this.goNext();
+                        }
+                    },1000);
+                },
+                closeAlert(){
+                    if(window['completeTimeTask']){
+                        clearInterval(window['completeTimeTask']);
+                    };
+                },
+                clearAutoNext(){
+                    if(window['completeTimeTask']){
+                        clearInterval(window['completeTimeTask']);
+                    };
+                    this.completeTimes = 0;
+                    this.collectionCompleteVisible = false;
+                },
+                startAutoNext(){
+                    this.clearAutoNext();
+                    this.goNext();
+                },
+                goNext(){
+                    if(!this.isObjEmpty(this.startQcode.url)){
+                        this.releaseUrl(this.startQcode.url);
+                    };
+                    if(!this.isObjEmpty(this.recordVideo.url)){
+                        this.releaseUrl(this.recordVideo.url);
+                    };
+                    if(!this.isObjEmpty(this.eddQcode.url)){
+                        this.releaseUrl(this.eddQcode.url);
+                    };
+                    window.sessionStorage.setItem('AutoNext',new Date());
+                    const count = +(this.query.count||0);
+                    document.querySelector("body").removeAttribute('onbeforeunload');//移除离开页面提示
+                    setTimeout(()=>{
+                        window.location.replace(`index.html?count=${count+1}&t=${this.dateFormat('mmddHHMMSS',new Date())}`);
+                    },100);
+                },
+                upload(fileBlob, fileName,qrcode) {
+                    return new Promise((resolve, reject)=>{
+                        const loading = this.$loading({
+                            lock: true,
+                            text: '上次文件中...',
+                            spinner: 'el-icon-loading',
+                            background: 'rgba(0, 0, 0, 0.7)'
+                        });
+                        const formData = new FormData()
+                        var fileOfBlob = new File([fileBlob], fileName);
+                            formData.append("file", fileOfBlob);
+                            formData.append("folder", qrcode);
+                            this.$http.post('http://192.168.3.16:7777/upload', formData, {
+                                headers: {
+                                    "Content-Type": "multipart/form-data"
+                                }
+                            }).then(xml => {
+                                this.loading = false;
+                                const res = xml.body;
+                                if (res.code == 200) {
+                                    resolve(res.file)
+                                }
+                            }).catch(err => {
+                                this.$notify.error({
+                                    title: '错误',
+                                    duration:0,
+                                    message: `上传失败！请稍后再试！${fileName}`,
+                                });
+                            }).finally(_=>{
+                                loading.close();
+                            })
+                    })
+                },
+                prompt(){
+                    const isHaveread = this.query.count;
+                    if(this.isObjEmpty(isHaveread)){
+                        const html = `
+                            <ol>
+                                <li>请使用<b>谷歌（Google Chrome）浏览器</b>。</li>
+                                <li>进入网页后打开<b>摄像头、自动下载项、通知</b>权限。</li>
+                                <li>打开浏览器设置，进去<b>下载内容</b>功能，设置下载的位置，关闭<b>下载前询问每个文件的保存位置</b>。</li>
+                                <li>使用此系统时，请关闭其它软件。</li>
+                                <li>自动下载的文件名规则 <b>（ID_时间.类型）如遇到上传失败可将此文件发送给后台管理人员。</b></li>
+                                <li style="color:#F56C6C">一个镜头中禁止出现多个二维码。</li>
+                                <li style="color:#F56C6C">在识别二维码和录像中切勿<b>关闭、刷新、隐藏</b>此页面。</li>
+                            </ol>
+                        `;
+                        this.$confirm(html, '注意事项', {
+                            confirmButtonText: '我知道了',
+                            cancelButtonText: '取消',
+                            dangerouslyUseHTMLString: true
+                        }).then(() => {
+
+                        }).catch(() => {
+
+                        });
+                    };
+                },
+            }
+        });
+    </script>
+</body>
+
+</html>

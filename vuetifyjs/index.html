@@ -1,0 +1,96 @@
+<!--
+ * @Author: vuetify
+ * @Date: 2021-08-19 09:56:11
+ * @LastEditTime: 2021-08-25 13:15:53
+ * @LastEditors: Please set LastEditors
+ * @Description: In User Settings Edit
+ * @FilePath: \工厂购e:\wangpeng1478.github.io\vuetifyjs\index.html
+-->
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="utf-8">
+    <title>vuetify</title>
+    <link href="https://cdn.bootcdn.net/ajax/libs/vuetify/2.6.9/vuetify.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+        }
+
+        [v-cloak] {
+            opacity: 0 !important;
+        }
+
+        #app {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        button.primary {
+            background-color: #409eff !important;
+        }
+
+        #app>.v-card {
+            margin: 10px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app" v-cloak>
+        <v-card :elevation="elevation">
+            <v-card-title>Buttons</v-card-title>
+            <v-card-subtitle>按钮</v-card-subtitle>
+            <v-card-text>
+                <v-row justify="center">
+                    <v-col cols="auto">
+                        <v-btn :elevation="elevation">Click</v-btn>
+                    </v-col>
+                    <v-col cols="auto">
+                        <v-btn :elevation="elevation" color="primary">Primary</v-btn>
+                    </v-col>
+                    <v-col cols="auto">
+                        <v-btn :elevation="elevation" disabled>Disabled</v-btn>
+                    </v-col>
+                    <v-col cols="auto">
+                        <v-btn :elevation="elevation" loading>Loading</v-btn>
+                    </v-col>
+                </v-row>
+            </v-card-text>
+        </v-card>
+        <v-card :elevation="elevation">
+            <v-card-title>Form</v-card-title>
+            <v-card-subtitle>表单组件</v-card-subtitle>
+            <v-card-text>
+                <v-checkbox v-model="form.checkbox" label="red"></v-checkbox>
+            </v-card-text>
+        </v-card>
+    </div>
+    <script src="https://cdn.bootcss.com/vue/2.6.11/vue.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/vuetify/2.6.9/vuetify.min.js"></script>
+    <script>
+        // https://vuetifyjs.com/zh-Hans/introduction/
+
+        new Vue({
+            el: '#app',
+            vuetify: new Vuetify(),
+            data: {
+                elevation: 3, //阴影
+                form: {}
+            },
+            mounted() {
+
+            },
+            methods: {
+
+            }
+        });
+    </script>
+
+
+</body>
+
+</html>

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+    <head>
+        <meta charset="utf-8">
+        <title>朗读</title>
+        <meta name="viewport"
+            content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+        <link rel="shortcut icon" href="" type="image/x-icon" />
+        <meta name="format-detection" content="telephone=no">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+        <style>
+
+        </style>
+    </head>
+
+    <body>
+        <div>
+            <textarea id="content" cols="30" rows="10" style="padding:1em">你好</textarea>
+        </div>
+        <div>
+            <button type="button" onclick="deacon()">朗读</button>
+        </div>
+        <script type="text/javascript">
+            function deacon() {
+                var content = document.getElementById("content").value;
+                speakText(content);
+            }
+            var speaker = new window.SpeechSynthesisUtterance();
+            speaker.addEventListener('start',_=>{
+                console.log('[start]',_);
+            })
+            speaker.addEventListener('end',_=>{
+                console.log('[end]',_);
+            })
+            speaker.addEventListener('resume',_=>{
+                console.log('[resume]',_);
+            })
+            speaker.addEventListener('pause',_=>{
+                console.log('[pause]',_);
+            })
+            speaker.addEventListener('error',_=>{
+                console.log('[error]',_);
+            })
+            var speakTimer,
+                stopTimer;
+
+            // 开始朗读
+            function speakText(text) {
+                clearTimeout(speakTimer);
+                window.speechSynthesis.cancel();
+                speakTimer = setTimeout(function () {
+                    speaker.text = text;
+                    window.speechSynthesis.speak(speaker);
+                }, 200);
+            }
+
+            // 停止朗读
+            function stopSpeak() {
+                clearTimeout(stopTimer);
+                clearTimeout(speakTimer);
+                stopTimer = setTimeout(function () {
+                    window.speechSynthesis.cancel();
+                }, 20);
+            }
+        </script>
+    </body>
+
+</html>

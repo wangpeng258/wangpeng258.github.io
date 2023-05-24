@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="utf-8">
+    <title>vue-sku-form</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <link rel="shortcut icon" href="" type="image/x-icon" />
+    <meta name="format-detection" content="telephone=no">
+    <link href="https://cdn.bootcdn.net/ajax/libs/element-ui/2.15.1/theme-chalk/index.min.css" rel="stylesheet">
+    <script src="https://cdn.bootcss.com/vue/2.6.11/vue.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/element-ui/2.15.1/index.min.js"></script>
+    <script src="https://unpkg.com/vue-sku-form/dist/SkuForm.umd.min.js"></script>
+    <script src="sku.js"></script>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <style>
+        .app {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        [v-cloak] {
+            opacity: 0 !important;
+        }
+
+        pre{
+            max-height:400px;
+            overflow: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app" class="app" v-cloak>
+        <el-button type="button" @click="addSourceAttribute" type="primary" icon="el-icon-plus"></el-button>
+        <br />
+        <br />
+        <sku-form ref="skuForm"  :source-attribute.sync="sourceAttribute" :structure="structure" :attribute.sync="attribute" :sku.sync="sku" :theme="theme" separator=";"></sku-form>
+        <el-row type="flex" :gutter="20">
+            <el-col>
+                <el-divider content-position="left">sourceAttribute 数据</el-divider>
+                <pre><code>{{ sourceAttribute }}</code></pre>
+            </el-col>
+            <el-col>
+                <el-divider content-position="left">attribute 数据</el-divider>
+                <pre><code>{{ attribute }}</code></pre>
+            </el-col>
+            <el-col>
+                <el-divider content-position="left">sku 数据</el-divider>
+                <pre><code>{{ sku }}</code></pre>
+            </el-col>
+        </el-row>
+        <br />
+         <el-button type="button" @click="initSku">生成Sku选择功能</el-button>
+        <br />
+        <hr />
+        <br />
+        <Sku ref="skuSelect"></Sku>
+    </div>
+    <script>
+        // https://hooray.github.io/vue-sku-form/guide/
+        new Vue({
+            el: '#app',
+            components: {
+                SkuForm:SkuForm.default
+            },
+            data: {
+                sourceAttribute: [{
+                    name: '颜色',
+                    item: ['星光色', '午夜色', '粉色','蓝色','红色']
+                }, {
+                    name: '版本',
+                    item: ['128GB', '256GB','512GB']
+                },{
+                    name: '运营商',
+                    item: ['全网通', '移动版','联通版','电信版']
+                }],
+                structure: [
+				{
+					name: 'price',
+					type: 'input',
+					label: '价格',
+					required: true
+				},
+				{
+					name: 'stock',
+					type: 'input',
+					label: '库存',
+					required: true
+				}
+			],
+                attribute: [],
+                sku: [],
+                theme: 2
+            },
+            mounted() {
+                console.log(SkuForm)
+            },
+            methods: {
+                isObjEmpty(obj){
+                    return (
+                        obj === undefined ||
+                        obj === "undefined" ||
+                        obj == null ||
+                        obj === "" ||
+                        obj.length === 0 ||
+                        (typeof obj === "object" && Object.keys(obj).length === 0)
+                    );
+                },
+                initSku(){
+                    this.$refs.skuForm.validate(valid => {
+                        if (valid) {
+                            this.$message.success('验证通过')
+                            const attribute = this.attribute;
+                            const sku = this.sku;
+
+                            this.$refs['skuSelect'].initSku(attribute,sku);
+                        } else {
+                            this.$message.warning('验证失败')
+                        }
+                    })
+                    
+                },
+                //添加属性
+                addSourceAttribute(){
+                    this.$prompt('请输入属性名称', '添加属性', {
+                        confirmButtonText: '添加',
+                        cancelButtonText: '取消',
+                        inputType: "text",
+                        inputPlaceholder: "请输入属性名称",
+                        inputValidator: (v) => {
+                            if (v && v.length >= 2 && v.length <= 10) {
+                                return true
+                            }
+                            return '请输入2-10位'
+                        },
+                        beforeClose: (action, instance, done) => {
+                            if (action === 'confirm') {
+                                const isRepeat = this.sourceAttribute.find(e=>e.name===instance.inputValue);
+                               if(!this.isObjEmpty(isRepeat)){
+                                    this.$message({
+                                        message: '请勿添加相同属性',
+                                        type: 'warning'
+                                    });
+                               }else{
+                                    instance.confirmButtonLoading = true;
+                                    instance.confirmButtonText = '添加中...';
+                                    this.sourceAttribute.push({
+                                        name:instance.inputValue,
+                                        item:[]
+                                    })
+                                    this.$nextTick(_=>{
+                                        done();
+                                        instance.confirmButtonLoading = false;
+                                        this.$refs.skuForm.init()
+                                    })
+                               }
+                                
+                            } else {
+                                done();
+                            }
+                        }
+                    }).then(value => {}).catch(() => {});
+                },
+            }
+        });
+    </script>
+
+
+</body>
+
+</html>

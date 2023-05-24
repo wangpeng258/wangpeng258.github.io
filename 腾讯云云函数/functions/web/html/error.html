@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+    <head>
+        <meta charset="utf-8">
+        <title>${title}</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+        <link href="${cdnUrl}/icon/web-2x57.png" rel="shortcut icon" />
+        <!-- 书签icon -->
+        <link href="${cdnUrl}/icon/web-2x57.png" rel="Bookmark" />
+        <!-- 隐藏浏览器的地址栏和toolbar -->
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <!-- 控制状态栏显示样式 [default、black、black-translucent] [即白色、黑色、灰色半透明] -->
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+        <!-- 添加到主屏后的标题 -->
+        <meta name="apple-mobile-web-app-title" content="${title}">
+        <link rel="apple-touch-icon" sizes="57x57" href="${cdnUrl}/icon/web-2x57.png" />
+        <link rel="apple-touch-icon" sizes="72x72" href="${cdnUrl}/icon/web-2x72.png" />
+        <link rel="apple-touch-icon" sizes="114x114" href="${cdnUrl}/icon/web-2x114.png" />
+        <link rel="apple-touch-icon" sizes="144x144" href="${cdnUrl}/icon/web-2x144.png" />
+        <meta name="format-detection" content="telephone=no">
+        <link href="//unpkg.com/vant@2.12.47/lib/index.css" rel="stylesheet">
+        <script>
+            (function(){
+                function setCookieItem(sKey, sValue, vEnd, sPath, sDomain, bSecure){
+                    if (!sKey || /^(?:expires|max\-age|path|domain|secure)$/i.test(sKey)) { return false; }
+                    var sExpires = '';
+                    if (vEnd) {
+                        switch (vEnd.constructor) {
+                            case Number:
+                                sExpires = vEnd === Infinity ? '; expires=Fri, 31 Dec 9999 23:59:59 GMT' : '; max-age=' + vEnd;
+                                break;
+                            case String:
+                                sExpires = '; expires=' + vEnd;
+                                break;
+                            case Date:
+                                sExpires = '; expires=' + vEnd.toUTCString();
+                                break;
+                        }
+                    }
+                    document.cookie = encodeURIComponent(sKey) + '=' + encodeURIComponent(sValue) + sExpires + (sDomain ? '; domain=' + sDomain : '') + (sPath ? '; path=' + sPath : '') + (bSecure ? '; secure' : '');
+                    return true;
+                };
+                var isEnter = '${enter}';
+                if(isEnter==="true"){
+                    var token = prompt('请输入口令', '');
+                    if(token){
+                        setCookieItem('token',token,0,'/web/db');
+                        location.replace(location.href);
+                    }
+                }
+            }())
+        </script>
+    </head>
+    <body>
+        <div class="van-empty">
+            <div class="van-empty__image" style="text-align: center;line-height: 160px;">
+                <i style="color: #fa5151;font-size: 70px;" class="van-icon van-icon-warning-o"></i>
+            </div>
+            <p class="van-empty__description">${errorMsg}</p>
+            <div class="van-empty__bottom">
+                <button style="min-width: 110px;" onclick="history.back()" class="bottom-button van-button van-button--default van-button--normal van-button--round">
+                  <div class="van-button__content"><span class="van-button__text">返回上一页</span></div>
+                </button>
+            </div>
+        </div>
+    </body>
+</html>

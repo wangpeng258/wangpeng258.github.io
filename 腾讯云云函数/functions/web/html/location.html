@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="utf-8">
+    <title>${title}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <link href="${cdnUrl}/icon/web-2x57.png" rel="shortcut icon" />
+    <!-- 书签icon -->
+    <link href="${cdnUrl}/icon/web-2x57.png" rel="Bookmark" />
+    <!-- 隐藏浏览器的地址栏和toolbar -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <!-- 控制状态栏显示样式 [default、black、black-translucent] [即白色、黑色、灰色半透明] -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <!-- 添加到主屏后的标题 -->
+    <meta name="apple-mobile-web-app-title" content="${title}">
+    <link rel="apple-touch-icon" sizes="57x57" href="${cdnUrl}/icon/web-2x57.png" />
+    <link rel="apple-touch-icon" sizes="72x72" href="${cdnUrl}/icon/web-2x72.png" />
+    <link rel="apple-touch-icon" sizes="114x114" href="${cdnUrl}/icon/web-2x114.png" />
+    <link rel="apple-touch-icon" sizes="144x144" href="${cdnUrl}/icon/web-2x144.png" />
+    <meta name="format-detection" content="telephone=no">
+    <link href="//unpkg.com/vant@2.12.47/lib/index.css" rel="stylesheet">
+    <link href="/web/static/index.css" rel="stylesheet">
+    <script src="//res.wx.qq.com/open/js/jweixin-1.6.0.js"></script>
+    <script src="//unpkg.com/vue@2.6.14/dist/vue.min.js"></script>
+    <script src="//unpkg.com/vant@2.12.47/lib/vant.min.js"></script>
+    <script src="//unpkg.com/vue-resource@1.5.3/dist/vue-resource.min.js"></script>
+    <script src="//imgcache.qq.com/qcloud/cloudbase-js-sdk/1.6.0/cloudbase.full.js"></script>
+    <script type="text/javascript">
+        window._AMapSecurityConfig = {
+            securityJsCode: '760d2f8ee73847d8b8c498e651baddd2'
+        };
+        window['WeChatLogin'] = false;
+    </script>
+    <script src="//webapi.amap.com/maps?v=1.4.15&key=523cbf7c050da8249419d1201a25d712"></script>
+    <script src="/web/static/index.js"></script>
+    <style>
+        html,
+        body,
+        #container,
+        #app {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .marker {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            font-size: 12px;
+            background-color: rgb(44 158 255 / 80%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #f0f0f0;
+        }
+
+        [v-cloak] {
+            opacity: 0 !important;
+        }
+
+        .infoWindow {
+            width: 280px;
+            position: relative;
+            background-color: #f0f0f0;
+            padding: 35px 0 5px 0;
+            border-radius: 10px;
+        }
+
+        .infoWindow .close {
+            padding: 10px;
+            position: absolute;
+            top: 5px;
+            right: 5px;
+        }
+
+        .infoWindow .triangle {
+            border: 5px solid transparent;
+            width: 0;
+            height: 0;
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-color: #f0f0f0 transparent transparent transparent;
+        }
+
+        .infoWindow .van-cell__title,
+        .infoWindow .van-cell__value {
+            font-size: 13px;
+        }
+
+        .infoWindow .van-cell__title {
+            -webkit-box-flex: unset;
+            -webkit-flex: unset;
+            flex: unset;
+            margin-right: 10px;
+        }
+
+        .suspension {
+            position: fixed;
+            bottom: 20px;
+            z-index: 10;
+            max-width: 400px;
+            min-width: 300px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 5px 4px rgb(0 0 0 / 13%);
+            border-radius: 100px;
+            overflow: hidden;
+        }
+
+        .suspension>button {
+            border: none;
+            border-radius: 0;
+            flex: 1;
+            background-color: #f0f0f0;
+        }
+
+        .suspension>button:not(:last-child) {
+            border-right: 1px solid #cfcfcf;
+        }
+
+        .suspension>button::before {
+            display: none;
+        }
+
+        .amap-logo,
+        .amap-copyright {
+            display: none !important;
+        }
+
+        .listShow .van-step__title h3 {
+            margin: 0;
+            padding: 0;
+            font-size: 15px;
+            line-height: 1.5;
+            font-size: 600;
+        }
+
+        .listShow .van-step__title p {
+            margin: 0;
+            padding: 0;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .van-cell,
+        .van-cell-group {
+            background-color: transparent;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app" v-cloak>
+        <div v-if="loading" style="padding:20px 0;">
+            <van-loading color="#0094ff" size="24px" vertical>加载中</van-loading>
+        </div>
+        <template v-else>
+                <div id="container"></div>
+                <div class="suspension">
+                    <van-button v-if="isObjEmpty(query.u)" type="default" size="small" icon="replay" @click="userChange">{{form.user}}</van-button>
+                    <van-button type="default" size="small" icon="clock-o" @click="calendarShow = true">{{dateFormat('mm-dd',new Date(form.time))}}</van-button>
+                    <van-button type="default" size="small" icon="orders-o" @click="listShow = true">列表[{{location_reverse.length}}]</van-button>
+                </div>
+                <van-calendar v-model="calendarShow" @confirm="calendarConfirm" type="single" :min-date="minDate" :max-date="maxDate" :show-confirm="false"></van-calendar>
+                <van-popup v-model="listShow" round position="bottom">
+                    <van-nav-bar :title="dateFormat('YYYY-mm-dd',new Date(form.time))" @click-right="listShow=false">
+                        <template #right>
+                            <van-icon name="cross" size="18"></van-icon>
+                        </template>
+        </van-nav-bar>
+        <div class="el-scrollbar-y" style="padding: 15px;max-height:50vh;">
+            <van-steps v-if="!isObjEmpty(location_reverse)" direction="vertical" :active="0" active-color="#ee0a24" class="listShow" @click-step="setCenter">
+                <van-step v-for="(item,index) in location_reverse" :key="index">
+                    <h3 v-text="`${location_reverse.length-index}、${item.address}`"></h3>
+                    <p v-text="dateFormat('mm-dd HH:MM',new Date(item.time))"></p>
+                </van-step>
+            </van-steps>
+            <van-empty v-else description="暂无数据" image="error"></van-empty>
+        </div>
+        </van-popup>
+        <van-action-sheet v-model="actionShow" :actions="actionList" cancel-text="取消" close-on-click-action @cancel="actionShow = false" @select="onDelete"></van-action-sheet>
+        </template>
+    </div>
+    <script>
+        window['continuityClickObj'] = new ContinuityClick({
+            clickCount: 2,
+            todoFunc: (e) => {
+                const myApp = document.getElementById('app');
+                if (myApp.__vue__ && myApp.__vue__.openActionSheet) {
+                    myApp.__vue__.openActionSheet(e);
+                }
+            }
+        });
+        new Vue({
+            el: '#app',
+            data: {
+                query: getQuery(),
+                user: {},
+                loading: true, //加载中
+                wxConfigReady: false, //微信配置是否准备完毕
+                GET_URL: `/web/location/get`,
+                REM_URL: `/web/location/rem`,
+                form: {
+                    user: "",
+                    time: "",
+                },
+                map: null,
+                location: [],
+                location_reverse: [],
+                calendarShow: false,
+                listShow: false,
+                minDate: new Date(2020, 1, 1),
+                maxDate: new Date(),
+                actionShow: false, //动作面板是否显示
+                actionList: [], //动作面板列表
+            },
+            mounted() {
+                this.loading = false;
+                this.$nextTick(_ => {
+                    this.initMap();
+                })
+            },
+            methods: {
+                isObjEmpty(obj) {
+                    return isObjEmpty(obj)
+                },
+                //YYYY-mm-dd HH:MM:SS
+                dateFormat(fmt, date = new Date()) {
+                    return dateFormat(fmt, date = new Date())
+                },
+                initUser() {
+                    const {
+                        u
+                    } = this.query;
+                    if (!this.isObjEmpty(u)) {
+                        window.localStorage.setItem('user', u.trim());
+                    };
+                    this.form.time = this.dateFormat(`YYYY-mm-dd`);
+                    const user = window.localStorage.getItem('user');
+                    if (this.isObjEmpty(user)) {
+                        this.userPrompt();
+                    } else {
+                        this.form.user = user;
+                        this.getLocation();
+                    }
+                    console.log(this.form);
+                },
+                userPrompt(user = "") {
+                    const promptUser = prompt('请输入用户名', user);
+                    if (this.isObjEmpty(promptUser)) {
+                        if (this.isObjEmpty(this.form.user)) {
+                           window.history.back();
+                        }
+                    } else {
+                        window.localStorage.setItem('user', promptUser.trim());
+                        this.form.user = promptUser.trim();
+                        this.getLocation();
+                    }
+                },
+                userChange() {
+                    const user = this.form.user;
+                    this.userPrompt(user);
+                },
+                initMap() {
+                    const toast = vant.Toast.loading({
+                        duration: 0, // 持续展示 toast
+                        forbidClick: true,
+                        message: '加载地图中',
+                    });
+                    this.map = new AMap.Map('container', {
+                        resizeEnable: true, //是否监控地图容器尺寸变化
+                        mapStyle: "amap://styles/dark",
+                        zoom: 11, //初始化地图层级
+                    });
+                    this.map.on('complete', _ => {
+                        this.initUser();
+                        toast.clear();
+                    });
+                },
+                setCenter(index) {
+                    this.listShow = false;
+                    this.infowindow(this.location_reverse[index])
+                },
+                toGps(gps) {
+                    return new Promise((resolve, reject) => {
+                        AMap.convertFrom(gps, 'gps', (status, result) => {
+                            if (result.info === 'ok') {
+                                const lnglats = result.locations; // Array.<LngLat>
+                                resolve(lnglats[0])
+                            }
+                        });
+                    });
+                },
+                getAddress(gps) {
+                    return new Promise((resolve, reject) => {
+                        AMap.plugin('AMap.Geocoder', _ => {
+                            const geocoder = new AMap.Geocoder();
+                            geocoder.getAddress(gps, (status, result) => {
+                                if (status === 'complete' && result.info === 'OK') {
+                                    const address = result.regeocode.formattedAddress;
+                                    resolve(address)
+                                }
+                            })
+                        })
+                    });
+                },
+                async batchToGps(array = []) {
+                    const sendAll = array.map(async(element) => {
+                        return new Promise(async resolve => {
+                            //如果高德地图不用转换
+                            if (element.type == "gd") {
+                                element.LngLat = new AMap.LngLat(element.lon, element.lat);
+                            } else {
+                                element.LngLat = await this.toGps([element.lon, element.lat]);
+                            };
+                            element.address = await this.getAddress([element.LngLat.R, element.LngLat.Q]);
+                            resolve(element)
+                        })
+                    })
+                    return Promise.all(sendAll)
+                },
+                async coveringChange(array = []) {
+                    function compare(property) {
+                        return function(a, b) {
+                            var value1 = a[property];
+                            var value2 = b[property];
+                            return value1 - value2;
+                        }
+                    }
+                    const location = await this.batchToGps(array);
+                    const locationSort = location.sort(compare('time'));
+                    const polylinePath = locationSort.map(e => e.LngLat); //折线
+                    this.location_reverse = JSON.parse(JSON.stringify(locationSort.reverse()));
+                    this.location = JSON.parse(JSON.stringify(locationSort.reverse()));
+                    // 创建折线实例
+                    const polyline = new AMap.Polyline({
+                        offset: new AMap.Pixel(0, 0), // 相对于基点的偏移位置
+                        path: polylinePath,
+                        borderWeight: 10, // 线条宽度，默认为 1
+                        strokeColor: '#ee0a24', // 线条颜色
+                        lineJoin: 'round', // 折线拐点连接处样式
+                        lineCap: 'round', // 折线两端线帽的绘制样式
+                        strokeStyle: "dashed",
+                        // showDir:true
+                    });
+                    this.map.clearMap(); //删除所有覆盖物
+                    locationSort.forEach((element, index) => {
+                        const content = `<div class="marker">${index + 1}</div>`;
+                        // 创建一个 Marker 实例：
+                        const marker = new AMap.Marker({
+                            extData: Object.assign(element, {
+                                index: index + 1
+                            }),
+                            content,
+                            offset: new AMap.Pixel(-11, -11), // 相对于基点的偏移位置
+                            position: element.LngLat, // 经纬度对象，也可以是经纬度构成的一维数组[116.39, 39.9]
+                            title: `${element.timeString}`
+                        });
+                        // 将创建的点标记添加到已有的地图实例：
+                        this.map.add(marker);
+                        marker.on('click', _ => {
+                            this.infowindow(marker.getExtData())
+                        })
+                    });
+                    this.map.add(polyline); // 将折线添加至地图实例
+                    this.map.setFitView(); // 将折线添加至地图实例
+                },
+                infowindow(info) {
+                    var noteHtml = ``;
+                    if (!this.isObjEmpty(info.note)) {
+                        noteHtml = ` <div class="van-cell">
+                                        <div class="van-cell__title"><span>备注</span></div>
+                                        <div class="van-cell__value preline"><span>${info.note}</span></div>
+                                     </div>`
+                    };
+                    const content = `<div class="infoWindow">
+                                        <i class="van-icon van-icon-cross close" onclick="window.InfoWindow.close()"></i>
+                                        <div class="van-cell-group van-hairline--top-bottom" onclick="window['continuityClickObj'].click('${info._id}')">
+                                            <div class="van-cell">
+                                                <div class="van-cell__title"><span>时间</span></div>
+                                                <div class="van-cell__value"><span>${this.dateFormat('HH:MM:SS', new Date(info.time))}</span></div>
+                                            </div>
+                                            <div class="van-cell">
+                                                <div class="van-cell__title"><span>地址</span></div>
+                                                <div class="van-cell__value"><span>${info.address}</span></div>
+                                            </div>
+                                            ${noteHtml}
+                                        </div>
+                                        <span class="triangle"></span>
+                                     </div>`;
+                    AMap.plugin('AMap.InfoWindow', _ => {
+                        window.InfoWindow = new AMap.InfoWindow({
+                            isCustom: true, //使用自定义窗体
+                            content,
+                            offset: new AMap.Pixel(0, -9)
+                        });
+                        this.map.setCenter(info.LngLat); //设置地图中心点
+                        setTimeout(_ => {
+                            window.InfoWindow.open(this.map, info.LngLat);
+                        }, 300);
+                    })
+                },
+
+                calendarConfirm(date) {
+                    this.form.time = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+                    this.calendarShow = false;
+                    this.getLocation();
+                },
+                getLocation() {
+                    window.InfoWindow && window.InfoWindow.close();
+                    const toast = vant.Toast.loading({
+                        duration: 0, // 持续展示 toast
+                        forbidClick: true,
+                        message: 'loading',
+                    });
+                    this.$http.get(`${this.GET_URL}`, {
+                        params: this.form
+                    }).then((xml) => {
+                        toast.clear();
+                        const res = xml.body;
+                        if (res.status === 200) {
+                            this.coveringChange(res.data||[]);
+                        } else {
+                            vant.Dialog.alert({
+                                title: '提示',
+                                message: res.errmsg || '获取信息失败，请重新获取',
+                                theme: 'round-button',
+                            }).then(() => {
+                                window.location.replace(window.location.href)
+                            });
+                        }
+                    }).catch((err) => {
+                        toast.clear();
+                        console.log(err);
+                        vant.Dialog.alert({
+                            title: '错误',
+                            message: '获取信息失败，请重新获取',
+                            theme: 'round-button',
+                        }).then(() => {
+                            window.location.replace(window.location.href)
+                        });
+                    })
+                },
+                openActionSheet(id) {
+                    this.actionList = [{
+                        name: '删除当前数据',
+                        type: 1,
+                        id
+                    }, {
+                        name: '删除当前日期数据',
+                        type: 2,
+                        id
+                    }, {
+                        name: '删除当前用户名数据',
+                        type: 3,
+                        id
+                    }, {
+                        name: '清空数据',
+                        type: 4,
+                        id
+                    }]
+                    this.actionShow = true;
+                },
+                //删除
+                onDelete(action) {
+                    const {
+                        type,
+                        id
+                    } = action;
+                    const {
+                        user,
+                        time
+                    } = this.form;
+                    let params = {};
+                    if (type == 1) {
+                        params = {
+                            type,
+                            id
+                        }
+                    } else if (type == 2) {
+                        params = {
+                            type,
+                            user,
+                            time
+                        }
+                    } else if (type == 3) {
+                        params = {
+                            type,
+                            user
+                        }
+                    } else if (type == 4) {
+                        params = {
+                            type
+                        }
+                    };
+                    const toast = vant.Toast.loading({
+                        duration: 0, // 持续展示 toast
+                        forbidClick: true,
+                        message: '删除中',
+                    });
+                    this.$http.get(`${this.REM_URL}`, {
+                        params
+                    }).then((xml) => {
+                        toast.clear();
+                        const res = xml.body;
+                        if (res.status === 200) {
+                            if (res.data && res.data.deleted) {
+                                vant.Notify({
+                                    type: 'success',
+                                    message: `成功删除${res.data.deleted}条`
+                                });
+                            } else {
+                                vant.Notify({
+                                    type: 'success',
+                                    message: '删除成功'
+                                });
+                            };
+                            this.getLocation();
+                        } else {
+                            vant.Dialog.alert({
+                                title: '提示',
+                                message: res.errmsg || '删除失败，请重新获取',
+                                theme: 'round-button',
+                            }).then(() => {
+                                // vant.Dialog.close();
+                                // window.location.replace(window.location.href)
+                            });
+                        }
+                    }).catch((err) => {
+                        toast.clear();
+                        console.log(err);
+                        vant.Dialog.alert({
+                            title: '错误',
+                            message: '删除失败，请重新获取',
+                            theme: 'round-button',
+                        }).then(() => {
+                            // vant.Dialog.close();
+                            // window.location.replace(window.location.href)
+                        });
+                    })
+
+                },
+            }
+        });
+    </script>
+</body>
+
+</html>

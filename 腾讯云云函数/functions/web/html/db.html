@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+    <head>
+        <meta charset="utf-8">
+        <title>${title}</title>
+        <meta name="viewport"
+            content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+        <link href="${cdnUrl}/icon/web-2x57.png" rel="shortcut icon" />
+        <!-- 书签icon -->
+        <link href="${cdnUrl}/icon/web-2x57.png" rel="Bookmark" />
+        <!-- 隐藏浏览器的地址栏和toolbar -->
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <!-- 控制状态栏显示样式 [default、black、black-translucent] [即白色、黑色、灰色半透明] -->
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+        <!-- 添加到主屏后的标题 -->
+        <meta name="apple-mobile-web-app-title" content="${title}">
+        <link rel="apple-touch-icon" sizes="57x57" href="${cdnUrl}/icon/web-2x57.png" />
+        <link rel="apple-touch-icon" sizes="72x72" href="${cdnUrl}/icon/web-2x72.png" />
+        <link rel="apple-touch-icon" sizes="114x114" href="${cdnUrl}/icon/web-2x114.png" />
+        <link rel="apple-touch-icon" sizes="144x144" href="${cdnUrl}/icon/web-2x144.png" />
+        <meta name="format-detection" content="telephone=no">
+        <link href="//unpkg.com/vant@2.12.47/lib/index.css" rel="stylesheet">
+        <link href="/web/static/index.css" rel="stylesheet">
+        <script src="//res.wx.qq.com/open/js/jweixin-1.6.0.js"></script>
+        <script src="//unpkg.com/vue@2.6.14/dist/vue.min.js"></script>
+        <script src="//unpkg.com/vant@2.12.47/lib/vant.min.js"></script>
+        <script src="//imgcache.qq.com/qcloud/cloudbase-js-sdk/1.6.0/cloudbase.full.js"></script>
+        <script>
+            window['WeChatLogin'] = true; //登录
+            window['WxFunction'] = false; //微信Config
+        </script>
+        <script src="/web/static/index.js"></script>
+    </head>
+
+    <body>
+        <!-- 文档地址 -->
+        <!-- https://docs.cloudbase.net/ -->
+        <div id="app" v-cloak>
+            <div v-if="loading" style="padding:20px 0;">
+                <van-loading color="#0094ff" size="24px" vertical>加载中</van-loading>
+            </div>
+            <template v-else>
+                <pre>{{list}}</pre>
+                <van-pagination @change="pageChange" v-model="page.pageIndex" :items-per-page="page.pageSize" :page-items="page.total" :page-count="page.totalPage" mode="simple"></van-pagination>
+            </template>
+        </div>
+        <script>
+            new Vue({
+                el: '#app',
+                data: {
+                    query: getQuery(),
+                    user: {},
+                    tcbApp: null,//云开发 CloudBase
+                    loading: true, //加载中
+                    wxConfigReady: false, //微信配置是否准备完毕
+                    list:[],
+                    page:{
+                        pageIndex:1, //当前页码
+                        pageSize:3, //每页记录数
+                        total:0, //总记录数
+                        totalPage:0, //总页数
+                    },
+                },
+                mounted() { },
+                methods: {
+                    isObjEmpty(obj) {
+                        return isObjEmpty(obj)
+                    },
+                    dateFormat(fmt, date = new Date()) {
+                        return dateFormat(fmt, date = new Date())
+                    },
+                    init(user, cloudbase) {
+                        this.user = user || {};
+                        console.log('user', user);
+                        console.log('cloudbase', cloudbase);
+                        this.tcbApp = cloudbase;
+                        this.loading = false;
+                        this.getData();
+                    },
+                    pageChange(pageIndex){
+                        this.page.pageIndex = pageIndex;
+                        this.getData();
+                    },
+                    async getData(){
+                        const where = {};
+                        const {pageIndex,pageSize} = this.page;
+                        const loading = vant.Toast.loading({
+                            duration: 0, // 持续展示 toast
+                            forbidClick: true,
+                            message: '获取数据中',
+                        });
+                        const dbResult = await this.getDb(pageIndex,pageSize,where);
+                        loading.clear();
+                        if(dbResult.status===200){
+                            this.list = dbResult.data||[];
+                            this.page.pageIndex = dbResult.pageIndex;
+                            this.page.pageSize = dbResult.pageSize;
+                            this.page.totalPage = dbResult.totalPage;
+                            this.page.total = dbResult.total;
+                            window.scrollTo(0, 0);
+                        }else{
+                            vant.Toast(dbResult.errmsg||'获取数据失败，请稍后再试');
+                        }
+                        console.log('[dbResult]',dbResult);
+                    },
+                    async getDb(pageIndex=1,pageSize=10,where={}){
+                        const dbName = `webLog`;//集合名称
+                        const db = this.tcbApp.database();
+                        const countResult =  await db.collection(dbName).where(where).count(); //获取总数
+                        const total = countResult.total; //总数
+                        const totalPage = Math.ceil(total/pageSize); //总页数
+                        var hasMore = true; //是否还有数据
+                        if(pageIndex>=totalPage){
+                            hasMore = false;
+                        };
+                        if(total>0){
+                            return await db.collection(dbName).where(where).skip((pageIndex-1)*pageSize).limit(pageSize).get().then(res=>{
+                                res.pageIndex = pageIndex;
+                                res.total = total;
+                                res.totalPage = totalPage;
+                                res.pageSize = pageSize;
+                                res.hasMore = hasMore;
+                                res.status = 200;
+                                return res
+                            }).catch(err=>{
+                                return {
+                                    status:-1,
+                                    errmsg:err
+                                }
+                            })
+                        }else{
+                            return {
+                                status:200,
+                                errmsg:'data null',
+                                data:[],
+                                pageIndex,
+                                pageSize,
+                                totalPage,
+                                total,
+                                hasMore
+                            }
+                        }
+
+                    },
+                }
+            });
+        </script>
+    </body>
+
+</html>

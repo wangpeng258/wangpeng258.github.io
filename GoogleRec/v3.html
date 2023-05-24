@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="utf-8">
+    <title>谷歌ReCaptcha</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <link rel="shortcut icon" href="" type="image/x-icon" />
+    <meta name="format-detection" content="telephone=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+</head>
+
+<body>
+    <button onclick="validate(this)">验证</button>
+    <script src="https://www.recaptcha.net/recaptcha/api.js?render=6LfiJ50cAAAAAMwPET55l98BN2-807Q5_1W86Tp-"></script>
+    <script>
+        function validate(obj) {
+            obj.disabled = true;
+            obj.innerText = '验证中';
+            const CAPTCHA_CLIENT_SECRET = `6LfiJ50cAAAAAMwPET55l98BN2-807Q5_1W86Tp-`;
+
+            grecaptcha.execute(CAPTCHA_CLIENT_SECRET, {
+                action: 'homepage'
+            }).then(token => {
+                console.log('客户端token:', token);
+                const formdata = new FormData();
+                formdata.append('response',token)
+                formdata.append('secret','6LfiJ50cAAAAACwIR2suCgrmObJgxeIe_3Hwuwpc')
+                fetch('https://www.recaptcha.net/recaptcha/api/siteverify', {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    body:formdata
+                }).then(response => {
+                    if (response.ok) {
+                        response.json().then(res => {
+                            obj.disabled = false;
+                            console.log('服务端验证');
+                            console.log(res);
+                            if(res.success){
+                                alert(`验证成功\n${res.score*100}%是人类`)
+                                obj.innerText = '验证成功';
+                            }else{
+                                alert('验证失败')
+                                obj.innerText = '验证失败';
+                            }
+                        });
+                    }else{
+                        console.log(response);
+                        obj.disabled = false;
+                        obj.innerText = '验证失败';
+                    }
+                }).catch(err=>{
+                    console.log(err);
+                    obj.disabled = false;
+                    obj.innerText = '验证失败';
+                });
+            })
+        }
+    </script>
+</body>
+
+</html>
