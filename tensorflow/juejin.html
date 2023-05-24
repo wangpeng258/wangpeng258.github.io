@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+    <head>
+        <meta charset="utf-8">
+        <title>hand</title>
+        <meta name="viewport"
+            content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+        <link rel="icon"
+            href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📸</text></svg>">
+        <meta name="format-detection" content="telephone=no">
+        <link href="https://cdn.bootcdn.net/ajax/libs/vant/2.12.25/index.min.css" rel="stylesheet">
+        <script src="https://dcdn.it120.cc/2022/12/09/89f2df97-9b7c-4650-9cce-7d885642564b.js"></script>
+        <script src="https://cdn.bootcdn.net/ajax/libs/vue/2.6.11/vue.min.js"></script>
+        <script src="https://cdn.bootcdn.net/ajax/libs/vant/2.12.25/vant.min.js"></script>
+        <script src="https://cdn.bootcdn.net/ajax/libs/tensorflow/3.19.0/tf.min.js"></script>
+        <script src="https://unpkg.com/@tensorflow-models/hand-pose-detection"></script>
+        <script src="https://unpkg.com/@mediapipe/hands"></script>
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+        <style>
+            html,
+            body,
+            #container,
+            #app {
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+
+            * {
+                padding: 0;
+                margin: 0;
+            }
+
+            [v-cloak] {
+                opacity: 0 !important;
+            }
+
+            .btn-group {
+                position: fixed;
+                bottom: 5vh;
+                left: 50%;
+                transform: translateX(-50%);
+                z-index: 10;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                width: 320px;
+            }
+
+            .btn-group>button {
+                border-radius: 0;
+                flex: 1;
+                background-color: rgba(255, 255, 255, 0.95);
+            }
+
+            .btn-group>button:first-child {
+                border-radius: 5px 0 0 5px;
+            }
+
+            .btn-group>button:last-child {
+                border-radius: 0 5px 5px 0;
+            }
+
+            .btn-group .flipHorizontalBut .van-button__icon {
+                transform: rotate(90deg);
+            }
+
+            .canvas-wrapper {
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                -webkit-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
+                user-select: none;
+                max-width: 600px;
+                margin: 0 auto;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+
+
+
+            .canvas-wrapper>canvas {
+                display: block;
+                width: 100%;
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                z-index: 1;
+                transform: translate(-50%, -50%) scale(1, 1);
+            }
+
+            .canvas-wrapper>video {
+                background: #000;
+                display: block;
+                width: 100%;
+                height: auto;
+                opacity:0.1;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div id="app" v-cloak>
+            <div class="canvas-wrapper" ref="wrapper">
+                <canvas ref="canvas" :width="canvasWidth" :height="canvasHeight"></canvas>
+                <video ref="video" class="video"
+                    :style="{ 'transform': flipHorizontal ? 'scale(-1, 1)' : 'scale(1, 1)' }" webkit-playsinline="true"
+                    playsinline="true" preload autoplay loop muted></video>
+            </div>
+
+            <!-- 切换摄像头 -->
+            <van-action-sheet v-model="actionShow" :actions="deviceList" description="请选择设备" @select="actionSelect"
+                cancel-text="取消" close-on-click-action>
+            </van-action-sheet>
+            <!-- 切换摄像头 -->
+
+            <div class="btn-group">
+                <van-button type="default" native-type="button" size="small" icon="photograph"
+                    @click="actionShow = true">切换摄像头
+                </van-button>
+                <van-button type="default" native-type="button" size="small"
+                    :icon="flipHorizontal?'ascending':'descending'" @click="triggerToggleFlipHorizontal"
+                    class="flipHorizontalBut">切换镜像</van-button>
+            </div>
+        </div>
+        <script>
+             //vars
+            var c; //canvas
+            var $; //context
+            var ŭ = 0; //color update
+            var msX = 0; //mouse x
+            var msY = 0; //mouse y
+            var prevX = 0; //previous x
+            var prevY = 0; //previous y
+            //points array
+            var pts = new Array();
+            //sparks array
+            var sparks = new Array();
+
+
+            function anim() {
+                render();
+                window.requestAnimationFrame(anim);
+            }
+
+            function render() {
+                $.globalCompositeOperation = "copy";
+                $.fillRect(0, 0, c.width, c.height);
+                $.fillStyle = "hsla(0,0%,0%,.2)";
+                $.globalCompositeOperation = "lighter";
+                ptSet(msX, msY);
+                // sprkSet();
+            }
+
+            function ptSet(x, y) {
+                if (pts.length > 30) {
+                    pts.shift();
+                }
+                if (x != 0 && y != 0) {
+                    pts[pts.length] = new Pt(x, y);
+                }
+
+                if (pts.length > 10) {
+                    for (var i = 2; i < pts.length; i++) {
+                        curve(pts[i - 2], pts[i - 1], pts[i]);
+                    }
+                }
+            }
+
+            function curve(prevPt, midPt, currPt) {
+                $.save();
+                $.beginPath();
+                $.strokeStyle = currPt.color;
+                $.shadowColor = "hsla(" + (ŭ % 360) + ",100%,50%,1)";
+                $.shadowBlur = 15;
+                $.lineWidth = 5;
+                $.lineCap="round";
+                $.lineJoin="round";
+                $.moveTo((prevPt.x + midPt.x) * 0.5, (prevPt.y + midPt.y) * 0.5);
+                $.quadraticCurveTo(midPt.x, midPt.y, (midPt.x + currPt.x) * 0.5, (midPt.y + currPt.y) * 0.5);
+                $.stroke();
+                $.restore();
+
+            }
+
+            function Pt(x, y) {
+                this.x = x;
+                this.y = y;
+                this.color = "hsla(206, 95%, 95%, 1)";
+            }
+
+            function sprkSet() {
+                for (var i = 0; i < sparks.length; i++) {
+                    sparks[i].move();
+                }
+                for (i = sparks.length - 1; i >= 0; i--) {
+                    if (sparks[i].y > c.height + 20) {
+                        sparks.splice(i, 1);
+                    }
+                }
+            }
+
+            function Spark(x, y, velX, velY, vel) {
+                this.x = x + (vel - Math.random() * vel * 2) * 0.5;
+                this.y = y + (vel - Math.random() * vel * 2) * 0.5;
+                this.vecX = (1 - Math.random() * 2 - Math.random() * velX);
+                this.vecY = (1 - Math.random() * 3 - Math.random() * velY);
+            }
+            Spark.prototype.move = function () {
+                this.vecY += 0.15;
+                this.x += this.vecX;
+                this.y += this.vecY;
+                $.save();
+                $.fillStyle = "hsla(" + (ŭ % 360) + ",100%,50%,1)";
+                $.shadowColor = "hsla(" + (ŭ % 360) + ",100%,50%,.3)";
+                $.shadowBlur = 10;
+                $.beginPath();
+                $.arc(this.x, this.y, 2.6, 0, Math.PI * 2, true);
+                $.fill();
+                $.restore();
+            }
+
+            new Vue({
+                el: '#app',
+                data: {
+                    camera: null,
+                    width: document.documentElement.clientWidth || window.innerWidth,
+                    height: document.documentElement.clientHeight || window.innerHeight,
+                    canvasWidth: 0,
+                    canvasHeight: 0,
+                    actionShow: false,
+                    deviceList: [], //设备列表
+                    deviceId: localStorage.getItem(`deviceId`) || 'user', //设备id
+                    flipHorizontal: false, // 是否水平翻转
+                    isCameraOpen: false, //摄像头是否打开
+                    task: null, //任务
+                    model: null, //模型
+                    modelLoad: true, //模型加载中
+                    canvas: null,
+                    ctx: null
+                },
+                async mounted() {
+                    c = this.$refs.canvas;
+                    $ = c.getContext('2d');
+                    /* c.onmousemove = function (e) {
+                        prevX = msX;
+                        prevY = msY;
+                        msX = e.clientX;
+                        msY = e.clientY;
+                        console.log(e.clientX,e.clientY);
+                        if (pts.length > 3) {
+
+                            var vel = (Math.abs(prevX - msX) + Math.abs(prevY - msY)) * 0.8;
+
+                            var numsparks = Math.ceil(vel);
+                            if (numsparks < 5) {
+                                numsparks = 1;
+                            }
+
+                            for (var i = 0; i < numsparks; i++) {
+                                ŭ -= .5;
+                                if (Math.random() > 0.9) {
+                                    sparks[sparks.length] = new Spark(msX, msY, (prevX - msX) * 0.2, (prevY - msY) * 0.2, vel);
+                                }
+                            }
+                        }
+                    }; */
+                    this.cameraInit();
+                    this.openCamera();
+                },
+                methods: {
+                    isObjEmpty(obj) {
+                        return (
+                            obj === undefined ||
+                            obj === "undefined" ||
+                            obj == null ||
+                            obj === "" ||
+                            obj.length === 0 ||
+                            (typeof obj === "object" && Object.keys(obj).length === 0)
+                        );
+                    },
+                    //创建模型
+                    createModel() {
+                        return new Promise(async resolve => {
+                            this.modelLoad = true;
+                            const toast = this.$toast.loading({
+                                duration: 0, // 持续展示 toast
+                                forbidClick: true,
+                                message: '加载模型中',
+                            });
+                            await tf.setBackend('webgl')
+                            const model = handPoseDetection.SupportedModels.MediaPipeHands;
+                            const detectorConfig = {
+                                runtime: 'mediapipe', // or 'tfjs',
+                                solutionPath: 'https://unpkg.com/@mediapipe/hands',
+                                modelType: 'full'
+                            };
+                            this.model = await handPoseDetection.createDetector(model, detectorConfig);
+                            toast.clear();
+                            this.modelLoad = false;
+                            resolve(this.model);
+                        })
+                    },
+                    //识别
+                    async recognition() {
+                        if (this.model && !this.modelLoad) {
+                            try {
+                                const video = this.$refs.video;
+                                const hands = await this.model.estimateHands(video, {
+                                    flipHorizontal: this.flipHorizontal
+                                });
+                                if(hands && hands.length>0){
+                                    const firstData = hands[0].keypoints;
+                                    const index_finger_tip = firstData.find(e=>e.name==='index_finger_tip');
+                                    // console.log('index_finger_tip', index_finger_tip);
+                                    prevX = msX;
+                                    prevY = msY;
+                                    msX = index_finger_tip.x;
+                                    msY = index_finger_tip.y;
+                                    if (pts.length > 3) {
+
+                                        var vel = (Math.abs(prevX - msX) + Math.abs(prevY - msY)) * 0.8;
+
+                                        var numsparks = Math.ceil(vel);
+                                        if (numsparks < 5) {
+                                            numsparks = 1;
+                                        }
+
+                                        for (var i = 0; i < numsparks; i++) {
+                                            ŭ -= .5;
+                                            if (Math.random() > 0.9) {
+                                                sparks[sparks.length] = new Spark(msX, msY, (prevX - msX) * 0.2, (prevY - msY) * 0.2, vel);
+                                            }
+                                        }
+                                    }
+
+                                }
+                                // this.drawResults(hands, video);
+                            } catch (error) {
+                                console.log(error);
+                            }
+                        };
+                        this.task = window.requestAnimationFrame(this.recognition);
+                    },
+                    // drawResults(hands, video) {
+                    //     this.ctx.save();
+                    //     const { width, height } = this.canvas;
+                    //     this.ctx.clearRect(0, 0, width, height);
+                    //     this.ctx.drawImage(video, 0, 0, this.canvas.width, height);
+                    //     console.log('hands', hands);
+                    //     this.ctx.restore();
+                    // },
+                    async cameraInit() {
+                        const video = this.$refs.video;
+                        this.camera = new Camera(video, {
+                            audio: false,
+                            video: {
+                                // width: this.width,
+                                // height: this.height,
+                            }
+                        });
+                        await this.getMediaDevices();
+                    },
+                    async getMediaDevices() {
+                        let deviceList = await this.camera.getMediaDevices();
+                        this.deviceList = deviceList.map(e => {
+                            e.name = e.label || e.deviceId;
+                            e.color = e.deviceId == this.deviceId ? '#1989fa' : '#323233';
+                            return e
+                        })
+                    },
+                    openCamera() {
+                        const toast = this.$toast.loading({
+                            duration: 0, // 持续展示 toast
+                            forbidClick: true,
+                            message: '打开摄像头',
+                        });
+                        this.isCameraOpen = false;
+                        this.camera.open(this.deviceId)
+                            .then(async res => {
+                                const video = this.$refs.video;
+                                const { videoWidth, videoHeight } = video;
+                                const { clientWidth, clientHeight } = video;
+                                this.canvasWidth = videoWidth;
+                                this.canvasHeight = videoHeight;
+                                video.width = videoWidth;
+                                video.height = videoHeight;
+                                this.$refs.wrapper.style.width = clientWidth + 'px';
+                                this.$refs.wrapper.style.height = clientHeight + 'px';
+                                this.isCameraOpen = true;
+                                if (res.settings && res.settings.deviceId) {
+                                    this.deviceId = res.settings.deviceId;
+                                    if (this.deviceList.filter(e => e.deviceId == this.deviceId).length === 0) {
+                                        this.deviceList.unshift({
+                                            name: res.label || '[未知设备]',
+                                            deviceId: this.deviceId
+                                        })
+                                    }
+                                    window.localStorage.setItem(`deviceId`, this.deviceId);
+                                };
+                                this.$nextTick(_=>{
+                                    anim();
+                                })
+                                await this.createModel();
+                                window.cancelAnimationFrame(this.task);
+                                this.task = window.requestAnimationFrame(this.recognition);
+                            })
+                            .catch(error => {
+                                console.log('error', error);
+                                this.$dialog.alert({
+                                    title: '失败',
+                                    message: `打开摄像头失败：${error.errMsg}`,
+                                    theme: 'round-button',
+                                }).then(() => {
+                                    this.openCamera();
+                                });
+                            })
+                            .finally(() => {
+                                toast.clear();
+                            })
+                    },
+                    triggerToggleFlipHorizontal() { },
+                    actionSelect(value) {
+                        const { deviceId } = value;
+                        this.actionShow = false;
+                        if (!this.isObjEmpty(deviceId) && this.deviceId != deviceId) {
+                            this.deviceId = deviceId;
+                            window.localStorage.setItem(`deviceId`, deviceId);
+                            this.openCamera();
+                        }
+                    },
+                }
+            });
+        </script>
+    </body>
+
+</html>

@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+    <head>
+        <meta charset="utf-8">
+        <title>konva</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+        <meta name="format-detection" content="telephone=no">
+        <link href="https://cdn.bootcdn.net/ajax/libs/vant/2.12.25/index.min.css" rel="stylesheet">
+        <script src="https://cdn.bootcdn.net/ajax/libs/vue/2.6.11/vue.min.js"></script>
+        <script src="https://cdn.bootcdn.net/ajax/libs/vant/2.12.25/vant.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/gh/wangpeng1478/Tools@master/static/stats.min.js"></script>
+        <script src="https://cdn.bootcdn.net/ajax/libs/konva/8.3.11/konva.min.js"></script>
+        <script src="https://cdn.bootcdn.net/ajax/libs/dat-gui/0.7.9/dat.gui.min.js"></script>
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+        <style>
+            html,
+            body,
+            #app {
+                margin: 0;
+                padding: 0;
+                width: 100vw;
+                height: 100vh;
+                overflow: hidden;
+            }
+
+            * {
+                padding: 0;
+                margin: 0;
+            }
+
+            [v-cloak] {
+                opacity: 0 !important;
+            }
+            .van-overlay {
+                -webkit-backdrop-filter: blur(5px);
+                backdrop-filter: blur(5px);
+            }
+            .dg textarea,
+            .dg button,
+            .dg input{
+                font: menu;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div id="app" v-cloak>
+            <div id="container"></div>
+            <input id="fileImage" type="file" accept="image/*" style="display:none">
+        </div>
+        <script>
+            //http://konvajs-doc.bluehymn.com/
+            new Vue({
+                el: '#app',
+                data: {
+                    width:document.documentElement.clientWidth||window.innerWidth,
+                    height:document.documentElement.clientHeight||window.innerHeight,
+                    stage:null, //阶段
+                    layer:null, //层
+                    isMousedown:false, //鼠标是否按下
+                    PenPath:[],//绘制的路径
+                    PenNum:-1,//绘制的路径数量
+                    animation:null,//动画
+                },
+                mounted() {
+                    this.initStats();
+                    this.konvaInit();
+                },
+                methods: {
+                    isObjEmpty(obj) {
+                        return (
+                            obj === undefined ||
+                            obj === "undefined" ||
+                            obj == null ||
+                            obj === "" ||
+                            obj.length === 0 ||
+                            (typeof obj === "object" && Object.keys(obj).length === 0)
+                        );
+                    },
+                    konvaInit(){
+                        this.stage = new Konva.Stage({
+                            container: 'container',
+                            width: this.width,
+                            height: this.height
+                        });
+                        this.layer = new Konva.Layer();
+                        //背景
+                        var bg = new Konva.Rect({
+                            x:0,
+                            y:0,
+                            width:this.width,
+                            height:this.height,
+                            fill:'#f9f9f9',
+                        });
+                        //移除转换
+                        this.stage.on('click tap',e=>{
+                            if (!e.target.hasName('Shape')) {
+                                this.stage.find('.ShapeTransformer').forEach(el=>el.destroy());
+                                return;
+                            }
+                        })
+                        this.layer.add(bg);
+                        this.guiInit();
+                    },
+                    //查看性能统计
+                    initStats() {
+                        const stats = new Stats();
+                        stats.showPanel(1); // 0: fps, 1: ms, 2: mb, 3+: custom
+                        stats.domElement.style.position = 'absolute';
+                        stats.domElement.style.left = '0px';
+                        stats.domElement.style.top = '0px';
+                        document.body.appendChild(stats.dom);
+                        requestAnimationFrame(function loop() {
+                            stats.update();
+                            requestAnimationFrame(loop)
+                        });
+                    },
+                    //图形控制界面
+                    guiInit(){
+                        const gui = new dat.GUI();
+                        const controls = new function () {
+                            this.Shape = () => {};
+                            this.Line = () => {};
+                            this.Text = () => {};
+                            this.Image = () => {};
+                            this.ImageUp = () => {};
+                            this.ImageBlur = 0; //图片模糊
+                            this.ImagePixelate = 1; //图片像素画
+                            this.ImageThreshold = 0; //图片遮罩
+                            this.ImageNoise = 0; //图片噪点
+                            this.ImageTransformer = false; //图片变形
+                            this.ImageTween = false; //图片动画
+
+                            this.ImagePreview = () => {};
+                            this.Download = () => {};
+                            this.ExportSize = 1;
+                            this.ToJSON = () => {};
+                            this.ImportJSON = () => {};
+                            this.Destroy = () => {};
+
+
+                            this.PenCheckbox = false; //笔开关
+                            this.PenColor = '#F00'; //笔颜色
+                            this.PenSize = 5; //笔粗细
+                            this.PenWithdraw = () => {}; //笔撤回
+
+                            this.Url = () => {};
+                        };
+
+                        const graphicsFolder = gui.addFolder(`图形`);
+                        graphicsFolder.add(controls, 'Shape').name(`随机（矩形，圆形，椭圆）`).onChange((value) => {
+                            console.log(`[随机形状]`);
+                            console.time();
+                            // this.layer.destroy(); //销毁全部
+                            this.stage.find('.Shape').forEach(el=>el.destroy());
+                            this.stage.find('.ShapeTransformer').forEach(el=>el.destroy());
+
+                            //矩形
+                            var num1 = this.getRandomInt(1,5);
+                            for (let index = 0; index < num1; index++) {
+                                var rect = new Konva.Rect({
+                                    name: 'Shape',
+                                    x: this.getRandomInt(0,this.width),
+                                    y: this.getRandomInt(0,this.height),
+                                    width: this.getRandomInt(10,this.width/2),
+                                    height: this.getRandomInt(10,this.width/2),
+                                    fill: this.randomHexColorCode(),
+                                    stroke: this.randomHexColorCode(),
+                                    strokeWidth: this.getRandomInt(2,5),
+                                    draggable: true
+                                });
+                                this.layer.add(rect);
+
+                                rect.on('click tap',e=>{
+                                    this.stage.find('.ShapeTransformer').forEach(el=>el.destroy());
+                                    var tr = new Konva.Transformer({
+                                        name: 'ShapeTransformer',
+                                        node: e.target,
+                                        centeredScaling: true
+                                    });
+                                    this.layer.add(tr);
+                                })
+                            };
+
+                            //圆形
+                            var num2 = this.getRandomInt(1,5);
+                            for (let index = 0; index < num2; index++) {
+                                var circle = new Konva.Circle({
+                                    name: 'Shape',
+                                    x: this.getRandomInt(0,this.width),
+                                    y: this.getRandomInt(0,this.height),
+                                    radius: this.getRandomInt(5,this.width/4),
+                                    fill: this.randomHexColorCode(),
+                                    stroke: this.randomHexColorCode(),
+                                    strokeWidth: this.getRandomInt(2,5),
+                                    draggable: true
+                                });
+                                circle.on('mouseover',()=>{
+                                    document.body.style.cursor = 'pointer';
+                                });
+                                circle.on('mouseout',()=>{
+                                    document.body.style.cursor = 'default';
+                                });
+                                this.layer.add(circle);
+                            };
+
+                            //椭圆
+                            var num3 = this.getRandomInt(1,5);
+                            for (let index = 0; index < num3; index++) {
+                                var oval = new Konva.Ellipse({
+                                    name: 'Shape',
+                                    x: this.getRandomInt(0,this.width),
+                                    y: this.getRandomInt(0,this.height),
+                                    radiusX: this.getRandomInt(5,this.width/4),
+                                    radiusY: this.getRandomInt(5,this.width/4),
+                                    fill: this.randomHexColorCode(),
+                                    stroke: this.randomHexColorCode(),
+                                    strokeWidth: this.getRandomInt(2,5)
+                                });
+                                oval.on('mousedown touchstart', (evt)=>{
+                                    console.log(`[destroy]`,evt);
+                                    evt.target.destroy();
+                                });
+                                this.layer.add(oval);
+                            };
+
+
+
+                            this.stage.add(this.layer);
+                            gui.close();
+                            console.timeEnd();
+                        });
+                        graphicsFolder.add(controls, 'Line').name(`线`).onChange((value) => {
+                            console.time();
+                            // this.layer.destroy(); //销毁
+                            this.stage.find('.Line').forEach(el=>el.destroy());
+                            var X = Math.ceil(this.width/40);
+                            for (let index = 0; index < X; index++) {
+                                var redLineX = new Konva.Line({
+                                    name: 'Line',
+                                    points: [index*40,0,index*40,this.height],
+                                    stroke: this.randomHexColorCode(),
+                                    strokeWidth: 1,
+                                    lineCap: 'round',
+                                    lineJoin: 'round'
+                                });
+                                this.layer.add(redLineX);
+                            };
+                            var Y = Math.ceil(this.height/40);
+                            for (let index = 0; index < Y; index++) {
+                                var redLineY = new Konva.Line({
+                                    name: 'Line',
+                                    points: [0,index*40,this.width,index*40],
+                                    stroke: this.randomHexColorCode(),
+                                    strokeWidth: 1,
+                                    lineCap: 'round',
+                                    lineJoin: 'round'
+                                });
+                                this.layer.add(redLineY);
+                            };
+
+                            this.stage.add(this.layer);
+                            gui.close();
+                            console.timeEnd();
+                        });
+                        graphicsFolder.add(controls, 'Text').name(`文字`).onChange((value) => {
+                            console.time();
+                            this.stage.find('.Text').forEach(el=>el.destroy());
+                            var complexText = new Konva.Text({
+                                name: 'Text',
+                                x: this.width/2-((this.width/2)/2),
+                                y: this.height/2-((this.height/2)/2),
+                                text:`Konva 是什么?\nKonva 是一个HTML5 Canvas JavaScript 框架，它通过对 2d context的扩展实现了在桌面端和移动端的可交互性。Konva提供了高性能的动画，补间，节点嵌套，布局，滤镜，缓存，事件绑定（桌面/移动端）等等功能。`,
+                                fontSize: 18,
+                                fontFamily: 'Microsoft Yahei',
+                                fill: '#555',
+                                width: this.width/2,
+                                padding: 20,
+                                lineHeight: 1.5,
+                                align: 'left'
+                            });
+
+
+                            var rect = new Konva.Rect({
+                                name: 'Text',
+                                x: this.width/2-((this.width/2)/2),
+                                y: this.height/2-((this.height/2)/2),
+                                stroke: '#555',
+                                strokeWidth: 5,
+                                fill: '#ddd',
+                                width: this.width/2,
+                                height: complexText.height(),
+                                shadowColor: 'black',
+                                shadowBlur: 10,
+                                shadowOffsetX: 10,
+                                shadowOffsetY: 10,
+                                shadowOpacity: 0.2,
+                                cornerRadius: 10
+                            });
+
+                            this.layer.add(rect);
+                            this.layer.add(complexText);
+                            this.stage.add(this.layer);
+                            gui.close();
+                            console.timeEnd();
+                        });
+                        const ImageFolder = gui.addFolder(`图片`);
+                        ImageFolder.add(controls, 'Image').name(`打开图片`).onChange((value) => {
+                            const toast = vant.Toast.loading({
+                                duration: 0, // 持续展示 toast
+                                forbidClick: true,
+                                message: '打开图片中',
+                            });
+                            Konva.Image.fromURL('iOS.png',darthNode=>{
+                                this.stage.find('.Image').forEach(el=>el.destroy());
+                                this.stage.find('.ImageTransformer').forEach(el=>el.destroy());
+
+                                this.loadImage(darthNode,controls);
+                                // gui.close();
+                                toast.clear();
+                            });
+                        });
+                        ImageFolder.add(controls, 'ImageUp').name(`上传图片`).onChange((value) => {
+                            const input = document.querySelector("#fileImage");
+                            input.click();
+                            input.onchange = () => {
+                                const toast = vant.Toast.loading({
+                                    duration: 0, // 持续展示 toast
+                                    forbidClick: true,
+                                    message: '打开图片中',
+                                });
+                                const file = input.files[0];
+                                if(file.type.indexOf('image') === -1){
+                                    vant.Toast('文件格式错误');
+                                    return;
+                                }
+                                const url = window.URL && window.URL.createObjectURL(file);
+                                const imageObj = new Image();
+                                imageObj.onload = ()=>{
+                                    this.stage.find('.Image').forEach(el=>el.destroy());
+                                    this.stage.find('.ImageTransformer').forEach(el=>el.destroy());
+
+                                    this.loadImage(imageObj,controls);
+                                     // gui.close();
+                                    toast.clear();
+                                };
+                                imageObj.src = url;
+                            }
+                        });
+                        ImageFolder.add(controls, 'ImageBlur', 0, 100).name(`图片模糊`).step(0.1).onChange((value) => {
+                            var img = this.stage.findOne('#ImageDom');
+                            if(!this.isObjEmpty(img)){
+                                img.blurRadius(parseFloat(value));
+                            }
+                        });
+                        ImageFolder.add(controls, 'ImagePixelate', 1, 200).name(`图片像素化`).step(1).onChange((value) => {
+                            var img = this.stage.findOne('#ImageDom');
+                            if(!this.isObjEmpty(img)){
+                                img.pixelSize(parseFloat(value));
+                            }
+                        });
+                        ImageFolder.add(controls, 'ImageThreshold', 0, 400).name(`图片遮罩`).step(1).onChange((value) => {
+                            var img = this.stage.findOne('#ImageDom');
+                            if(!this.isObjEmpty(img)){
+                                img.threshold(parseFloat(value));
+                            }
+                        });
+                        ImageFolder.add(controls, 'ImageNoise', 0, 4).name(`图片噪点`).step(0.1).onChange((value) => {
+                            var img = this.stage.findOne('#ImageDom');
+                            if(!this.isObjEmpty(img)){
+                                img.noise(parseFloat(value));
+                            }
+                        });
+                        ImageFolder.add(controls, 'ImageTransformer').name(`图片变形`).onChange((value) => {
+                            var img = this.stage.findOne('#ImageDom');
+                            if(!this.isObjEmpty(img)){
+                                if(value){
+                                    var tr = new Konva.Transformer({
+                                        name: 'ImageTransformer',
+                                        node: img,
+                                        centeredScaling: true,
+                                        keepRatio: true,
+                                        enabledAnchors: ['top-left', 'top-right', 'bottom-left', 'bottom-right']
+                                    });
+                                    this.layer.add(tr);
+                                }else{
+                                    this.stage.find('.ImageTransformer').forEach(el=>el.destroy());
+                                }
+                            }
+                        });
+                        ImageFolder.add(controls, 'ImageTween').name(`图片动画`).onChange((value) => {
+                            var img = this.stage.findOne('#ImageDom');
+                            if(!this.isObjEmpty(img)){
+                                if(value){
+                                    if(this.isObjEmpty(this.animation)){
+                                        var angularSpeed = 365;
+                                        this.animation = new Konva.Animation((frame)=>{
+                                            var angleDiff = (frame.timeDiff * angularSpeed) / 200;
+                                            img.rotate(angleDiff);
+                                        }, this.layer);
+                                    }
+                                    this.animation && this.animation.start();
+                                }else{
+                                    this.animation && this.animation.stop();
+                                }
+                            }
+                        });
+
+                        const PenFolder = gui.addFolder(`笔`);
+                        PenFolder.add(controls, 'PenCheckbox').name(`开启`).onChange((value) => {
+                            console.log(`[开关]`, value);
+                            console.log(PenFolder);
+                            if(value){
+                                // 按下
+                                this.stage.on('mousedown.eventPen touchstart.eventPen',e=>{
+                                    this.isMousedown=true;
+                                    this.PenNum++;
+                                    this.PenPath[this.PenNum]=[];
+                                })
+                                // 移动
+                                this.stage.on('mousemove.eventPen touchmove.eventPen',e=>{
+                                    if(this.isMousedown){
+                                        var mousePos = this.stage.getPointerPosition();
+                                        this.stage.find(`.mousePos${this.PenNum}`).forEach(el=>el.destroy());
+                                        this.PenPath[this.PenNum].push(mousePos);
+                                        var Path = this.PenPath[this.PenNum];
+                                        var points = [];
+                                        for (let index = 0; index < Path.length; index++) {
+                                            const element = Path[index];
+                                            points.push(element.x)
+                                            points.push(element.y)
+                                        };
+                                        var PenLine = new Konva.Line({
+                                            name: `mousePos${this.PenNum}`,
+                                            points:points,
+                                            stroke: controls.PenColor,
+                                            strokeWidth: controls.PenSize,
+                                            lineCap: 'round',
+                                            lineJoin: 'round',
+                                            tension: 0,
+                                            shadowColor: controls.PenColor,
+                                            shadowBlur: controls.PenSize*5,
+                                            shadowOffset: { x: 0, y: 0 },
+                                            shadowOpacity: 0.6
+                                        });
+                                        this.layer.add(PenLine);
+                                        this.stage.add(this.layer);
+                                    }
+                                })
+                                // 松开
+                                this.stage.on('mouseup.eventPen touchend.eventPen',e=>{
+                                    this.isMousedown=false;
+                                    console.log(`[PenPath]`,this.PenPath);
+                                })
+                            }else{
+                                this.stage.off('mousedown.eventPen mousemove.eventPen mouseup.eventPen touchstart.eventPen touchmove.eventPen touchend.eventPen');
+                            }
+                        });
+                        PenFolder.addColor(controls, 'PenColor').name(`颜色`);
+                        PenFolder.add(controls, 'PenSize',1, 20).name(`大小`).step(1);
+                        PenFolder.add(controls, 'PenWithdraw').name(`撤回`).onChange(() => {
+                            var PenNum = this.PenNum;
+                            if(PenNum>=0){
+                                this.stage.find(`.mousePos${PenNum}`).forEach(el=>el.destroy());
+                                this.PenPath.splice(PenNum,1);
+                                this.PenNum--;
+                            }else{
+                                vant.Toast('无法撤回');
+                            }
+                        });
+
+
+
+                        const CanvasFolder = gui.addFolder(`画布操作`);
+                        CanvasFolder.add(controls, 'ExportSize', {
+                            '原始尺寸': 1,
+                            'x2': 2,
+                            'x3': 3,
+                            'x4': 4,
+                            'x5': 5,
+                            'x6': 6,
+                            'x7': 7,
+                            'x8': 8,
+                            'x9': 9,
+                            'x10': 10
+                        }).name(`尺寸`);
+                        CanvasFolder.add(controls, 'ImagePreview').name(`预览`).onChange(() => {
+                            console.log(`[预览]`);
+                            var dataURL = this.stage.toDataURL({
+                                pixelRatio:controls.ExportSize
+                            });
+                            const Blob = this.convertBase64UrlToBlob(dataURL);
+                            const url = window.URL && window.URL.createObjectURL(Blob);
+                            vant.ImagePreview({
+                                images: [url],
+                                closeable: true,
+                            });
+                        });
+                        CanvasFolder.add(controls, 'Download').name(`下载`).onChange(() => {
+                            console.log(`[下载]`);
+                            var dataURL = this.stage.toDataURL({
+                                pixelRatio:+controls.ExportSize
+                            });
+                            this.downloadURL(dataURL, 'stage.png');
+                        });
+                        CanvasFolder.add(controls, 'ToJSON').name(`查看JSON`).onChange(() => {
+                            var json = this.stage.toJSON();
+                            vant.Dialog.confirm({
+                                title: 'JSON',
+                                message: `<pre>${json}</pre>`,
+                                className: 'KonvaJSON-dialog',
+                                confirmButtonText: '保存数据',
+                                cancelButtonText: '取消',
+                                theme: 'round-button',
+                            })
+                            .then(() => {
+                                window.sessionStorage.setItem('KonvaJSON',json);
+                            })
+                            .catch(() => {
+                                // on cancel
+                            });
+                        });
+                        CanvasFolder.add(controls, 'ImportJSON').name(`导入JSON`).onChange(() => {
+                            var str = window.sessionStorage.getItem('KonvaJSON');
+                            if(!this.isObjEmpty(str)){
+                                var json = JSON.parse(str);
+                                this.layer.destroy(); //销毁全部
+                                this.stage.destroy(); //销毁全部
+                                this.stage = Konva.Node.create(json, 'container');
+                            }else{
+                                vant.Toast('null JSON');
+                            }
+                        });
+                        CanvasFolder.add(controls, 'Destroy').name(`清除画布&JSON`).onChange(() => {
+                            this.layer.destroy(); //销毁全部
+                            window.sessionStorage.removeItem('KonvaJSON');
+                            gui.close();
+                        });
+
+                        const EventFolder = gui.addFolder(`文档`);
+                        EventFolder.add(controls, 'Url').name(`进入`).onChange(() => {
+                            location.href = `http://konvajs-doc.bluehymn.com/`;
+                            //https://konvajs.org/api/Konva.Stage.html api
+                            gui.close();
+                        });
+
+
+
+                        graphicsFolder.open();
+                        // CanvasFolder.open();
+                        // PenFolder.open();
+                        // ImageFolder.open();
+                        // EventFolder.open();
+
+                    },
+                    //随机颜色
+                    randomHexColorCode() {
+                        return '#' + Math.floor(Math.random() * 16777215).toString(16);
+                    },
+                    //随机数
+                    getRandomInt(min, max) {
+                        return Math.floor(Math.random() * (max - min + 1)) + min;
+                    },
+                    convertBase64UrlToBlob(base64) {
+                        let urlData = base64
+                        let type = base64.type
+                        let bytes = null
+                        if (urlData.split(',').length > 1) {//是否带前缀
+                            bytes = window.atob(urlData.split(',')[1]) // 去掉url的头，并转换为byte
+                        } else {
+                            bytes = window.atob(urlData)
+                        }
+                        // 处理异常,将ascii码小于0的转换为大于0
+                        let ab = new ArrayBuffer(bytes.length)
+                        let ia = new Uint8Array(ab)
+                        for (let i = 0; i < bytes.length; i++) {
+                            ia[i] = bytes.charCodeAt(i)
+                        }
+                        return new Blob([ab], { type: type })
+                    },
+                    // function from https://stackoverflow.com/a/15832662/512042
+                    downloadURL(url, name){
+                        var link = document.createElement('a');
+                        link.download = name;
+                        link.href = url;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        delete link;
+                    },
+                    loadImage(obj,controls) {
+                        var image = null;
+                        var darthNode = null;
+                        if(obj.localName=="img"){
+                            image = obj;
+                        }else{
+                            image = obj.attrs.image;
+                        };
+                        const {width,height} = image;
+                        var cw = this.width/2;//设置宽度
+                        var coefficient = cw/width;
+                        var ch = coefficient*height;
+                        console.log(`${cw}x${ch}`);
+
+                        var parameter = {
+                            id: 'ImageDom',
+                            name:'Image',
+                            x: this.width/2,
+                            y: this.height/2,
+                            scaleX: 1,
+                            scaleY: 1,
+                            width: cw,
+                            height: ch,
+                            fill: '#000',
+                            draggable: true,
+                            offset: {
+                                x: cw/2,
+                                y: ch/2
+                            }
+                        };
+                        if(obj.localName=="img"){
+                            parameter.image = image;
+                            darthNode = new Konva.Image(parameter);
+                        }else{
+                            darthNode = obj.setAttrs(parameter);
+                        };
+                        darthNode.on('mouseover',()=>{
+                            document.body.style.cursor = 'pointer';
+                        });
+                        darthNode.on('mouseout',()=>{
+                            document.body.style.cursor = 'default';
+                        });
+                        darthNode.cache();
+                        darthNode.filters([Konva.Filters.Blur,Konva.Filters.Pixelate,Konva.Filters.Mask,Konva.Filters.Noise]);
+                        darthNode.blurRadius(controls.ImageBlur); //图片模糊
+                        darthNode.pixelSize(controls.ImagePixelate); //图片像素化
+                        darthNode.threshold(controls.ImageThreshold); //图片遮罩
+                        darthNode.noise(controls.ImageNoise); //图片噪点
+
+                        this.layer.add(darthNode);
+                        this.layer.batchDraw();
+                        this.stage.add(this.layer);
+
+                        // var img = new Image();
+                        // img.onload = function () {
+                        //     callback(img);
+                        // };
+                        // img.src = url;
+                    },
+                }
+            });
+        </script>
+    </body>
+
+</html>

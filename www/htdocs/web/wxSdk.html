@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+    <head>
+        <meta charset="utf-8">
+        <title>微信JS-SDK Demo</title>
+        <meta name="viewport"
+            content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+        <link href="/static/icon/favicon.ico" rel="shortcut icon" />
+        <!-- 书签icon -->
+        <link href="/static/icon/57x0w.png" rel="Bookmark" />
+        <!-- 隐藏浏览器的地址栏和toolbar -->
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <!-- 控制状态栏显示样式 [default、black、black-translucent] [即白色、黑色、灰色半透明] -->
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+        <!-- 添加到主屏后的标题 -->
+        <meta name="apple-mobile-web-app-title" content="微信JS-SDK Demo">
+        <link rel="apple-touch-icon" sizes="57x57" href="/static/icon/57x0w.png" />
+        <link rel="apple-touch-icon" sizes="72x72" href="/static/icon/72x0w.png" />
+        <link rel="apple-touch-icon" sizes="114x114" href="/static/icon/114x0w.png" />
+        <link rel="apple-touch-icon" sizes="144x144" href="/static/icon/144x0w.png" />
+        <meta name="format-detection" content="telephone=no">
+        <link href="https://cdn.bootcdn.net/ajax/libs/vant/2.12.25/index.min.css" rel="stylesheet">
+        <link href="/static/css/index.css" rel="stylesheet">
+        <script src="https://cdn.bootcdn.net/ajax/libs/eruda/2.4.1/eruda.min.js"></script>
+        <script>location.search.includes('bug') && eruda.init()</script>
+        <script src="https://res.wx.qq.com/open/js/jweixin-1.6.0.js"></script>
+        <script src="https://cdn.bootcdn.net/ajax/libs/vue/2.6.11/vue.min.js"></script>
+        <script src="https://cdn.bootcdn.net/ajax/libs/vant/2.12.25/vant.min.js"></script>
+        <script src="https://cdn.bootcdn.net/ajax/libs/vue-resource/1.5.2/vue-resource.min.js"></script>
+        <script src="/static/js/index.js"></script>
+        <style>
+
+        </style>
+    </head>
+
+    <body>
+        <div id="app" v-cloak>
+            <div v-if="loading" style="padding:20px 0;">
+                <van-loading color="#0094ff" size="24px" vertical>加载中</van-loading>
+            </div>
+            <template v-else-if="!isWeixin">
+                <van-empty image="error" description="请在微信客户端打开链接"></van-empty>
+            </template>
+            <template v-else>
+                <div class="userInfo" v-if="!isObjEmpty(user)" style="text-align: center;padding: 15px;">
+                    <van-image :src="user.headimgurl" width="50px" height="50px" round></van-image>
+                    <h4 v-text="user.nickName"></h4>
+                    <p v-text="user.openid"></p>
+                </div>
+
+                <h2 class="doc-block__title">地理位置</h2>
+                <van-cell-group inset>
+                    <van-cell @click="getLocation" title="获取地理位置" value="getLocation" is-link></van-cell>
+                    <pre v-if="!isObjEmpty(location)" v-html="location"></pre>
+                    <van-cell @click="openLocation" title="查看位置" value="openLocation" v-if="!isObjEmpty(location)"
+                        is-link></van-cell>
+                </van-cell-group>
+                <h2 class="doc-block__title">扫一扫</h2>
+                <van-cell-group inset>
+                    <van-cell @click="scanQRCode(0)" title="扫一扫" value="微信处理" is-link></van-cell>
+                    <van-cell @click="scanQRCode(1)" title="扫一扫" value="返回扫描结果" is-link></van-cell>
+                    <pre v-if="!isObjEmpty(qrcodeResult)" v-html="qrcodeResult"></pre>
+                </van-cell-group>
+                <h2 class="doc-block__title">图像接口</h2>
+                <van-cell-group inset>
+                    <van-cell @click="chooseImage" title="拍照或从手机相册中选图" value="chooseImage" is-link></van-cell>
+                    <van-cell @click="previewImage()" title="预览图片" value="previewImage" is-link></van-cell>
+                    <div v-if="!isObjEmpty(imgs)" class="van-row--flex">
+                        <van-image v-for="(item,index) in imgs" :key="index" style="margin: 5px;" width="100"
+                            height="100" fit="contain" :src="item"></van-image>
+                    </div>
+                    <pre v-if="!isObjEmpty(imageResult)" v-html="imageResult"></pre>
+                </van-cell-group>
+                <h2 class="doc-block__title">音频接口</h2>
+                <van-grid clickable :column-num="2" clickable>
+                    <van-grid-item @click="startRecord" v-if="!recording" icon="play-circle-o" text="开始录音">
+                    </van-grid-item>
+                    <van-grid-item @click="stopRecord" v-else icon="pause-circle-o" text="停止录音"></van-grid-item>
+                    <template v-if="!isObjEmpty(recordingLocalId)">
+                        <van-grid-item @click="playVoice" v-if="!playSound" icon="play-circle" text="播放语音">
+                        </van-grid-item>
+                        <van-grid-item @click="stopVoice" v-else icon="pause-circle" text="暂停播放"></van-grid-item>
+                    </template>
+                </van-grid>
+                <pre @click="recordingLocalId=''" v-if="!isObjEmpty(recordingLocalId)" v-html="recordingLocalId"></pre>
+                <pre @click="translateResult=''" v-if="!isObjEmpty(translateResult)" v-html="translateResult"></pre>
+
+
+                <h2 class="doc-block__title">界面操作</h2>
+                <van-cell-group inset>
+                    <van-cell @click="closeWindow" title="关闭当前网页" value="closeWindow" is-link></van-cell>
+                </van-cell-group>
+
+                <h2 class="doc-block__title"></h2>
+            </template>
+        </div>
+        <script>
+            new Vue({
+                el: '#app',
+                data: {
+                    isWeixin:isWeiXinClient(),
+                    loading: true,
+                    user: JSON.parse(localStorage.getItem('user') || "{}"),
+                    location: {}, //地理位置
+                    qrcodeResult: null, //扫描二维码结果
+                    imageResult: null, //图片接口结果
+                    imgs: [], //图片接口结果
+                    recording: false, //是否正在录音
+                    playSound: false, //是否正在播放音频
+                    recordingLocalId: null, //录音的本地id
+                    recordingServerId: null, //录音的服务器id
+                    translateResult: null, //翻译结果
+                },
+                async mounted() {
+                    this.loading = true;
+                    if (this.isObjEmpty(this.user)) {
+                        this.user = await getUser();
+                    };
+                    console.log('user', this.user);
+                    await wxConfig();
+                    this.loading = false;
+                },
+                methods: {
+                    isObjEmpty(obj) {
+                        return isObjEmpty(obj)
+                    },
+                    //获取地理位置
+                    getLocation() {
+                        const loading = vant.Toast.loading({
+                            duration: 0, // 持续展示 toast
+                            forbidClick: true,
+                            message: '获取地理位置中',
+                        });
+                        wx.getLocation({
+                            type: 'gcj02', // 默认为wgs84的 gps 坐标，如果要返回直接给 openLocation 用的火星坐标，可传入'gcj02'
+                            success: res => {
+                                this.location = res;
+                            },
+                            fail: err => {
+                                vant.Dialog.alert({
+                                    title: '[getLocation][fail]',
+                                    message: `${err.errMsg}`,
+                                }).then(() => {
+                                    // on close
+                                });
+                            },
+                            cancel: _ => {
+                                vant.Toast('[getLocation][cancel]');
+                            },
+                            complete: () => {
+                                loading.clear();
+                            }
+                        });
+
+                    },
+                    //查看地理位置
+                    openLocation() {
+                        const loading = vant.Toast.loading({
+                            duration: 0, // 持续展示 toast
+                            forbidClick: true,
+                            message: '查看地理位置中',
+                        });
+                        const {
+                            latitude,
+                            longitude
+                        } = this.location;
+                        wx.openLocation({
+                            latitude, // 纬度，浮点数，范围为90 ~ -90
+                            longitude, // 经度，浮点数，范围为180 ~ -180。
+                            name: document.title, // 位置名
+                            address: document.title + '[地址详情说明]', // 地址详情说明
+                            scale: 18, // 地图缩放级别,整型值,范围从1~28。默认为最大
+                            infoUrl: location.href, // 在查看位置界面底部显示的超链接,可点击跳转
+                            success: res => {
+                                vant.Toast('[openLocation][success]');
+                            },
+                            fail: err => {
+                                vant.Dialog.alert({
+                                    title: '[openLocation][fail]',
+                                    message: `${err.errMsg}`,
+                                }).then(() => {
+                                    // on close
+                                });
+                            },
+                            cancel: _ => {
+                                vant.Toast('[openLocation][cancel]');
+                            },
+                            complete: () => {
+                                loading.clear();
+                            }
+                        });
+                    },
+                    //扫一扫
+                    scanQRCode(needResult) {
+                        const loading = vant.Toast.loading({
+                            duration: 0, // 持续展示 toast
+                            forbidClick: true,
+                            message: '扫一扫',
+                        });
+                        wx.scanQRCode({
+                            needResult: +needResult, // 默认为0，扫描结果由微信处理，1则直接返回扫描结果，
+                            scanType: ["qrCode", "barCode"], // 可以指定扫二维码还是一维码，默认二者都有
+                            success: res => {
+                                this.qrcodeResult = res;
+                                vant.Toast('[scanQRCode][success]');
+                            },
+                            fail: err => {
+                                vant.Dialog.alert({
+                                    title: '[scanQRCode][fail]',
+                                    message: `${err.errMsg}`,
+                                }).then(() => {
+                                    // on close
+                                });
+                            },
+                            cancel: _ => {
+                                vant.Toast('[scanQRCode][cancel]');
+                            },
+                            complete: () => {
+                                loading.clear();
+                            }
+                        });
+                    },
+                    //拍照或从手机相册中选图接口
+                    chooseImage() {
+                        const loading = vant.Toast.loading({
+                            duration: 0, // 持续展示 toast
+                            forbidClick: true,
+                            message: 'chooseImage',
+                        });
+                        wx.chooseImage({
+                            count: 9, // 默认9
+                            sizeType: ['original', 'compressed'], // 可以指定是原图还是压缩图，默认二者都有
+                            sourceType: ['album', 'camera'], // 可以指定来源是相册还是相机，默认二者都有
+                            success: async res => {
+                                this.imageResult = res;
+                                this.getImgData(res.localIds);
+                                vant.Toast('[chooseImage][success]');
+                            },
+                            fail: err => {
+                                vant.Dialog.alert({
+                                    title: '[chooseImage][fail]',
+                                    message: `${err.errMsg}`,
+                                }).then(() => {
+                                    // on close
+                                });
+                            },
+                            cancel: _ => {
+                                vant.Toast('[chooseImage][cancel]');
+                            },
+                            complete: () => {
+                                loading.clear();
+                            }
+                        });
+                    },
+                    async getImgData(localIds) {
+                        //获取本地图片接口
+                        const getLocalImgData = async (localId) => {
+                            return new Promise((resolve, reject) => {
+                                wx.getLocalImgData({
+                                    localId,
+                                    success: res => {
+                                        if (res.errMsg == "getLocalImgData:ok") {
+                                            resolve(res.localData);
+                                        }
+                                    }
+                                });
+                            });
+                        };
+                        const imgs = [];
+                        for (let index = 0; index < localIds.length; index++) {
+                            const localId = localIds[index];
+                            const LocalImgData = await getLocalImgData(localId);
+                            if (!this.isObjEmpty(LocalImgData)) {
+                                imgs.push(LocalImgData);
+                            }
+                        }
+                        this.imgs = imgs;
+                    },
+                    //预览图片接口
+                    previewImage(index) {
+
+                        const loading = vant.Toast.loading({
+                            duration: 0, // 持续展示 toast
+                            forbidClick: true,
+                            message: 'previewImage',
+                        });
+
+                        let imgList = [
+                            'https://www.quanjing.com/image/fs/index/oriental/1.jpg',
+                            'https://www.quanjing.com/image/fs/index/oriental/2.jpg',
+                            'https://www.quanjing.com/image/fs/index/oriental/3.jpg',
+                            'https://www.quanjing.com/image/fs/index/oriental/4.jpg',
+                        ];
+                        if (!this.isObjEmpty(index)) {
+                            imgList = this.upImg.map(e => e.download_url);
+                        }
+                        wx.previewImage({
+                            current: imgList[index || 0], // 当前显示图片的 http 链接
+                            urls: imgList, // 需要预览的图片 http 链接列表
+                            success: async res => {
+                                vant.Toast('[previewImage][success]');
+                            },
+                            fail: err => {
+                                vant.Dialog.alert({
+                                    title: '[previewImage][fail]',
+                                    message: `${err.errMsg}`,
+                                }).then(() => {
+                                    // on close
+                                });
+                            },
+                            cancel: _ => {
+                                vant.Toast('[previewImage][cancel]');
+                            },
+                            complete: () => {
+                                loading.clear();
+                            }
+                        });
+                    },
+                    //开始录音
+                    startRecord() {
+                        const loading = vant.Toast.loading({
+                            duration: 0, // 持续展示 toast
+                            forbidClick: true,
+                            message: 'startRecord',
+                        });
+                        this.translateResult = '';
+                        this.recordingLocalId = '';
+                        wx.startRecord({
+                            success: async res => {
+                                this.recording = true;
+                                vant.Toast('[startRecord][success]');
+                                wx.onVoiceRecordEnd({
+                                    complete: (voiceRecordEndRes) => {
+                                        if (!this.isObjEmpty(voiceRecordEndRes.localId)) {
+                                            this.recordingLocalId = voiceRecordEndRes.localId;
+                                            this.recording = false;
+                                        };
+                                    }
+                                });
+                            },
+                            fail: err => {
+                                vant.Dialog.alert({
+                                    title: '[startRecord][fail]',
+                                    message: `${err.errMsg}`,
+                                }).then(() => {
+                                    // on close
+                                });
+                            },
+                            cancel: _ => {
+                                vant.Toast('[startRecord][cancel]');
+                            },
+                            complete: () => {
+                                loading.clear();
+                            }
+                        });
+                    },
+                    //停止录音
+                    stopRecord() {
+                        const loading = vant.Toast.loading({
+                            duration: 0, // 持续展示 toast
+                            forbidClick: true,
+                            message: 'stopRecord',
+                        });
+                        wx.stopRecord({
+                            success: async res => {
+                                vant.Toast('[stopRecord][success]');
+                                if (!this.isObjEmpty(res.localId)) {
+                                    this.recordingLocalId = res.localId;
+                                }
+                            },
+                            fail: err => {
+                                vant.Dialog.alert({
+                                    title: '[stopRecord][fail]',
+                                    message: `${err.errMsg}`,
+                                }).then(() => {
+                                    // on close
+                                });
+                            },
+                            cancel: _ => {
+                                vant.Toast('[stopRecord][cancel]');
+                            },
+                            complete: () => {
+                                loading.clear();
+                                this.recording = false;
+                            }
+                        });
+                    },
+                    //播放录音
+                    async playVoice() {
+                        const localId = this.recordingLocalId;
+                        if (isObjEmpty(localId)) {
+                            vant.Toast('请先录音');
+                            return;
+                        }
+                        const loading = vant.Toast.loading({
+                            duration: 0, // 持续展示 toast
+                            forbidClick: true,
+                            message: 'playVoice',
+                        });
+                        wx.playVoice({
+                            localId,
+                            success: async res => {
+                                if (this.isObjEmpty(this.translateResult)) {
+                                    this.translateVoice();
+                                };
+                                vant.Toast('[playVoice][success]');
+                                this.playSound = true;
+                                wx.onVoicePlayEnd({
+                                    success: () => {
+                                        this.playSound = false;
+                                    }
+                                });
+                            },
+                            fail: err => {
+                                vant.Dialog.alert({
+                                    title: '[playVoice][fail]',
+                                    message: `${err.errMsg}`,
+                                }).then(() => {
+                                    // on close
+                                });
+                            },
+                            cancel: _ => {
+                                vant.Toast('[playVoice][cancel]');
+                            },
+                            complete: () => {
+                                loading.clear();
+                            }
+                        });
+                    },
+                    //识别音频并返回识别结果接口
+                    async translateVoice() {
+                        const localId = this.recordingLocalId;
+                        if (isObjEmpty(localId)) {
+                            vant.Toast('请先录音');
+                            return;
+                        };
+                        //获取本地图片接口
+                        const getTranslateVoice = async (localId) => {
+                            return new Promise((resolve, reject) => {
+                                wx.translateVoice({
+                                    localId,
+                                    success: res => {
+                                        resolve(res);
+                                    },
+                                    fail: err => {
+                                        resolve(err);
+                                    }
+                                });
+                            });
+                        };
+                        const loading = vant.Toast.loading({
+                            duration: 0, // 持续展示 toast
+                            forbidClick: true,
+                            message: 'translateVoice',
+                        });
+                        const translateResultStr = await getTranslateVoice(localId);
+                        this.translateResult = translateResultStr;
+                        loading.clear();
+                    },
+                    //停止播放
+                    stopVoice() {
+                        // @stopVoice  停止播放接口
+                        // @pauseVoice 暂停播放接口
+                        const loading = vant.Toast.loading({
+                            duration: 0, // 持续展示 toast
+                            forbidClick: true,
+                            message: 'stopVoice',
+                        });
+                        wx.stopVoice({
+                            complete: () => {
+                                this.playSound = false;
+                                loading.clear();
+                            }
+                        });
+                    },
+                    //关闭网页
+                    closeWindow() {
+                        const loading = vant.Toast.loading({
+                            duration: 0, // 持续展示 toast
+                            forbidClick: true,
+                            message: '关闭网页中',
+                        });
+                        wx.closeWindow({
+                            complete: () => {
+                                loading.clear();
+                            }
+                        });
+                    },
+                }
+            });
+        </script>
+    </body>
+
+</html>

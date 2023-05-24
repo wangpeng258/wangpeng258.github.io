@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+    <head>
+        <meta charset="utf-8">
+        <title>石头剪刀布</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+        <link rel="icon" href="./icon.jpg">
+        <meta name="format-detection" content="telephone=no">
+        <link href="https://cdn.bootcdn.net/ajax/libs/vant/2.12.25/index.min.css" rel="stylesheet">
+        <script src="https://cdn.bootcdn.net/ajax/libs/vue/2.6.11/vue.min.js"></script>
+        <script src="https://cdn.bootcdn.net/ajax/libs/vant/2.12.25/vant.min.js"></script>
+        <script src="https://cdn.bootcdn.net/ajax/libs/tensorflow/3.19.0/tf.min.js"></script>
+        <script src="https://unpkg.com/@tensorflow-models/hand-pose-detection"></script>
+        <script src="https://unpkg.com/@mediapipe/hands"></script>
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+        <style>
+            * {
+                padding: 0;
+                margin: 0;
+            }
+
+            [v-cloak] {
+                opacity: 0 !important;
+            }
+
+            body {
+                color: #323233;
+                font-size: 16px;
+                font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Segoe UI, Arial, Roboto, 'PingFang SC', 'miui', 'Hiragino Sans GB', 'Microsoft Yahei', sans-serif;
+                background-color: #f7f8fa;
+                -webkit-font-smoothing: antialiased;
+            }
+
+            #app {
+                margin: 0 auto;
+                max-width: 450px;
+                position: relative;
+            }
+
+            .row {
+                display: flex;
+            }
+
+            .row .van-form {
+                flex: 1;
+            }
+
+            .row .van-form .van-field {
+                font-size: 12px;
+            }
+
+            .row .van-form .van-field__label {
+                width: 40px;
+                margin-right: 5px;
+            }
+
+            .Camera-wrapper-view {
+                background: #000;
+                position: relative;
+                border-radius: 8px 0 0 8px;
+                overflow: hidden;
+            }
+
+            .Camera-wrapper-view::after {
+                content: '以 "画中画" 模式播放';
+                color: #fff;
+                position: absolute;
+                top: 10px;
+                left: 10px;
+                font-size: 12px;
+            }
+
+            .Camera-wrapper {
+                width: 100%;
+                position: relative;
+                overflow: hidden;
+                z-index: 10;
+            }
+
+            .Camera-wrapper>video {
+                width: 100%;
+                background: #000;
+                display: block;
+                overflow: hidden;
+            }
+
+            .Camera-wrapper>canvas {
+                position: absolute;
+                display: block;
+                top: 0;
+                left: 0;
+                z-index: 1;
+                overflow: hidden;
+            }
+
+            .Camera-wrapper>.distance,
+            .Camera-wrapper>.score {
+                position: absolute;
+                top: 0;
+                z-index: 10;
+                font-size: 12px;
+                background: #fff;
+                padding: 5px;
+                border-radius: 100px;
+                color: #323233;
+                font-weight: bold;
+                opacity: 0.5;
+                transform: scale(0.7);
+                transition: 0.25s;
+                width: 70px;
+                text-align: center;
+            }
+
+            .Camera-wrapper>.distance {
+                right: 0;
+            }
+
+            .Camera-wrapper>.score {
+                left: 0;
+            }
+
+            .Camera-wrapper>.distance[distance="0"],
+            .Camera-wrapper>.score[score="0"] {
+                opacity: 0;
+            }
+
+            .Camera-wrapper>.distance::after {
+                content: "距离 " attr(distance);
+            }
+
+            .Camera-wrapper>.score::after {
+                content: "分数 " attr(score);
+            }
+
+            .van-cell-group--inset {
+                margin: 0;
+            }
+
+            .van-cell-group--inset+.van-cell-group--inset {
+                margin-top: 10px;
+            }
+
+            .van-radio:not(:last-child) {
+                margin-bottom: 8px;
+            }
+
+            select.van-field__control {
+                -webkit-appearance: none;
+                border: 0;
+                outline: 0;
+                vertical-align: bottom;
+                box-sizing: border-box;
+                font-size: 12px;
+            }
+
+            .operationButton {
+                padding: 15px 40px;
+            }
+
+            .operationButton>button {
+                margin: 10px 0;
+            }
+
+            .Game {
+                background-image: linear-gradient(to bottom, #cddc39, #ff5722);
+                position: relative;
+            }
+
+            .Game-overlay {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                width: 100%;
+                height: 100%;
+                position: absolute;
+                left: 0;
+                top: 0;
+                z-index: 10;
+                background-color: rgba(0, 0, 0, 0.4);
+            }
+
+            .Game .chip {
+                width: 40px;
+                height: 40px;
+                border-radius: 100%;
+                display: flex;
+                flex-flow: row;
+                align-items: center;
+                justify-content: center;
+                background: #f3f4f5;
+                box-shadow: 0 0.2em 0.35em -0.15em rgba(35, 41, 44, 0.5);
+                font-size: 20px;
+                line-height: 1;
+                margin: 0 auto;
+                cursor: pointer;
+                transition: 0.25s;
+                transform: scale(1.2);
+            }
+
+            .Game .notBeacon .chip {
+                transform: scale(1);
+                background: none;
+            }
+
+            .Game .van-col:not(.notBeacon) .chip[beacon="0"] {
+                animation: beacon 1s infinite linear;
+            }
+
+            .Game .van-col:not(.notBeacon) .chip[beacon="1"] {
+                animation: beacon 1s infinite linear;
+                animation-delay: .15s;
+            }
+
+            .Game .van-col:not(.notBeacon) .chip[beacon="2"] {
+                animation: beacon 1s infinite linear;
+                animation-delay: .3s;
+            }
+
+            @keyframes beacon {
+                0% {
+                    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.35);
+                }
+
+                100% {
+                    box-shadow: 0 0 0 20px transparent;
+                }
+            }
+
+            .Game .around {
+                text-align: center;
+                color: #f3f4f5;
+            }
+
+            .Game .around span {
+                opacity: .5;
+            }
+
+            .Game .around h1 {
+                opacity: .9;
+            }
+
+            .SpockGesture {
+                position: absolute;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 60px;
+                top: 10px;
+                left: 0;
+                width: 100%;
+                -webkit-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
+                user-select: none;
+                z-index: 10;
+                transition: 0.65s;
+                opacity:0;
+                transform: translateY(-100%);
+            }
+            .SpockGestureShow{
+                opacity:1;
+                transform: translateY(0);
+            }
+            .SpockGesture>span {
+                transform: rotate(180deg);
+            }
+
+            .GameOvdialog .van-dialog__message {
+                line-height: 1;
+                white-space: unset;
+            }
+
+            .pkResult {
+                margin-top: 10px;
+                padding: 10px;
+                font-size: 40px;
+            }
+
+            .pkResult>span {
+                display: block;
+                margin: 20px 0;
+            }
+
+            .pkResult .Spock {
+                transform: rotate(180deg);
+            }
+
+            .van-overlay {
+                -webkit-backdrop-filter: blur(5px);
+                backdrop-filter: blur(5px);
+            }
+
+            .g-container {
+                position: relative;
+                width: 100%;
+                height: 300px;
+                font-family: "Montserrat", sans-serif;
+                color: #fff;
+                font-size: 40px;
+                filter: contrast(2);
+                -webkit-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
+                user-select: none;
+                border-radius: 8px 8px 0 0;
+                overflow: hidden;
+            }
+
+            .word {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                letter-spacing: 5px;
+                -webkit-animation: change 8s infinite ease-in-out;
+                animation: change 8s infinite ease-in-out;
+            }
+
+            .word:nth-child(1) {
+                -webkit-animation-delay: -8s;
+                animation-delay: -8s;
+            }
+
+            .word:nth-child(2) {
+                -webkit-animation-delay: -6.4s;
+                animation-delay: -6.4s;
+            }
+
+            .word:nth-child(3) {
+                -webkit-animation-delay: -4.8s;
+                animation-delay: -4.8s;
+            }
+
+            .word:nth-child(4) {
+                -webkit-animation-delay: -3.2s;
+                animation-delay: -3.2s;
+            }
+
+            @-webkit-keyframes change {
+
+                0%,
+                5%,
+                100% {
+                    filter: blur(0px);
+                    opacity: 1;
+                }
+
+                50%,
+                80% {
+                    filter: blur(50px);
+                    opacity: 0;
+                }
+            }
+
+            @keyframes change {
+
+                0%,
+                5%,
+                100% {
+                    filter: blur(0px);
+                    opacity: 1;
+                }
+
+                50%,
+                80% {
+                    filter: blur(50px);
+                    opacity: 0;
+                }
+            }
+
+            .modelLoad {
+                background-color: rgba(0, 0, 0, 0.7);
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                z-index: 50;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div id="app" v-cloak>
+            <div style="padding:10px">
+                <van-cell-group inset>
+                    <Game ref="game"></Game>
+                </van-cell-group>
+                <van-cell-group inset>
+                    <transition name="van-fade">
+                        <div v-if="modelLoad" class="modelLoad">
+                            <van-loading color="#1989fa" vertical>模型加载中</van-loading>
+                        </div>
+                    </transition>
+                    <div class="row">
+                        <div class="Camera-wrapper-view" :style="{width:width+'px',height:height+'px'}">
+                            <div class="Camera-wrapper" id="Camera-wrapper"
+                                :style="{width:width+'px',height:height+'px'}">
+                                <video ref="video"
+                                    :style="{'transform':modelParams.flipHorizontal ? 'scale(-1, 1)' : 'scale(1, 1)'}"
+                                    :width="width" :height="height" webkit-playsinline="true" playsinline="true" preload
+                                    autoplay loop muted></video>
+                                <canvas ref="canvas" :width="width" :height="height"></canvas>
+                                <div ref="score" class="score" score="0"></div>
+                                <div ref="distance" class="distance" distance="0"></div>
+                            </div>
+                        </div>
+                        <div :style="{'width':`calc(100% - ${width}px)`}">
+                            <van-form @submit.native.prevent>
+                                <van-field label="摄像头" center is-link>
+                                    <template #input>
+                                        <select class="van-field__control" v-model="deviceId" @change="actionSelect">
+                                            <option v-for="(item,index) in deviceList" :key="index"
+                                                :value="item.deviceId" v-text="item.name"></option>
+                                        </select>
+                                    </template>
+                                </van-field>
+                                <van-field label="镜像" center>
+                                    <template #input>
+                                        <van-switch v-model="modelParams.flipHorizontal" size="15"></van-switch>
+                                    </template>
+                                </van-field>
+                                <van-field label="模型" center is-link>
+                                    <template #input>
+                                        <select class="van-field__control" v-model="modelParams.modelType">
+                                            <option value="lite">lite(尺寸小 内存占用小)</option>
+                                            <option value="full">full(尺寸大 内存占用大 准确性高)</option>
+                                        </select>
+                                    </template>
+                                </van-field>
+                                <van-field label="分数" center is-link>
+                                    <template #input>
+                                        <select class="van-field__control" v-model="modelParams.minScore">
+                                            <option value="0.5">>=0.5</option>
+                                            <option value="0.6">>=0.6</option>
+                                            <option value="0.7">>=0.7</option>
+                                            <option value="0.8">>=0.8</option>
+                                            <option value="0.9">>=0.9</option>
+                                            <option value="1">>=1</option>
+                                        </select>
+                                    </template>
+                                </van-field>
+                            </van-form>
+                        </div>
+                    </div>
+                </van-cell-group>
+                <van-cell-group inset v-if="(typeof navigator.share)!='undefined'" style="text-align: center">
+                    <van-button @click="share" native-type="button"  size="small" round type="primary"
+                        style="min-width: 100px;margin: 10px;">分享</van-button>
+                </van-cell-group>
+            </div>
+        </div>
+        <script>
+            const shareIcon = `data:image/jpeg;base64,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`;
+            Vue.component('Game', {
+                template: `
+                    <div class="Game" :style="{'background-image':backgroundImage}">
+                        <transition name="van-fade">
+                            <div class="Game-overlay" v-if="!Gameing">
+                                <van-button style="margin-bottom: 100px" @click="StartGame" native-type="button" type="info" round>开始游戏</van-button>
+                            </div>
+                        </transition>
+                        <div class="SpockGesture" :class="{SpockGestureShow:SpockGestureShow}">
+                            <span>{{SpockGestureName}}</span>
+                        </div>
+                        <div class="battlefield">
+                            <transition name="van-fade">
+                                <div class="g-container">
+                                    <div class="word" v-if="ongoing">准备</div>
+                                    <div class="word" v-if="ongoing">石头</div>
+                                    <div class="word" v-if="ongoing">剪刀</div>
+                                    <div class="word" v-if="ongoing">布</div>
+                                </div>
+                            </transition>
+                        </div>
+                        <van-row type="flex" align="center" justify="space-between" style="padding:10px 10px 20px 10px;">
+                            <van-col v-for="(item,index) in player" :key="index" @click="action=index" :class="{'notBeacon':action>=0 && action != index}" span="6">
+                                <div class="chip" :beacon="index">{{item.name}} </div>
+                            </van-col>
+                        </van-row>
+                        <van-row type="flex" align="center" justify="space-between" style="margin-top:20px;padding:20px 0;border-top: 1px dashed rgba(255, 255, 255, 0.35);">
+                            <van-col span="12" class="around">
+                                <span>Me</span>
+                                <h1>{{MeScore}}</h1>
+                            </van-col>
+                            <van-col span="12" class="around">
+                                <span>Spock</span>
+                                <h1>{{SpockScore}}</h1>
+                            </van-col>
+                        </van-row>
+                    </div>
+                `,
+                data() {
+                    return {
+                        backgroundImage: "",
+                        timer: null,
+                        action: -1,
+                        width: 200,
+                        height: 200,
+                        ongoing: false, //动画进行中
+                        player: [{
+                            name: "✊",
+                            value: "Rock"
+                        }, {
+                            name: "✌️",
+                            value: "Scissor"
+                        }, {
+                            name: "🖐️",
+                            value: "Cloth"
+                        },],
+                        Gameing: false, //游戏中
+                        SpockGestureShow: false,
+                        SpockGestureName: "", //机器动作
+                        SpockScore: 0,
+                        MeScore: 0,
+                        countDown: null, //倒计时
+                        countDownTime: 5, //倒计时时间
+                    }
+                },
+                mounted() {
+                    this.backgroundImage = this.blender();
+                    this.SpockInit();
+                },
+                methods: {
+                    blender() {
+                        var randum = (max) => {
+                            return Math.round(Math.random() * max);
+                        }
+
+                        var hexify = (x) => {
+                            return ('0' + parseInt(x).toString(16)).slice(-2);
+                        }
+
+                        var randex = () => {
+                            return '#' + hexify(randum(255)) + hexify(randum(255)) + hexify(randum(255));
+                        };
+                        if (!!Math.round(Math.random())) {
+                            return 'radial-gradient(circle at ' + randum(100) + '% ' + randum(100) + '%, ' + randex() + ', ' + randex() + ')';
+                        } else {
+                            return 'linear-gradient(' + randum(360) + 'deg, ' + randex() + ', ' + randex() + ')';
+                        }
+                    },
+                    setAction(action) {
+                        this.action = action;
+                    },
+                    //开始游戏
+                    StartGame() {
+                        this.ongoing = true;
+                        this.action = -1;
+                        this.SpockGestureShow = false;
+                        this.Gameing = true;
+                        setTimeout(() => {
+                            this.StartOv();
+                        }, 6 * 1000);
+                    },
+                    StartOv() {
+                        const arr = ['✊', '✌️', '🖐️'];
+                        this.SpockGestureName = arr[this.rand(0, arr.length)];
+                        this.ongoing = false;
+                        this.SpockGestureShow = true;
+                        const action = this.action;
+                        const player = this.player;
+
+                        const SpockGestureName = this.SpockGestureName;
+                        const MeGestureName = action >= 0 ? player[action].name : action;
+                        console.log(`Spock`, SpockGestureName);
+                        console.log(`Me`, MeGestureName);
+                        let title;
+                        if (MeGestureName === -1) {
+                            title = `您做出动作💤`;
+                        } else if (MeGestureName == SpockGestureName) {
+                            title = `平局😑`;
+                        } else if (MeGestureName == '✌️' && SpockGestureName == '✊' || MeGestureName == '✊' && SpockGestureName == '🖐️' || MeGestureName == '🖐️' && SpockGestureName == '✌️') {
+                            title = `您输了😒`;
+                            var SpockScore = Number(localStorage.getItem(`SpockScore`) || 0);
+                            SpockScore++;
+                            localStorage.setItem(`SpockScore`, SpockScore);
+                            this.SpockInit();
+
+                        } else if (MeGestureName == '✌️' && SpockGestureName == '🖐️' || MeGestureName == '✊' && SpockGestureName == '✌️' || MeGestureName == '🖐️' && SpockGestureName == '✊') {
+                            title = `您赢了😃`;
+                            var MeScore = Number(localStorage.getItem(`MeScore`) || 0);
+                            MeScore++;
+                            localStorage.setItem(`MeScore`, MeScore);
+                            this.SpockInit();
+                        } else {
+                            title = `未知⛔`;
+                            console.log('未知', MeGestureName, SpockGestureName)
+                        };
+                        setTimeout(() => {
+                            this.countDown && clearInterval(this.countDown);
+                            this.countDownTime = 5;
+                            this.countDown = setInterval(() => {
+                                this.countDownTime--;
+                                var dom = document.getElementById('countDownTime');
+                                dom && (dom.innerText = this.countDownTime);
+                                if (this.countDownTime <= 0) {
+                                    clearInterval(this.countDown);
+                                    this.countDownTime = 5;
+                                    this.StartGame();
+                                    vant.Dialog.close();
+                                }
+                            }, 1000);
+                            vant.Dialog.confirm({
+                                message: `
+                                    <h2>${title}</h2>
+                                    <div class="pkResult">
+                                        <span class="Spock">${SpockGestureName}</span>
+                                        <span class="Me">${MeGestureName == -1 ? '💤' : MeGestureName}</span>
+                                    </div>
+                                    <div role="alert" class="van-notice-bar" style="color: rgb(25, 137, 250); background: rgb(236, 249, 255);">
+                                        <i class="van-icon van-icon-chat-o van-notice-bar__left-icon"><!----></i>
+                                        <div role="marquee" class="van-notice-bar__wrap">
+                                            <div class="van-notice-bar__content" style="transition-duration: 0s;"><span id="countDownTime">10</span>秒后继续</div>
+                                        </div>
+                                    </div>
+                                `,
+                                theme: 'round-button',
+                                confirmButtonText: '继续',
+                                cancelButtonText: '不玩了',
+                                className: 'GameOvdialog',
+                                allowHtml: true,
+                            })
+                                .then(() => {
+                                    this.countDown && clearInterval(this.countDown);
+                                    this.StartGame();
+                                })
+                                .catch(() => {
+                                    this.countDown && clearInterval(this.countDown);
+                                    this.action = -1;
+                                    this.SpockGestureShow = false;
+                                    this.Gameing = false;
+                                });
+                        }, 500);
+                    },
+                    rand(min, max) {
+                        return Math.floor(Math.random() * (max - min)) + min;
+                    },
+                    SpockInit() {
+                        this.SpockScore = Number(localStorage.getItem(`SpockScore`) || 0);
+                        this.MeScore = Number(localStorage.getItem(`MeScore`) || 0);
+                    }
+                }
+            });
+
+            new Vue({
+                el: '#app',
+                data: {
+                    isPhone: (navigator.userAgent.match(/(phone|pad|pod|iPhone|iPod|ios|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone)/i)),
+                    width: 200,
+                    height: 200,
+                    deviceId: localStorage.getItem(`deviceId`) || '', //设备id
+                    deviceList: [], //设备列表
+                    isCameraOpen: false, //摄像头是否打开
+                    task: null, //任务
+                    model: null, //模型
+                    modelLoad: true, //模型加载中
+                    modelParams: {
+                        flipHorizontal: false, // 是否水平翻转
+                        modelType: 'full', // //'lite', 'full'
+                        maxHands: 2,
+                        minScore: 0.7,
+                    },
+                    canvas: null,
+                    ctx: null,
+                    distance: 0,
+                },
+                async mounted() {
+                    if (this.isPhone) {
+                        this.modelParams.flipHorizontal = true;
+                    };
+                    vant.Notify({ type: 'primary', message: '首次模型加载模型可能需要1-2分钟，请耐心等待',duration: 2000, });
+                    this.canvas = this.$refs['canvas'];
+                    this.ctx = this.canvas.getContext('2d');
+                    this.openUserMedia(); //打开摄像头
+                },
+                watch: {
+                    modelParams: {
+                        deep: true,
+                        async handler() {
+                            !this.modelLoad && await this.createModel();
+                        }
+                    }
+                },
+                methods: {
+                    isObjEmpty(obj) {
+                        return (
+                            obj === undefined ||
+                            obj === "undefined" ||
+                            obj == null ||
+                            obj === "" ||
+                            obj.length === 0 ||
+                            (typeof obj === "object" && Object.keys(obj).length === 0)
+                        );
+                    },
+                    //打开摄像头
+                    async openUserMedia() {
+                        const isOpen = await this.getUserMedia();
+                        if (isOpen.code == "ok") {
+                            await this.createModel();
+                            window.cancelAnimationFrame(this.task);
+                            this.task = window.requestAnimationFrame(this.recognition);
+                            vant.Toast(`摄像头已打开`);
+                        } else {
+                            vant.Dialog.alert({
+                                title: '失败',
+                                message: `打开摄像头失败：${isOpen.errMsg}`,
+                                theme: 'round-button',
+                            }).then(() => {
+                                this.openUserMedia();
+                            });
+                            return;
+                        };
+                    },
+                    getUserMedia() {
+                        return new Promise(async resolve => {
+                            this.isCameraOpen = false;
+                            const toast = vant.Toast.loading({
+                                duration: 0, // 持续展示 toast
+                                forbidClick: true,
+                                message: '打开摄像头',
+                            });
+                            let mediaOpts = {
+                                audio: false,
+                                video: true,
+                                video: {
+                                    width: this.width,
+                                    height: this.height,
+                                    frameRate: {
+                                        ideal: 100,
+                                        max: 150
+                                    } //最佳帧率
+                                }
+                            };
+                            if (this.deviceId === "user" || this.deviceId === "environment") {
+                                mediaOpts.video.facingMode = this.deviceId;
+                            } else if (this.deviceId) {
+                                mediaOpts.video.deviceId = this.deviceId;
+                            } else if (this.isPhone) {
+                                mediaOpts.video.facingMode = 'user';
+                            }
+                            try {
+                                const stream = await navigator.mediaDevices.getUserMedia(mediaOpts);
+                                this.mediaStreamTrack = stream;
+                                //获取设备
+                                this.deviceList = await this.getDevice() || [];
+                                let video = this.$refs['video'];
+                                video.pause();
+                                video.setAttribute("playsinline", true); // required to tell iOS safari we don't want fullscreen
+                                if ("srcObject" in video) {
+                                    video.srcObject = stream
+                                } else {
+                                    video.src = window.URL && window.URL.createObjectURL(stream) || stream
+                                };
+                                video.play();
+                                video.onplaying = () => {
+                                    toast.clear();
+                                    this.isCameraOpen = true;
+                                    resolve({
+                                        code: `ok`
+                                    });
+                                };
+                            } catch (error) {
+                                toast.clear();
+                                console.error(error);
+                                resolve({
+                                    errMsg: error
+                                })
+                            }
+                        })
+                    },
+                    //获取设备信息
+                    getDevice() {
+                        return new Promise(async resolve => {
+                            const toast = vant.Toast.loading({
+                                duration: 0, // 持续展示 toast
+                                forbidClick: true,
+                                message: '获取设备中',
+                            });
+                            try {
+                                const arr = [];
+                                if (this.isPhone) {
+                                    arr.push({
+                                        name: '前置摄像头',
+                                        deviceId: 'user',
+                                    }, {
+                                        name: '后置摄像头',
+                                        deviceId: 'environment',
+                                    })
+                                } else {
+                                    const devicesList = await navigator.mediaDevices.enumerateDevices();
+                                    (devicesList || []).forEach(e => {
+                                        e.name = e.label || e.deviceId;
+                                        if (e.kind === "videoinput" && e.deviceId && !e.name.includes('麦克风')) {
+                                            e.color = e.deviceId == this.deviceId ? '#1989fa' : '#323233';
+                                            arr.push(e)
+                                        }
+                                    });
+                                };
+                                toast.clear();
+                                resolve(arr);
+                            } catch (error) {
+                                toast.clear();
+                                console.log(error);
+                                resolve([]);
+                            };
+                        })
+                    },
+                    actionSelect() {
+                        localStorage.setItem(`deviceId`, this.deviceId);
+                        this.openUserMedia();
+                    },
+                    //创建模型
+                    createModel() {
+                        return new Promise(async resolve => {
+                            this.modelLoad = true;
+                            const model = handPoseDetection.SupportedModels.MediaPipeHands;
+                            const detectorConfig = {
+                                runtime: 'mediapipe',
+                                solutionPath: 'https://unpkg.com/@mediapipe/hands',
+                                maxHands: this.modelParams.maxHands,
+                                modelType: this.modelParams.modelType, //'lite', 'full'
+                            };
+                            this.model = await handPoseDetection.createDetector(model, detectorConfig);
+                            this.modelLoad = false;
+                            resolve(this.model);
+                        })
+                    },
+                    //识别
+                    async recognition() {
+                        try {
+                            if (this.isCameraOpen && !this.modelLoad) {
+                                const video = this.$refs['video'];
+                                const hands = await this.model.estimateHands(video, {
+                                    flipHorizontal: this.modelParams.flipHorizontal
+                                });
+                                this.$refs['score'].setAttribute('score', 0);
+                                this.$refs['distance'].setAttribute('distance', 0);
+                                this.distance = 0;
+                                // console.log('hands', hands);
+                                this.drawResults(hands || []);
+                                this.recognitionAction(hands || []);
+                            };
+                            this.task = window.requestAnimationFrame(this.recognition);
+                        } catch (error) {
+                            console.log(error);
+                            this.task = window.requestAnimationFrame(this.recognition);
+                        }
+                    },
+                    //获取距离
+                    getDistance(array) {
+                        if (array.length === 0) {
+                            return 0
+                        }
+                        var calculate = (x1, y1, x2, y2) => {
+                            return Math.sqrt((x2 -= x1) * x2 + (y2 -= y1) * y2);
+                        };
+                        var s = 0;
+                        array.forEach((element, index) => {
+                            if (array[index + 1]) {
+                                var x1 = element.x;
+                                var y1 = element.y;
+                                var x2 = array[index + 1].x;
+                                var y2 = array[index + 1].y;
+                                s += calculate(x1, y1, x2, y2);
+                            }
+                        });
+                        return s;
+                    },
+                    //碰撞检测
+                    isCrash(array, name1, name2, watch = 8, height = 8) {
+                        const r1 = array.find(e => e.name === name1);
+                        const r2 = array.find(e => e.name === name2);
+                        if (r1 && r2) {
+                            return !(
+                                r2.x > r1.x + watch ||
+                                r2.x + watch < r1.x ||
+                                r2.y > r1.y + height ||
+                                r2.y + height < r1.y
+                            );
+                        } else {
+                            return false
+                        }
+                    },
+                    /**
+                     * @ 占比计算
+                     * @ num 当前数
+                     * @ total 总数
+                     */
+                    GetPercent(num, total) {
+                        num = parseFloat(num);
+                        total = parseFloat(total);
+                        if (isNaN(num) || isNaN(total)) {
+                            return "-";
+                        }
+                        return total <= 0 ? 0 : (Math.round(num / total * 10000) / 100.00);
+                    },
+                    //平均
+                    average(arr = []) {
+                        return arr.reduce((a, b) => a + b) / arr.length;
+                    },
+                    //识别动作
+                    recognitionAction(hands) {
+                        hands.forEach(el => {
+                            if (el.score >= Number(this.modelParams.minScore)) {
+
+                                const indexFinger_distance = this.getDistance(el.keypoints.filter(e => ['index_finger_mcp', 'index_finger_tip'].includes(e.name)));//食指=>手掌
+                                const middleFinger_distance = this.getDistance(el.keypoints.filter(e => ['middle_finger_mcp', 'middle_finger_tip'].includes(e.name)));//中指=>手掌
+                                const ringFinger_distance = this.getDistance(el.keypoints.filter(e => ['ring_finger_mcp', 'ring_finger_tip'].includes(e.name))); //无名指=>手掌
+                                const littleFinger_distance = this.getDistance(el.keypoints.filter(e => ['pinky_finger_mcp', 'pinky_finger_tip'].includes(e.name)));//小指=>手掌
+
+
+                                // console.log('食指=>手掌', indexFinger_distance);
+                                // console.log('中指=>手掌', middleFinger_distance);
+                                // console.log('无名指=>手掌', ringFinger_distance);
+                                // console.log('小指=>手掌', littleFinger_distance);
+                                // console.log('\n');
+                                const scissors = [
+                                    (this.isCrash(el.keypoints, 'thumb_tip', 'ring_finger_tip', 10, 10) || this.isCrash(el.keypoints, 'thumb_tip', 'pinky_finger_tip', 10, 10)),
+                                    (this.isCrash(el.keypoints, 'ring_finger_tip', 'pinky_finger_tip', 10, 10)),
+                                    (indexFinger_distance > ringFinger_distance || indexFinger_distance > littleFinger_distance),
+                                    (middleFinger_distance > ringFinger_distance || middleFinger_distance > littleFinger_distance),
+                                ]
+
+
+                                const cloth = [
+                                    (this.getDistance(el.keypoints.filter(e => ['wrist', 'thumb_cmc', 'thumb_mcp', 'thumb_ip', 'thumb_tip'].includes(e.name)))),
+                                    (
+                                        this.average([this.getDistance(el.keypoints.filter(e => ['wrist', 'index_finger_tip'].includes(e.name)))]),
+                                        this.average([this.getDistance(el.keypoints.filter(e => ['wrist', 'middle_finger_tip'].includes(e.name)))]),
+                                        this.average([this.getDistance(el.keypoints.filter(e => ['wrist', 'ring_finger_tip'].includes(e.name)))])
+                                        // this.average([this.getDistance(el.keypoints.filter(e => ['wrist', 'pinky_finger_tip'].includes(e.name)))])
+                                    ),
+                                ];
+                                const wrist_thumb_tip_distance = this.getDistance(el.keypoints.filter(e => ['wrist', 'thumb_tip'].includes(e.name)));
+
+                                const wrist_index_finger_tip_distance = this.getDistance(el.keypoints.filter(e => ['wrist', 'index_finger_tip'].includes(e.name)));
+                                const wrist_middle_finger_tip_distance = this.getDistance(el.keypoints.filter(e => ['wrist', 'middle_finger_tip'].includes(e.name)));
+                                const wrist_ring_finger_tip_distance = this.getDistance(el.keypoints.filter(e => ['wrist', 'ring_finger_tip'].includes(e.name)));
+                                const wrist_pinky_finger_tip_distance = this.getDistance(el.keypoints.filter(e => ['wrist', 'pinky_finger_tip'].includes(e.name)));
+
+                                const fingerAndthumb = [
+                                    (wrist_index_finger_tip_distance > wrist_thumb_tip_distance),
+                                    (wrist_middle_finger_tip_distance > wrist_thumb_tip_distance),
+                                    (wrist_ring_finger_tip_distance > wrist_thumb_tip_distance),
+                                    (wrist_pinky_finger_tip_distance > wrist_thumb_tip_distance)
+                                ];
+                                const thumb_finger_pro = this.GetPercent(cloth[1], cloth.reduce((a, b) => a + b));
+
+                                const mauler = [
+                                    (wrist_thumb_tip_distance > indexFinger_distance),
+                                    (wrist_thumb_tip_distance > middleFinger_distance),
+                                    (wrist_thumb_tip_distance > ringFinger_distance),
+                                    (wrist_thumb_tip_distance > littleFinger_distance)
+                                ];
+
+                                if (scissors.every(e => e)) {
+                                    this.$refs['game'].setAction(1);
+                                } else if (fingerAndthumb.every(e => e) && thumb_finger_pro >= 50) {
+                                    this.$refs['game'].setAction(2);
+                                } else if (mauler.every(e => e) && thumb_finger_pro >= 20 && thumb_finger_pro <= 35) {
+                                    this.$refs['game'].setAction(0);
+                                };
+
+                            }
+                        })
+                    },
+                    /**
+                     * Draw the keypoints on the video.
+                     * @param hands A list of hands to render.
+                     */
+                    drawResults(hands) {
+                        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                        // Sort by right to left hands.
+                        hands.sort((hand1, hand2) => {
+                            if (hand1.handedness < hand2.handedness) return 1;
+                            if (hand1.handedness > hand2.handedness) return -1;
+                            return 0;
+                        });
+
+                        // Pad hands to clear empty scatter GL plots.
+                        while (hands.length < 2) hands.push({});
+
+                        for (let i = 0; i < hands.length; ++i) {
+                            this.drawResult(hands[i]);
+                        }
+                    },
+                    /**
+                     * Draw the keypoints on the video.
+                     * @param hand A hand with keypoints to render.
+                     */
+                    drawResult(hand) {
+                        if (hand.keypoints != null) {
+                            if (hand.score >= Number(this.modelParams.minScore)) {
+                                this.$refs['score'].setAttribute('score', hand.score.toFixed(2));
+                                this.drawKeypoints(hand.keypoints, hand.handedness);
+                            }
+                        }
+                    },
+                    /**
+                     * Draw the keypoints on the video.
+                     * @param keypoints A list of keypoints.
+                     * @param handedness Label of hand (either Left or Right).
+                     */
+                    drawKeypoints(keypoints, handedness) {
+                        const distance = this.getDistance(keypoints.filter(e => ['wrist', 'thumb_cmc', 'thumb_mcp', 'thumb_ip', 'thumb_tip'].includes(e.name)));
+                        const pro = this.GetPercent(distance, this.canvas.width);
+                        this.distance = pro;
+                        this.$refs['distance'].setAttribute('distance', pro.toFixed(2));
+                        let lineWidth = 1;
+                        let arcWidth = 1;
+                        if (pro >= 0 && pro < 40) {
+                            lineWidth = 1;
+                            arcWidth = 2;
+                        } else if (pro >= 40 && pro < 50) {
+                            lineWidth = 1.5;
+                            arcWidth = 3;
+                        } else if (pro >= 50 && pro < 60) {
+                            lineWidth = 2;
+                            arcWidth = 4;
+                        } else {
+                            lineWidth = 3;
+                            arcWidth = 5;
+                        }
+                        const fingerLookupIndices = {
+                            thumb: [0, 1, 2, 3, 4],
+                            indexFinger: [0, 5, 6, 7, 8],
+                            middleFinger: [0, 9, 10, 11, 12],
+                            ringFinger: [0, 13, 14, 15, 16],
+                            pinky: [0, 17, 18, 19, 20],
+                            mcp: [5, 9, 13, 17],
+                        }; // for rendering each finger as a polyline
+
+                        const fingers = Object.keys(fingerLookupIndices);
+                        for (let i = 0; i < fingers.length; i++) {
+                            const finger = fingers[i];
+                            const points = fingerLookupIndices[finger].map(idx => keypoints[idx]);
+                            this.drawLine(points, lineWidth, 'lime');
+                        };
+
+                        keypoints.forEach(el => {
+                            this.ctx.beginPath();
+                            this.ctx.arc(el.x, el.y, arcWidth, 0, 2 * Math.PI);
+                            this.ctx.fillStyle = handedness === 'Left' ? 'Red' : 'Blue';
+                            this.ctx.fill();
+                            this.ctx.stroke();
+                            this.ctx.closePath();
+                        });
+                    },
+                    //画线
+                    drawLine(lineArr = [], lineWidth = 2, color = "lime") {
+                        this.ctx.beginPath();
+                        this.ctx.lineCap = "round";
+                        this.ctx.lineJoin = "round";
+                        this.ctx.strokeStyle = color;
+                        this.ctx.lineWidth = lineWidth;
+                        lineArr.forEach((e, index) => {
+                            if (index > 0) {
+                                this.ctx.lineTo(e.x, e.y);
+                            } else {
+                                this.ctx.moveTo(e.x, e.y);
+                            }
+                        });
+                        this.ctx.stroke();
+                        this.ctx.closePath();
+                    },
+                    async share() {
+                        vant.Toast.loading({
+                            duration: 0, // 持续展示 toast
+                            forbidClick: true,
+                            message: '分享中',
+                        });
+                        try {
+                            const { host, search, href } = location;
+                            const { projectId } = Object.fromEntries(new URLSearchParams(search));
+                            const files = [this.Base64UrlToBlob(shareIcon,'image/jpeg','icon.jpeg')];
+                            console.log('files',files);
+                            navigator.share({
+                                url: host === "code.devrank.cn" ? `https://code.juejin.cn/pen/${projectId}` : href,
+                                title: `我在玩《石头剪刀布》，快来加入吧`,
+                                text: `我在玩《石头剪刀布》，快来加入吧`,
+                                files
+                            }).then(res => {
+                                vant.Toast('分享成功')
+                            }).catch(err=>{
+                                vant.Toast('分享失败-'+err)
+                            })
+                        } catch (error) {
+                            console.error(error);
+                            vant.Toast('分享失败')
+                        }
+                    },
+                    Base64UrlToBlob(base64,type="image/png",filename="icon.png") {
+                         // 获取到base64编码
+                        const base64_str = base64.split(',');
+                        // 将base64编码转为字符串
+                        const decode_str = atob(base64_str[1]);
+                        let n = decode_str.length;
+                        // 创建初始化为0的，包含length个元素的无符号整型数组
+                        const u8arr = new Uint8Array(n) ;
+                        while (n--) {
+                            u8arr[n] = decode_str .charCodeAt(n);
+                        }
+                        return new File([u8arr], filename, {
+                            type,
+                        });
+                    },
+                },
+            });
+        </script>
+    </body>
+
+</html>

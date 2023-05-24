@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+    <head>
+        <meta charset="utf-8">
+        <title>mock</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎲</text></svg>">
+        <meta name="format-detection" content="telephone=no">
+        <script src="https://cdn.bootcdn.net/ajax/libs/Mock.js/1.0.0/mock-min.js"></script>
+        <script src="https://cdn.bootcdn.net/ajax/libs/vue/2.6.11/vue.min.js"></script>
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+        <style>
+            html,
+            body,
+            #container,
+            #app {
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+
+            * {
+                padding: 0;
+                margin: 0;
+            }
+
+            [v-cloak] {
+                opacity: 0 !important;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div id="app" v-cloak>
+            <button type="button" @click="openMap">定位</button>
+        </div>
+        <script>
+            //http://mockjs.com/examples.html
+            new Vue({
+                el: '#app',
+                data: {
+                    loading: true
+                },
+                mounted() {
+                    this.getData();
+                },
+                methods: {
+                    openMap(){
+                        if (navigator.geolocation){
+
+                            navigator.geolocation.getCurrentPosition(showmap, error);
+                            function showmap(position) {
+                                console.log(position);
+                                var cords = position.coords;
+                                var latitude = cords.latitude; //获取纬度
+                                var longitude = cords.longitude; //获取经度
+                                alert(JSON.parse(position))
+                            };
+
+                            function error(error) {
+                                console.error(error);
+                                var err = error.code;
+                                switch (err) {
+                                    case 1: alert("用户拒绝了位置服务"); break;
+                                    case 2: alert("获取不到位置信息"); break;
+                                    case 3: alert("获取信息超时");
+                                }
+                            }
+                        }else{
+                            alert("该浏览器不支持获取地理位置")
+                        }
+                    },
+                    getData() {
+                        const mockList = []; // 存放数据
+                        for (let index = 0; index < 10; index++) {
+                            const name = Mock.mock('@cname');
+                            mockList.push({
+                                index,
+                                id:Mock.mock('@guid'), // 生成唯一id
+                                avatar: Mock.Random.image('100x100', Mock.mock('@color'), '#FFF', 'png', name), // 生成图片
+                                name:name,// 生成中文名字
+                                age:Mock.mock('@integer(1, 100)'),// 生成1-100的随机整数
+                                date:Mock.mock('@date'),
+                            })
+                        }
+                        console.log(mockList);
+                    }
+                }
+            });
+        </script>
+    </body>
+
+</html>

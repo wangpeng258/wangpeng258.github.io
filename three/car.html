@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport"
+            content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+        <title>兰博基尼</title>
+        <style>
+            html,
+            body,
+            #app {
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+                background-color: #333;
+            }
+
+            * {
+                padding: 0;
+                margin: 0;
+            }
+
+            :root {
+                color-scheme: light dark;
+            }
+
+            [v-cloak] {
+                opacity: 0 !important;
+            }
+
+            canvas {
+                display: block;
+            }
+
+            .settings .tabs {
+                background-color: #1b1b1b;
+                position: relative;
+                display: flex;
+                width: 100%;
+            }
+
+            .settings .tabs .tab-item {
+                font-size: 13px;
+                color: #555;
+                border-right: 1px solid #222;
+                padding: 9px 15px;
+                text-transform: uppercase;
+                cursor: default;
+                display: inline-block;
+                transition: 0.3s;
+            }
+
+            .settings .tabs .tab-item.selected {
+                color: #888;
+                background-color: #111;
+            }
+
+            .settings .panels {
+                color: #888;
+                background-color: #111;
+                height: calc(300px - 35px);
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .settings .panels .row {
+                font-size: 12px;
+                display: flex;
+                align-items: center;
+                padding: 10px 0;
+            }
+
+            .settings .panels .row .text {
+                width: 80px;
+                margin-right: 10px;
+                word-wrap: break-word;
+            }
+            .settings .panels .row input+input:not([type="range"]){
+                margin-left: 10px;
+            }
+            .settings .panels .row input {
+                background-color: #222;
+                border: 1px solid transparent;
+                color: #888;
+                transition: 0.3s;
+
+            }
+            .settings .panels .row input[type="range"] {
+                flex: 1;
+            }
+            .settings .panels .row input[type="number"] {
+                text-align: center;
+                width:100px;
+                padding: 3px 0;
+            }
+            .settings .panels .row select,
+            .settings .panels .row input[type="button"] {
+                padding: 3px 5px;
+                font-size: 12px;
+            }
+
+            .settings .panels .row select {
+                color: #aaa;
+                background-color: #222;
+            }
+
+            .settings .panels .row input[disabled] {
+                opacity: 0.5;
+            }
+
+            .canvas-wrapper {
+                position: relative;
+            }
+
+            .canvas-wrapper canvas {
+                cursor: grab;
+            }
+
+            .canvas-wrapper canvas:active {
+                cursor: grabbing;
+            }
+
+            .canvas-wrapper .viewData {
+                user-select: none;
+                width: 100%;
+                position: absolute;
+                left: 0;
+                bottom: 0;
+                opacity: 0.7;
+                z-index: 3;
+            }
+
+            .canvas-wrapper .viewData svg {
+                display: block;
+            }
+
+            .progress {
+                position: fixed;
+                left: 0;
+                bottom: 0;
+                width: 100%;
+                height: 100%;
+                z-index: 10;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-direction: column;
+                background-color: #333;
+            }
+
+            .progress .progress-text {
+                font-size: 12px;
+                padding: 10px 0 0 0;
+            }
+
+            .progress .progress-bar {
+                width: 50%;
+                height: 10px;
+                overflow: hidden;
+                background-color: #f5f5f5;
+                border-radius: 10px;
+                box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+                position: relative;
+            }
+
+            .progress .progress-bar::before {
+                content: ' ';
+                display: block;
+                width: var(--progress);
+                height: 100%;
+                transition: width .6s ease;
+                background-color: #5bc0de;
+            }
+
+            .fade-enter-active {
+                animation: .3s fade-in both ease-out
+            }
+
+            .fade-leave-active {
+                animation: .3s fade-out both ease-in
+            }
+
+            @keyframes fade-in {
+                from {
+                    opacity: 0
+                }
+
+                to {
+                    opacity: 1
+                }
+            }
+            .advancedSettings{
+                display: block;
+                width:100%;
+                height:100%;
+            }
+            .advancedSettings-head{
+                height: 35px;
+                display: block;
+                position: relative;
+                border-bottom: 1px solid #242424;
+                box-sizing: border-box;
+            }
+            .advancedSettings-head .close{
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 35px;
+                height: 35px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                transition: 0.35s;
+            }
+            .advancedSettings-head .close:active{
+                background-color: #090909;
+            }
+            .advancedSettings-head .close svg{
+                display: block;
+                width: 30%;
+                height: 30%;
+                color: #fff;
+            }
+            .advancedSettings-head .title{
+                text-align: center;
+                height: 100%;
+                line-height: 35px;
+                font-size: 12px;
+                font-weight: bold;
+            }
+            .advancedSettings-body{
+                height: calc(100% - 35px);
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div class="progress" ref="progress">
+            <div class="progress-bar" ref="progressBar" style="--progress:0%;"></div>
+            <div class="progress-text">模型加载中</div>
+        </div>
+
+        <div id="app" v-cloak>
+            <div class="canvas-wrapper">
+                <canvas ref="canvas"></canvas>
+                <div class="viewData" id="viewData"></div>
+            </div>
+            <div class="settings">
+                <div class="tabs">
+                    <span class="tab-item" :class="{selected:tabSelected===0}" @click="tabSelected=0,advancedSettingsIndex=-1">设置</span>
+                    <span class="tab-item" :class="{selected:tabSelected===1}" @click="tabSelected=1,advancedSettingsIndex=-1">灯光</span>
+                    <span class="tab-item" :class="{selected:tabSelected===2}" @click="tabSelected=2,advancedSettingsIndex=-1">材质</span>
+                    <span class="tab-item" :class="{selected:tabSelected===3}" @click="tabSelected=3,advancedSettingsIndex=-1">图片贴图</span>
+                </div>
+                <div class="panels" v-if="tabSelected===0">
+                    <div style="padding: 15px;">
+                        <div class="row" v-if="axesHelper">
+                            <span class="text">坐标轴</span>
+                            <input type="checkbox" v-model="axesHelper.visible">
+                        </div>
+                        <div class="row">
+                            <span class="text">显示网格</span>
+                            <input type="checkbox" v-model="controls.meshShow" @change="meshShowChange">
+                        </div>
+                        <transition name="fade">
+                            <div class="row" v-if="controls.meshShow">
+                                <span class="text">网格颜色</span>
+                                <input type="color" v-model="controls.meshColor" @change="meshShowChange">
+                            </div>
+                        </transition>
+                        <div class="row" v-if="control">
+                            <span class="text">控制器阻尼</span>
+                            <input type="checkbox" v-model="control.enableDamping">
+                        </div>
+                        <div class="row" v-if="control">
+                            <span class="text">自动旋转</span>
+                            <input type="checkbox" v-model="control.autoRotate" >
+                        </div>
+                        <transition name="fade">
+                            <div class="row" v-if="control && control.autoRotate">
+                                <span class="text">旋转速度</span>
+                                <input type="range" min="0.5" max="10" step="0.2" v-model="control.autoRotateSpeed">
+                            </div>
+                        </transition>
+                        <div class="row">
+                            <span class="text">前进</span>
+                            <input type="checkbox" v-model="controls.isForward" >
+                        </div>
+                    </div>
+                </div>
+                <div class="panels" v-if="tabSelected===1">
+                    <div style="padding: 15px;" v-if="light">
+                        <div class="row">
+                            <span class="text">颜色</span>
+                            <input type="color" v-model="light.inputColor" @change="lightChange($event,light)">
+                        </div>
+                        <div class="row">
+                            <span class="text">动态阴影</span>
+                            <input type="checkbox" v-model="light.castShadow">
+                        </div>
+                        <div class="row">
+                            <span class="text">x</span>
+                            <input type="range" min="-500" max="500" step="1" v-model="light.position.x">
+                        </div>
+                        <div class="row">
+                            <span class="text">y</span>
+                            <input type="range" min="-500" max="500" step="1" v-model="light.position.y">
+                        </div>
+                        <div class="row">
+                            <span class="text">z</span>
+                            <input type="range" min="-500" max="500" step="1" v-model="light.position.z">
+                        </div>
+                    </div>
+                </div>
+                <div class="panels" v-if="tabSelected===2">
+                    <transition name="fade">
+                        <div style="padding: 15px;" v-if="advancedSettingsIndex===-1">
+                            <div class="row" v-for="(item,index) in mesh" :key="item.uuid+index">
+                                <span class="text" style="width:120px;">{{item.name}}</span>
+                                <input type="color" :value="item.material.inputColor" @change="colorChange($event,item)" />
+                                <input type="button" value="高级设置" @click="advancedSettingsForm=item,advancedSettingsIndex=index" />
+                            </div>
+                        </div>
+                    </transition>
+                    <transition name="fade">
+                        <div v-if="advancedSettingsIndex>=0" class="advancedSettings">
+                            <div class="advancedSettings-head">
+                                <div class="close" @click="advancedSettingsIndex=-1">
+                                    <svg t="1673399909591" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2680" width="100" height="100">
+                                        <path d="M710.153924 8.980397L266.007127 460.692524a81.118646 81.118646 0 0 0 0.861532 114.476097l446.192936 441.050666a26.922883 26.922883 0 0 0 37.853573-38.284339L304.722232 536.884282a27.27288 27.27288 0 0 1-0.323074-38.445877L748.545955 46.726278A26.922883 26.922883 0 1 0 710.180847 9.00732z" fill="#fff" p-id="2681"></path>
+                                    </svg>
+                                </div>
+                                <div class="title" v-text="advancedSettingsForm.name"></div>
+                            </div>
+                            <div class="advancedSettings-body">
+                                <div style="padding: 15px;">
+                                    <div class="row">
+                                        <span class="text">显示</span>
+                                        <input type="checkbox" v-model="advancedSettingsForm.visible">
+                                    </div>
+                                    <div class="row">
+                                        <span class="text">颜色</span>
+                                        <input type="color" :value="advancedSettingsForm.material.inputColor" @change="colorChange($event,advancedSettingsForm)">
+
+                                    </div>
+                                    <div class="row">
+                                        <span class="text">粗糙度</span>
+                                        <input type="range" min="0" max="1" step="0.1" v-model="advancedSettingsForm.material.roughness">
+                                    </div>
+                                    <div class="row">
+                                        <span class="text">金属感</span>
+                                        <input type="range" min="0" max="1" step="0.1" v-model="advancedSettingsForm.material.metalness">
+                                    </div>
+                                    <div class="row">
+                                        <span class="text">反射率</span>
+                                        <input type="range" min="0" max="1" step="0.1" v-model="advancedSettingsForm.material.reflectivity">
+                                    </div>
+                                    <div class="row">
+                                        <span class="text">透明涂层</span>
+                                        <input type="range" min="0" max="1" step="0.01" v-model="advancedSettingsForm.material.clearcoat">
+                                    </div>
+                                    <div class="row">
+                                        <span class="text">清漆粗糙度</span>
+                                        <input type="range" min="0" max="1" step="0.01" v-model="advancedSettingsForm.material.clearcoatRoughness">
+                                    </div>
+                                    <div class="row">
+                                        <span class="text">线框图</span>
+                                        <input type="checkbox" v-model="advancedSettingsForm.material.wireframe" >
+                                    </div>
+                                    <!-- <pre>{{advancedSettingsForm.material}}</pre> -->
+                                </div>
+                            </div>
+                        </div>
+                    </transition>
+                </div>
+                <div class="panels" v-if="tabSelected===3">
+                    <transition name="fade">
+                        <div style="padding: 15px;" v-if="advancedSettingsIndex===-1">
+                            <div class="row" v-for="(item,index) in mesh" :key="item.uuid+index">
+                                <span class="text" style="width:120px;">{{item.name}}</span>
+                                <input type="file" @change="meshImageChange($event,item)"
+                                    accept="image/*" />
+                                <input type="button" value="高级设置" @click="advancedSettingsForm=item,advancedSettingsIndex=index" />
+                            </div>
+                        </div>
+                    </transition>
+                    <transition name="fade">
+                        <div v-if="advancedSettingsIndex>=0" class="advancedSettings">
+                            <div class="advancedSettings-head">
+                                <div class="close" @click="advancedSettingsIndex=-1">
+                                    <svg t="1673399909591" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2680" width="100" height="100">
+                                        <path d="M710.153924 8.980397L266.007127 460.692524a81.118646 81.118646 0 0 0 0.861532 114.476097l446.192936 441.050666a26.922883 26.922883 0 0 0 37.853573-38.284339L304.722232 536.884282a27.27288 27.27288 0 0 1-0.323074-38.445877L748.545955 46.726278A26.922883 26.922883 0 1 0 710.180847 9.00732z" fill="#fff" p-id="2681"></path>
+                                    </svg>
+                                </div>
+                                <div class="title" v-text="advancedSettingsForm.name"></div>
+                            </div>
+                            <div class="advancedSettings-body">
+                                <div style="padding: 15px;">
+                                    <div class="row">
+                                        <span class="text">显示</span>
+                                        <input type="checkbox" v-model="advancedSettingsForm.visible">
+                                    </div>
+                                    <div class="row">
+                                        <span class="text">贴图</span>
+                                        <input type="file" @change="meshImageChange($event,advancedSettingsForm)" accept="image/*" />
+                                    </div>
+                                    <div class="row">
+                                        <span class="text">线框图</span>
+                                        <input type="checkbox" v-model="advancedSettingsForm.material.wireframe" >
+                                    </div>
+                                    <!-- <pre>{{advancedSettingsForm.material}}</pre> -->
+                                </div>
+                            </div>
+                        </div>
+                    </transition>
+                </div>
+            </div>
+        </div>
+        <!-- https://cdn.jsdelivr.net/npm -->
+        <!-- <script async src="https://unpkg.com/es-module-shims@1.3.6/dist/es-module-shims.js"></script> -->
+        <script async src="https://cdn.jsdelivr.net/npm/es-module-shims@1.3.6/dist/es-module-shims.min.js"></script>
+        <script type="importmap">
+            {
+                "imports": {
+                    "vue": "https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.esm.browser.min.js",
+                    "three": "https://cdn.jsdelivr.net/npm/three@0.148.0/build/three.module.min.js",
+                    "examples/jsm/": "https://cdn.jsdelivr.net/npm/three@0.148.0/examples/jsm/"
+                }
+            }
+        </script>
+        <script type="module">
+            import Vue from 'vue'
+            import * as THREE from 'three';
+            // import { GUI } from 'examples/jsm/libs/lil-gui.module.min.js';
+            import { GLTFLoader } from 'examples/jsm/loaders/GLTFLoader.min.js';
+            import { RoomEnvironment } from 'examples/jsm/environments/RoomEnvironment.min.js';
+            import { OrbitControls } from 'examples/jsm/controls/OrbitControls.min.js';
+            import { DRACOLoader } from 'examples/jsm/loaders/DRACOLoader.min.js';
+            // import { RGBELoader } from 'examples/jsm/loaders/RGBELoader.min.js';
+            import Stats from 'examples/jsm/libs/stats.module.js';
+
+            new Vue({
+                el: '#app',
+                data: {
+                    scene: null,
+                    camera: null,
+                    renderer: null,
+                    floorGrid: null,
+                    light: null,
+                    axesHelper: null,
+                    control: null,
+                    clock: null,
+                    mixer: null,
+                    task: null,
+                    gltf: null,
+                    animations: null,
+                    allLayer: [],
+                    mesh: [],
+                    meshName: {
+                        '_3DWheel_front_L': '轮毂-左前',
+                        '_3DWheel_front_R': '轮毂-右前',
+                        '_3DWheel_rear_L': '轮毂-左后',
+                        '_3DWheel_rear_R': '轮毂-右后',
+                        'Carrozzeria_CarPaintedExteriors_A': '机盖&叶子板&车顶',
+                        'Abitacolo_MainInterior': '内饰',
+                        'Carrozzeria_BlackParts': '玻璃胶条&雾灯贴&水箱',
+                        'Portella_No63_R': '门-左',
+                        'Portella_No63_L': '门-右',
+                        'AV_SJ_FrontBump_Bodycolor': '前保险杠',
+                        'AV_S_Spoiler': '前铲',
+                        'AV_SJ_FrontBump_Accent': '前部饰条',
+                        'AV_SJ_BackBumperExtractorContrast': '扩散器饰条',
+                        'AV_S_Grille_Front_R': '刹车进气罩-右',
+                        'AV_S_Grille_Front_L': '刹车进气罩-左',
+                        'BrakeCaliper_CaliperBody': '刹车卡钳',
+                    },
+                    tabSelected: 0,
+                    controls: {
+                        meshShow: false,
+                        meshColor: '#ffffff',
+                        autoRotate: false,
+                        autoRotateSpeed: 1,
+                        axes: false,
+                        enableDamping: false,
+                        isForward:true,
+                    },
+                    wheels: [],//轮子
+                    advancedSettingsIndex:-1,
+                    advancedSettingsForm:{},
+                },
+                mounted() {
+                    this.threeInit();
+                    this.loaderGlb();
+                    window.addEventListener('resize', this.onResize, false);
+                },
+                methods: {
+                    onResize(){
+                        const w = (document.documentElement.clientWidth || window.innerWidth);
+                        const h = (document.documentElement.clientHeight || window.innerHeight) - 300;
+                        this.renderer.setSize(w, h);
+                        this.camera.aspect = (w / h);
+                        this.camera.updateProjectionMatrix();
+                    },
+                    threeInit() {
+                        const { axes,enableDamping } = this.controls;
+
+                        const canvas = this.$refs.canvas;
+                        const w = (document.documentElement.clientWidth || window.innerWidth);
+                        const h = (document.documentElement.clientHeight || window.innerHeight) - 300;
+                        this.scene = new THREE.Scene();
+                        this.scene.background = new THREE.Color(`#333`);
+
+                        const fov = 50; // 视野范围
+                        const aspect = w / h; // 相机默认值 画布的宽高比
+                        const near = 1; // 近平面
+                        const far = 100; // 远平面
+                        this.camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+                        this.camera.position.set(-5.487, 2.583, 9.513);
+
+                        this.renderer = new THREE.WebGLRenderer({
+                            canvas,
+                            alpha: true,
+                            antialias: true
+                        });
+                        this.renderer.setPixelRatio(window.devicePixelRatio);
+                        this.renderer.setSize(w, h);
+                        this.clock = new THREE.Clock();
+
+                        const environment = new RoomEnvironment();
+                        const pmremGenerator = new THREE.PMREMGenerator(this.renderer);
+                        this.scene.environment = pmremGenerator.fromScene(environment).texture;
+
+                        //地面表格
+                        this.floorGrid = new THREE.GridHelper(20, 40, 0xffffff, 0xffffff);
+                        this.floorGrid.material.opacity = 0.2;
+                        this.floorGrid.material.depthWrite = false;
+                        this.floorGrid.material.transparent = true;
+                        this.floorGrid.position.y = -0.1;
+                        this.scene.add(this.floorGrid);
+                        console.log('地面表格',this.floorGrid);
+
+                        // 地面平铺
+                        // const planeSize = 20
+                        // const loader = new THREE.TextureLoader()
+                        // const texture = loader.load('https://threejs.org/manual/examples/resources/images/checker.png')
+                        // texture.wrapS = THREE.RepeatWrapping
+                        // texture.wrapT = THREE.RepeatWrapping
+                        // texture.magFilter = THREE.NearestFilter
+                        // const repeats = planeSize / 2
+                        // texture.repeat.set(repeats, repeats)
+                        // const planeGeo = new THREE.PlaneGeometry(planeSize, planeSize)
+                        // const planeMat = new THREE.MeshPhongMaterial({
+                        //     map: texture,
+                        //     side: THREE.DoubleSide
+                        // })
+                        // const mesh = new THREE.Mesh(planeGeo, planeMat)
+                        // mesh.rotation.x = Math.PI * -0.5
+                        // this.scene.add(mesh)
+
+                        //灯光
+                        this.scene.add(new THREE.AmbientLight(0x444444))
+
+                        // 平行光
+                        this.light = new THREE.DirectionalLight(0xffffff)
+                        this.light.position.set(0, 20, 20)
+
+                        this.light.castShadow = true
+                        this.light.shadow.camera.top = 10
+                        this.light.shadow.camera.bottom = -10
+                        this.light.shadow.camera.left = -10
+                        this.light.shadow.camera.right = 10
+                        this.light.inputColor = "#"+this.light.color.getHexString()
+
+                        this.scene.add(this.light)
+                        console.log('平行光',this.light);
+
+                        // 控制器
+                        this.control = new OrbitControls(this.camera, this.renderer.domElement);
+                        this.control.target = new THREE.Vector3(0, 0, 0); //控制焦点
+                        this.control.enableDamping = enableDamping; //阻尼
+
+
+                        // this.control.minDistance = 2; //最小放大距离
+                        // this.control.maxDistance = 35;//最大放大距离
+                        console.log('控制器',this.control);
+
+                        // 坐标轴
+                        this.axesHelper = new THREE.AxesHelper(14);
+                        this.axesHelper.name = '坐标轴';
+                        this.axesHelper.visible = axes;
+                        this.scene.add(this.axesHelper);
+                        console.log('坐标轴',this.axesHelper);
+
+                        this.stats = new Stats();
+				        document.body.appendChild(this.stats.dom);
+                        console.log('性能监测',this.stats);
+
+                        // --------
+                    },
+                    loaderGlb() {
+                        // https://dcdn.it120.cc/2023/02/03/1e93fb99-d095-40e3-a178-ad55193e11f8.glb  UrusPGLB_02
+                        // https://dcdn.it120.cc/2023/02/03/e394719a-87c4-4da8-be79-4f81a6aa3941.glb  AV_ULT_coupe_09
+
+                        // https://www.lamborghini.com/en-en/3d
+                        const dracoLoader = new DRACOLoader();
+                        dracoLoader.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.148.0/examples/jsm/libs/draco/gltf');
+                        const loader = new GLTFLoader();
+                        loader.setDRACOLoader(dracoLoader);
+                        loader.load(`https://dcdn.it120.cc/2023/02/03/e394719a-87c4-4da8-be79-4f81a6aa3941.glb`, (gltf) => {
+                            this.gltf = gltf;
+                            // this.animations = gltf.animations;
+                            console.log('gltf', gltf);
+                            // console.log('animations', gltf.animations);
+                            const object = gltf.scene;
+                            const box = new THREE.Box3().setFromObject(object)
+                            const size = box.getSize(new THREE.Vector3()).length()
+                            console.log('size', size);
+                            object.scale.setScalar(1);
+                            // console.log('_3DWheel_front_R',object.getObjectByName('_3DWheel_front_R'));
+                            const allLayer = this.getMesh(object, '*');
+                            this.allLayer = allLayer;
+
+                            const mesh = this.getMesh(object, 'Mesh');
+                            this.mesh = mesh.sort((a, b) => a['name'].localeCompare(b['name']));
+                            console.log('mesh', mesh);
+
+                            this.wheels = [
+                                mesh.find(e=>e.oname==="_3DWheel_front_R"),
+                                mesh.find(e=>e.oname==="_3DWheel_front_L"),
+                                mesh.find(e=>e.oname==="_3DWheel_rear_R"),
+                                mesh.find(e=>e.oname==="_3DWheel_rear_L"),
+                            ];
+                            console.log('wheels', this.wheels);
+
+                            this.scene.add(object);
+
+                            window.cancelAnimationFrame(this.task);
+                            this.task = window.requestAnimationFrame(this.render3D);
+                        }, xhr => {
+                            const progress = (xhr.loaded / xhr.total) * 100;
+                            const progressDom = document.querySelector("div.progress");
+                            const progressBarDom = document.querySelector("div.progress > div.progress-bar");
+                            progressBarDom.style.setProperty("--progress", `${progress}%`);
+                            if (progress >= 100) {
+                                setTimeout(() => {
+                                    progressDom.style.display = 'none';
+                                }, 800);
+                            }
+                        }, error => {
+                            alert(`模型加载失败\n${error}`);
+                        });
+                    },
+                    getMesh(object, type) {
+                        const meshAll = [];
+                        object.traverse(e => {
+                            if (Object.hasOwnProperty.call(this.meshName, e.name)) {
+                                !Object.hasOwnProperty.call(e, 'oname')&&(e.oname = e.name);
+                                e.name = this.meshName[e.name];
+                            };
+                            if (type === "*") {
+                                e.material && (e.material_original = e.material);
+                                meshAll.push(e);
+                                if (e.isMesh) e.castShadow = true,e.receiveShadow = true;
+                            } else if (e.type === type) {
+                                e.material && (e.material.inputColor = "#"+e.material.color.getHexString());
+                                meshAll.push(e);
+                            }
+                        });
+                        return meshAll
+                    },
+                    //前进
+                    wheelsRotate() {
+                        const time = - performance.now() / 1000;
+                        const wheels = this.wheels;
+
+                        wheels.forEach(object => {
+                            (object && object.rotation) && (object.rotation.x += 0.05);
+                        });
+                        this.floorGrid.position.z = (time) % 1;
+                    },
+                    render3D() {
+                        const { isForward } = this.controls;
+                        this.stats.begin();
+                        this.task = window.requestAnimationFrame(this.render3D);
+                        const viewData = document.querySelector("div.viewData");
+                        if (this.control) {
+                            this.control.update();
+                            viewData.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" height="50" version="1.1">
+                                                                <text x="10" y="10" style="font-size:8px;font-weight:200;fill:#fff;">
+                                                                    <tspan x="10" y="10">AzimuthalAngle：${this.control.getAzimuthalAngle()}</tspan>
+                                                                    <tspan x="10" y="23">Distance：${this.control.getDistance()}</tspan>
+                                                                    <tspan x="10" y="36">PolarAngle：${this.control.getPolarAngle()}</tspan>
+                                                                </text>
+                                                            </svg>`;
+                            viewData.style.opacity = 0.7;
+                        } else {
+                            viewData.style.opacity = 0;
+                        };
+                        isForward && this.wheelsRotate();
+                        this.renderer && this.renderer.render(this.scene, this.camera);
+                        this.stats.end();
+                    },
+                    lightChange(event, obj){
+                        const color = event.target.value;
+                        obj.color = new THREE.Color(color);
+                    },
+                    meshShowChange() {
+                        const { meshShow, meshColor } = this.controls;
+                        this.mesh.forEach(element => {
+                            element.material = meshShow ? new THREE.MeshBasicMaterial({
+                                transparent: true,
+                                wireframe: true,
+                                wireframeLinewidth: 1,
+                                wireframeLinecap: 'round',//round butt square
+                                wireframeLinejoin: 'round',//round bevel miter
+                                color: new THREE.Color(meshColor),
+                                lights: true,
+                            }) : element.material_original;
+                        });
+                    },
+                    meshImageChange(event, obj) {
+                        event.target.disabled = true;
+                        try {
+                            const file = event.target.files[0];
+                            const url = window.URL && window.URL.createObjectURL(file);
+                            const texture = new THREE.TextureLoader().load(url);
+                            texture.encoding = THREE.sRGBEncoding
+                            texture.anisotropy = 16;
+                            obj.material = new THREE.MeshBasicMaterial({
+                                map: texture,
+                                // wireframe: true,
+                                // transparent: true,
+                            });
+                        } catch (error) {
+                            alert(error)
+                        } finally {
+                            event.target.disabled = false;
+                        }
+
+                    },
+                    colorChange(event, obj) {
+                        const color = event.target.value;
+                        obj.material = new THREE.MeshPhysicalMaterial({
+                            color: new THREE.Color(color)
+                        });
+                        obj.material.inputColor = color;
+                    },
+                    restore(){
+                        this.mesh.forEach(element => {
+                            element.position.set(0,0,0)
+                            element.rotation.set(0,0,0)
+                            element.scale.set(1,1,1)
+                        });
+                    },
+                }
+            });
+        </script>
+    </body>
+
+</html>

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+    <head>
+        <meta charset="utf-8">
+        <title>table2excel</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+        <link rel="shortcut icon" href="" type="image/x-icon" />
+        <meta name="format-detection" content="telephone=no">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+        <style>
+            body {
+                margin: 0 auto;
+            }
+
+            table {
+                width: 100%;
+                margin: 1em 0;
+            }
+
+            table,
+            th,
+            td {
+                border: 1px solid grey;
+                border-collapse: collapse;
+                padding: 5px;
+                text-align: center;
+            }
+
+            table thead tr {
+                background-color: #000;
+                color: #fff;
+            }
+
+            table tbody tr:nth-child(odd) {
+                background-color: #ffffff;
+            }
+
+            table tbody tr:nth-child(even) {
+                background-color: #f1f1f1;
+            }
+            button{
+                position: fixed;
+                bottom: 20px;
+                left:50%;
+                transform: translateX(-50%);
+                padding: 5px 20px;
+            }
+        </style>
+    </head>
+
+    <body>
+        <table id="exportExcelTable">
+            <thead></thead>
+            <tbody></tbody>
+        </table>
+        <button type="button" onClick="exportExcel()">导出</button>
+        <!-- https://www.npmjs.com/package/qrcode -->
+        <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.js"></script>
+        <script src="index.js"></script>
+        <script type="text/javascript">
+            let fileName = '';
+            const column = [
+                {
+                    title: '姓名',
+                    key: 'name',
+                    type: 'text',
+                },
+                {
+                    title: '网址',
+                    key: 'url',
+                    type: 'text',
+                },
+                {
+                    title: '照片',
+                    key: 'pic',
+                    type: 'image',
+                    width: 100,
+                    height: 100,
+                },
+            ]; // thead
+            const tableData = []; // tbody
+            //渲染HTML
+            function RenderingHTML(column,tableData){
+                let theadHtml = ``;
+                column.forEach(element => {
+                    theadHtml += `<th data-type="${element.type}">${element.title}</th>`;
+                });
+                document.querySelector('#exportExcelTable thead').innerHTML = `<tr>${theadHtml}</tr>`;
+                let tbodyHtml = ``;
+                tableData.forEach(element => {
+                    var tdHtml = ``;
+                    Object.keys(element).forEach((key,index)=>{
+                        var el = column[index];
+                        var k = el.key;
+                        if(el.type=='text'){
+                            tdHtml += ` <td>${element[k]}</td>`;
+                        };
+                        if(el.type=='image'){
+                            tdHtml += ` <td><img width="${el.width}" height="${el.height}" src="${element[k]}"></td>`;
+                        };
+
+                    });
+                    tbodyHtml += `<tr>${tdHtml}</tr>`;
+                });
+                document.querySelector('#exportExcelTable tbody').innerHTML = tbodyHtml;
+            };
+
+
+
+
+
+            console.time('render');
+            Array.from({length:20}, (v,k) => k).forEach(async index=>{
+                const url = `https://yplm.cn/wx/card.html?id=${Math.random().toString(16).substring(2)}`;
+                const base64 = await QRCode.toDataURL(url,{
+                    width: 100,
+                    height: 100,
+                    errorCorrectionLevel: 'L', //误差校正级别。 L, M, Q, H
+                    margin:0,
+                })
+                tableData.push({
+                    name: '张三' + (index+1),
+                    url:url,
+                    pic: base64
+                })
+                if((index+1)>=20){
+                    RenderingHTML(column,tableData);
+                }
+            })
+            console.timeEnd('render');
+            function exportExcel() {
+                table2excel(column, tableData, fileName)
+            }
+        </script>
+    </body>
+</html>

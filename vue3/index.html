@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link href="https://cdn.bootcdn.net/ajax/libs/vant/4.1.2/index.min.css" rel="stylesheet">
+        <script src="https://cdn.bootcdn.net/ajax/libs/vue/3.2.47/vue.global.min.js"></script>
+        <script src="https://cdn.bootcdn.net/ajax/libs/vant/4.1.2/vant.min.js"></script>
+        <title>Vue3</title>
+    </head>
+
+    <body>
+        <div id="app">
+            <van-config-provider :theme="dark?'dark':'light'">
+                <van-switch v-model="dark"></van-switch>
+                <p>
+                    <a :href="url" target="_blank" rel="noopener noreferrer" v-text="url"></a>
+                </p>
+                <p v-text="str"></p>
+                <p v-html="strHtml"></p>
+                <p>
+                    <van-button @click="count++" native-type="button">Count[{{count}}]</van-button>
+                    <van-button native-type="button" type="primary">主要按钮</van-button>
+                    <van-button native-type="button" type="success">成功按钮</van-button>
+                    <van-button native-type="button" type="default">默认按钮</van-button>
+                    <van-button native-type="button" type="warning">警告按钮</van-button>
+                    <van-button native-type="button" type="danger">危险按钮</van-button>
+                </p>
+                <p>
+                    <van-button @click="myFn" native-type="button" type="danger">点我加1[{{num}}]</van-button>
+                </p>
+                <p>
+                    <van-icon name="chat-o" />
+                </p>
+                <van-submit-bar :price="3050" button-text="提交订单"></van-submit-bar>
+            </van-config-provider>
+            <a href="https://uri.amap.com/marker?lng=121.287689&lat=31.234527&name=park&src=mypage&callnative=0" target="_blank" rel="noopener noreferrer">baidu</a>
+        </div>
+        <script>
+            const VueApp = {
+                data() {
+                    return {
+                        dark: true,
+                        url: `https://cn.vuejs.org/`,
+                        str: `Hello Vue!!`,
+                        strHtml: `<span style="color: red;">Hello Vue!!<span>`,
+                        count: 0,
+                    }
+                },
+                setup() {
+                    console.group('[0]');
+                    console.log('[setup]', new Date());
+                    let num = Vue.ref(0);
+                    // 定义点击事件 myFn
+                    function myFn() {
+                        console.log(num);
+                        num.value += 1;
+                    }
+                    // 组件被挂载时，我们用 onMounted 钩子记录一些消息
+                    Vue.onMounted(() => console.log('component mounted!'));
+
+                    // 外部使用组合API中定义的变量或方法，在模板中可用。
+                    return { num, myFn } // 返回的函数与方法的行为相同
+                },
+                beforeCreate() {
+                    console.group('[1]');
+                    console.log('[beforeCreate]', new Date());
+                },
+                created() {
+                    console.group('[2]');
+                    console.log('[created]', new Date());
+                },
+                beforeMount() {
+                    console.group('[3]');
+                    console.log('[beforeMount]', new Date());
+                },
+                mounted() {
+                    console.group('[4]');
+                    console.log('[mounted]', new Date());
+                    console.groupEnd();
+                },
+                beforeUpdate() {
+                    console.log('[beforeUpdate]', new Date());
+                },
+                updated() {
+                    console.log('[updated]', new Date());
+                },
+                beforeUnmount() {
+                    console.log('[beforeUnmount]', new Date());
+                },
+                unmounted() {
+                    console.log('[unmounted]', new Date());
+                },
+                errorCaptured() {
+                    console.log('[errorCaptured]', new Date());
+                }
+            }
+            const app = Vue.createApp(VueApp);
+            app.use(vant);
+            app.mount('#app');
+        </script>
+    </body>
+
+</html>

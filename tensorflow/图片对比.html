@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+    <head>
+        <meta charset="utf-8">
+        <title>图片对比</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    </head>
+
+    <body>
+        <button type="button">下载视频</button>
+
+        <img id='image1' src='./images/1.png' />
+        <img id='image2' src='./images/2.png' />
+        <img id='test' src='./images/3.png ' />
+        <!-- <script src="https://cdn.bootcdn.net/ajax/libs/tensorflow/3.19.0/tf.min.js"></script> -->
+        <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.11.0/dist/tf.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.0.4/dist/mobilenet.min.js"></script>
+
+        <script>
+
+            async function calculateSimilarity() {
+                const model = await tf.loadGraphModel('https://storage.googleapis.com/tfjs-models/tfjs/mobilenet_v1_0.25_224/model.json');;
+                const image1 = document.getElementById('image1');
+                const image2 = document.getElementById('image2');
+
+                // 将图片转换为Tensor对象
+                const tensor1 = tf.browser.fromPixels(image1);
+                const tensor2 = tf.browser.fromPixels(image2);
+
+                // 将张量调整为模型所需的大小
+                const resized1 = tf.image.resizeBilinear(tensor1, [224, 224]).div(255.0);
+                const resized2 = tf.image.resizeBilinear(tensor2, [224, 224]).div(255.0);
+
+                // 将张量的形状调整为模型所需的形状
+                const batched1 = resized1.expandDims(0);
+                const batched2 = resized2.expandDims(0);
+
+                // 使用模型进行预测
+                const result = await model.predict([batched1, batched2]);
+                const similarity = result.dataSync()[0];
+
+                const percentSimilar = Math.round(similarity * 100);
+                console.log(`These images are ${percentSimilar}% similar`);
+            }
+
+
+
+
+            // async function calculateSimilarity() {
+            //     console.log('1');
+            //     // 加载 MobileNet 模型
+            //     const model = await tf.loadLayersModel('https://storage.googleapis.com/tfjs-models/tfjs/mobilenet_v1_0.25_224/model.json');
+
+            //     const image1 = document.getElementById('image1');
+            //     const image2 = document.getElementById('image2');
+
+            //     const tensor1 = tf.browser.fromPixels(image1);
+            //     const tensor2 = tf.browser.fromPixels(image2);
+            //     console.log('tensor1',tensor1);
+            //     console.log('tensor2',tensor2);
+
+            //     // Extract features from the images
+            //     const feature1 = model.predict(tensor1);
+            //     const feature2 = model.predict(tensor2);
+
+            //     // Calculate the cosine similarity between the features
+            //     const similarity = tf.cosineSimilarity(feature1, feature2);
+
+            //     console.log(similarity.dataSync());  // Output: [0.9746318]
+            // }
+
+            calculateSimilarity();
+        </script>
+    </body>
+
+</html>

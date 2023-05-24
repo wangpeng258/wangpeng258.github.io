@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+    <head>
+        <meta charset="utf-8">
+        <title>fps</title>
+        <meta name="viewport"
+            content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+        <meta name="format-detection" content="telephone=no">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+        <script src="https://cdn.bootcdn.net/ajax/libs/konva/8.3.11/konva.min.js"></script>
+        <style>
+
+        </style>
+    </head>
+
+    <body>
+        <h1>canvas</h1>
+        <div id="container"></div>
+        <em style="font-size: 12px;">点击方块，可进行变换图形</em>
+        <br />
+        <h1>video</h1>
+        <!-- https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/video -->
+        <video id="video" webkit-playsinline="true" playsinline="true" autoplay controls playsinline muted loop></video>
+        <br />
+        <br />
+        <input type="button" id="pipBtn" value="点击进入画中画状态">
+        <script>
+            let index = 0;
+            let blob;
+            let task;
+            let stage;
+            let layer;
+            const [width, height] = [300, 150];
+            const pipBtn = document.querySelector("#pipBtn");
+            const video = document.querySelector("#video");
+            function animation() {
+                stage.find('.star').forEach(el => el.destroy());
+                const star = new Konva.Star({
+                    name: 'star',
+                    x: 30,
+                    y: 40,
+                    numPoints: 6,
+                    innerRadius: 5,  //内半径
+                    outerRadius: 10, //外半径
+                    fill: 'yellow',
+                    // stroke: 'black',
+                    // strokeWidth: 0,
+                    // offset: {
+                    //     x: 5,
+                    //     y: 5
+                    // }
+                });
+                layer.add(star);
+                stage.add(layer);
+
+                const angularSpeed = 90;
+                const anim = new Konva.Animation((frame) => {
+                    const angleDiff = (frame.timeDiff * angularSpeed) / 1000;
+                    star.rotate(angleDiff);
+                }, layer);
+                anim.start();
+            }
+            function rectDraw() {
+                stage.find('.rectGroup').forEach(el => el.destroy());
+                //组
+                const rectGroup = new Konva.Group({
+                    name: 'rectGroup',
+                    x: stage.width() / 2,
+                    y:80,
+                    draggable: true
+                });
+                //文字
+                const rectText = new Konva.Text({
+                    fontSize:15,
+                    text: '点击拖动',
+                    fill: 'black',
+                    padding: 10
+                });
+                //矩形
+                const rect = new Konva.Rect({
+                    width: rectText.width(),
+                    height: rectText.height(),
+                    fill: '#aaf',
+                    stroke: 'black',
+                    strokeWidth:2,
+                    draggable: true
+                });
+                rectGroup.offsetX(rectText.width() / 2);
+                rectGroup.add(rect).add(rectText);
+
+
+                var redLine = new Konva.Line({
+                    points: [5, 70, 140, 23, 250, 60, 300, 20],
+                    stroke: 'red',
+                    strokeWidth: 5,
+                    lineCap: 'round',
+                    lineJoin: 'round',
+                    tension: 1,
+                    shadowColor: 'red',
+                    shadowBlur: 5*2,
+                    shadowOffset: { x: 0, y: 0 },
+                    shadowOpacity: 0.5
+                });
+
+                layer.add(rectGroup);
+                layer.add(redLine);
+                stage.add(layer);
+            };
+            function repeatDraw() {
+                index++;
+                stage.find('.Text').forEach(el => el.destroy());
+                const indexText = new Konva.Text({
+                    name: 'Text',
+                    x: stage.width() / 2,
+                    y: 15,
+                    text: `${index}`,
+                    fontSize: 13,
+                    fill: '#fff',
+                    align: 'center'
+                });
+                indexText.offsetX(indexText.width() / 2);
+
+                const timeText = new Konva.Text({
+                    name: 'Text',
+                    x: stage.width() / 2,
+                    y: (13 * 2) + (5 * 1),
+                    text: `时间:${new Date().toLocaleString()}`,
+                    fontSize: 13,
+                    fill: '#fff',
+                    align: 'left'
+                });
+                timeText.offsetX(timeText.width() / 2);
+
+                layer.add(indexText);
+                layer.add(timeText);
+                stage.add(layer);
+
+                task = window.requestAnimationFrame(repeatDraw);
+            };
+
+            function main() {
+                stage = new Konva.Stage({
+                    container: 'container',
+                    width,
+                    height
+                });
+                layer = new Konva.Layer();
+                //背景
+                var bg = new Konva.Rect({
+                    x: 0,
+                    y: 0,
+                    width,
+                    height,
+                    fill: '#000',
+                });
+                layer.add(bg);
+                stage.add(layer);
+                task = window.requestAnimationFrame(repeatDraw); //重复
+                rectDraw(); //矩形
+                animation(); //动画
+                MediaRecorderInit();
+            };
+
+
+            function MediaRecorderInit() {
+                const canvas = document.querySelector("#container canvas");
+                const stream = canvas.captureStream(25); // 25 FPS
+                const recorder = new MediaRecorder(stream);
+                recorder.recorder = e => {
+                    blob = new Blob([e.data], {
+                        'type': e.currentTarget.mimeType
+                    });
+                };
+                recorder.onerror = e => {
+                    console.error('[录制失败]', e)
+                };
+                recorder.onstart = e => {
+                    video.controls = false;
+                    console.log('[开始录制]', e)
+                };
+                recorder.onresume = e => {
+                    console.log('[恢复录制]', e)
+                };
+                recorder.onstop = e => {
+                    // const url = URL.createObjectURL(new Blob(data, { type: 'video/webm' }));
+                    console.log('[录制结束]', e)
+                };
+                recorder.start(); //开始
+                // recorder.stop(); //结束
+                video.width = width;
+                video.height = height;
+                video.srcObject = stream;
+                video.play();
+            };
+            document.addEventListener('DOMContentLoaded', async () => {
+                pipBtn.addEventListener('click', async () => {
+                    pipBtn.disabled = true;
+                    try {
+                        if (video !== document.pictureInPictureElement) {
+                            await video.requestPictureInPicture();
+                        } else {
+                            await document.exitPictureInPicture();
+                        }
+                    } catch (error) {
+                        console.error(error);
+                    } finally {
+                        pipBtn.disabled = false;
+                    }
+                });
+                video.addEventListener('enterpictureinpicture', () => {
+                    pipBtn.value = pipBtn.value.replace('进入', '退出');
+                });
+                video.addEventListener('leavepictureinpicture', () => {
+                    pipBtn.value = pipBtn.value.replace('退出', '进入');
+                });
+                main();
+            });
+
+            //兼容微信(微信可以自动播放)
+            document.addEventListener("WeixinJSBridgeReady", () => {
+                video.play();
+            }, false);
+
+
+            function randomHexColorCode() {
+                return '#' + Math.floor(Math.random() * 16777215).toString(16);
+            }
+        </script>
+    </body>
+
+</html>

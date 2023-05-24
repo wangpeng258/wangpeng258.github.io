@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+    <head>
+        <meta charset="utf-8">
+        <title>3D模型</title>
+        <meta name="viewport"
+            content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+        <meta name="format-detection" content="telephone=no">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+        <style>
+            html,
+            body,
+            #app {
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+
+            * {
+                padding: 0;
+                margin: 0;
+            }
+        </style>
+    </head>
+
+    <body>
+        <canvas id="canvas"></canvas>
+        <script async src="https://unpkg.com/es-module-shims@1.3.6/dist/es-module-shims.js"></script>
+        <script type="importmap">
+            {
+                "imports": {
+                    "lil-gui": "https://unpkg.com/lil-gui@0.17.0/dist/lil-gui.umd.min.js",
+                    "three": "https://unpkg.com/three@0.148.0/build/three.module.js",
+                    "examples/jsm/": "https://unpkg.com/three@0.148.0/examples/jsm/"
+                }
+            }
+        </script>
+        <script type="module">
+            import * as GUI from 'lil-gui';
+            import * as THREE from 'three';
+            import { GLTFLoader } from 'examples/jsm/loaders/GLTFLoader.js';
+            import { OrbitControls } from 'examples/jsm/controls/OrbitControls.js';
+            import { DRACOLoader } from 'examples/jsm/loaders/DRACOLoader.js';
+            const w = document.documentElement.clientWidth || window.innerWidth;
+            const h = document.documentElement.clientHeight || window.innerHeight;
+
+            let gui;
+            let controls={};
+            let action;
+            const canvas = document.querySelector("#canvas");
+            const scene = new THREE.Scene();
+
+            // 放置camera，这里选用的是正交相机(OrthographicCamera)
+            const camera = new THREE.OrthographicCamera(
+                w / -2,
+                w / 2,
+                h / 2,
+                h / -2,
+                0,
+                2000
+            )
+            camera.position.set(0, 0, 1000)
+            camera.lookAt(scene.position)
+
+            // 添加一些光照
+            const hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.3)
+            scene.add(hemiLight)
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.7)
+            scene.add(ambientLight)
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.7)
+            directionalLight.position.set(0.5, 0, 0.866)
+            scene.add(directionalLight)
+
+            // 创建渲染器
+            const renderer = new THREE.WebGLRenderer({
+                canvas,
+                alpha: true,
+                antialias: true
+            })
+
+            // 兼容高清屏幕
+            renderer.setPixelRatio(window.devicePixelRatio)
+            renderer.setSize(w, h)
+
+            // 导入轨道模型控制器
+            const orbitControls = new OrbitControls(camera,renderer.domElement);
+            //  // 惯性
+            // orbitControls.enableDamping = true;
+
+            // // 动态阻尼系数
+            // orbitControls.dampingFactor = 0.25;
+
+            // // 缩放
+            // orbitControls.enableZoom = true;
+
+            // // 右键拖拽
+            // orbitControls.enablePan = true;
+
+            // // 水平旋转范围
+            // orbitControls.maxAzimuthAngle = Math.PI / 6;
+            // orbitControls.minAzimuthAngle = -Math.PI / 6;
+
+            // // 垂直旋转范围
+            // orbitControls.maxPolarAngle = Math.PI / 6;
+            // orbitControls.minPolarAngle = -Math.PI / 6;
+
+            const dracoLoader = new DRACOLoader();
+			dracoLoader.setDecoderPath('https://unpkg.com/three@0.148.0/examples/jsm/libs/draco/gltf/');
+            const loader = new GLTFLoader();
+            loader.setDRACOLoader( dracoLoader );
+
+            const Object3D = new THREE.Object3D();
+
+            // https://dcdn.it120.cc/2022/12/07/55607c9c-1aaa-494a-b332-6a5360933c4a.glb
+            // https://dcdn.it120.cc/2022/12/07/4c4096b0-fd19-4a1b-886c-7b263c35dfe9.glb
+            // https://dcdn.it120.cc/2023/01/09/29300463-0161-48f8-a69c-cdc77bdd1179.glb //兰博基尼
+            // https://dcdn.it120.cc/2023/01/09/030d53fa-5fa5-4ca7-ba23-0d8fdd64d07f.glb //骨架
+            // https://dcdn.it120.cc/2023/01/09/687eccea-64d6-42e2-a31e-a4fcee677ad7.glb //法拉利 [https://threejs.org/examples/webgl_materials_car.html]
+
+            // https://dcdn.it120.cc/2023/01/09/60075f92-520d-43f7-8f39-e399bb58894d.glb 兔子模型
+            // https://sketchfab.com/3d-models/low-poly-rabbit-284412021a4c42879b894271c0bcc634
+
+            loader.load(`https://dcdn.it120.cc/2023/01/09/29300463-0161-48f8-a69c-cdc77bdd1179.glb`, (gltf) => {
+                console.log('gltf',gltf);
+                const object = gltf.scene;
+                console.log('Portella_No63_R',object.getObjectByName('Portella_No63_R'));
+                // object.getObjectByName('Portella_No63_R').material = new THREE.MeshBasicMaterial({color: 0xff0000})
+                // object.getObjectByName('Door_R')
+                // //设置材质
+                // object.traverse(e => {
+                //     console.log(e);
+                //     // e.material = new THREE.MeshBasicMaterial({color: 0xff0000})
+                //     if ( e.isMesh ) e.castShadow = true;
+                // })
+                const box = new THREE.Box3().setFromObject(object)
+                const size = box.getSize(new THREE.Vector3()).length()
+                console.log('size',size);
+                object.scale.setScalar(100)
+                // const center = box.getCenter(new THREE.Vector3())
+                // object.position.x += (object.position.x - center.x);
+                // object.position.y += (object.position.y - center.y + 1);
+                // object.position.z += (object.position.z - center.z - 15);
+
+
+                Object3D.add(object)
+                scene.add(Object3D)
+
+
+                action = getAction(object) //获取动作
+
+
+                guiInit();
+                render3D();
+            },xhr=>{
+                console.log(`模型加载进度：${(xhr.loaded / xhr.total) * 100}%`);
+            },error=>{
+                console.log("模型加载失败", error);
+            });
+
+            function guiInit(){
+                gui && gui.destroy();
+                gui = new lil.GUI();
+                const actionObj = action||{};
+                for (const key in actionObj) {
+                    if (Object.hasOwnProperty.call(actionObj, key)) {
+                        const fun = actionObj[key];
+                        controls[key] = 0;
+                        gui.add(controls, key, 0, 1).step(0.1).onChange((value) => {
+                            fun(value)
+                        });
+                    }
+                }
+                console.log('controls',controls);
+                console.log('action',action)
+            };
+
+            function render3D(){
+                renderer.render(scene, camera)
+                window.requestAnimationFrame(render3D)
+            }
+
+
+            function getAction(nodes, value){
+                const morphTarget = {};
+                const traverse = (node) => {
+                    // console.log('node',node);
+                    if (node.type === 'Mesh' && node.morphTargetInfluences) {
+                        const mesh = node;
+                        Object.keys(mesh.morphTargetDictionary).forEach(key => {
+                            morphTarget[key] = (value) => {
+                                mesh.morphTargetInfluences[mesh.morphTargetDictionary[key]] = value
+                            }
+                        })
+                    }
+                    node.children.forEach(traverse)
+                }
+                traverse(nodes)
+                return morphTarget
+            }
+
+        </script>
+    </body>
+
+</html>

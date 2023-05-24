@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+    <head>
+        <meta charset="utf-8">
+        <title>前端录屏</title>
+        <meta name="viewport"
+            content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+        <link rel="icon"
+            href=" https://is4-ssl.mzstatic.com/image/thumb/Purple112/v4/e4/e0/df/e4e0df31-8483-df08-1629-bb2f300d0283/AppIcon-0-0-1x_U007emarketing-0-0-0-10-0-0-sRGB-0-0-0-GLES2_U002c0-512MB-85-220-0-0.png/217x0w.png">
+        <link
+            href=" https://is4-ssl.mzstatic.com/image/thumb/Purple112/v4/e4/e0/df/e4e0df31-8483-df08-1629-bb2f300d0283/AppIcon-0-0-1x_U007emarketing-0-0-0-10-0-0-sRGB-0-0-0-GLES2_U002c0-512MB-85-220-0-0.png/217x0w.png"
+            rel="shortcut icon" />
+        <!-- 书签icon -->
+        <link
+            href=" https://is4-ssl.mzstatic.com/image/thumb/Purple112/v4/e4/e0/df/e4e0df31-8483-df08-1629-bb2f300d0283/AppIcon-0-0-1x_U007emarketing-0-0-0-10-0-0-sRGB-0-0-0-GLES2_U002c0-512MB-85-220-0-0.png/217x0w.png"
+            rel="Bookmark" />
+        <!-- 隐藏浏览器的地址栏和toolbar -->
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <!-- 控制状态栏显示样式 [default、black、black-translucent] [即白色、黑色、灰色半透明] -->
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+        <!-- 添加到主屏后的标题 -->
+        <meta name="apple-mobile-web-app-title" content="前端录屏">
+        <link rel="apple-touch-icon" sizes="57x57"
+            href=" https://is4-ssl.mzstatic.com/image/thumb/Purple112/v4/e4/e0/df/e4e0df31-8483-df08-1629-bb2f300d0283/AppIcon-0-0-1x_U007emarketing-0-0-0-10-0-0-sRGB-0-0-0-GLES2_U002c0-512MB-85-220-0-0.png/217x0w.png" />
+        <link rel="apple-touch-icon" sizes="72x72"
+            href="https://is4-ssl.mzstatic.com/image/thumb/Purple112/v4/e4/e0/df/e4e0df31-8483-df08-1629-bb2f300d0283/AppIcon-0-0-1x_U007emarketing-0-0-0-10-0-0-sRGB-0-0-0-GLES2_U002c0-512MB-85-220-0-0.png/246x0w.png" />
+        <link rel="apple-touch-icon" sizes="114x114"
+            href=" https://is4-ssl.mzstatic.com/image/thumb/Purple112/v4/e4/e0/df/e4e0df31-8483-df08-1629-bb2f300d0283/AppIcon-0-0-1x_U007emarketing-0-0-0-10-0-0-sRGB-0-0-0-GLES2_U002c0-512MB-85-220-0-0.png/434x0w.png" />
+        <link rel="apple-touch-icon" sizes="144x144"
+            href=" https://is4-ssl.mzstatic.com/image/thumb/Purple112/v4/e4/e0/df/e4e0df31-8483-df08-1629-bb2f300d0283/AppIcon-0-0-1x_U007emarketing-0-0-0-10-0-0-sRGB-0-0-0-GLES2_U002c0-512MB-85-220-0-0.png/492x0w.png" />
+        <meta name="format-detection" content="telephone=no">
+        <link href="https://cdn.bootcdn.net/ajax/libs/vant/2.12.25/index.min.css" rel="stylesheet">
+        <script src="https://cdn.bootcdn.net/ajax/libs/vue/2.6.11/vue.min.js"></script>
+        <script src="https://cdn.bootcdn.net/ajax/libs/vant/2.12.25/vant.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/gh/wangpeng1478/Tools@master/static/stats.min.js"></script>
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+        <style>
+            html,
+            body,
+            #app {
+                margin: 0;
+                padding: 0;
+                width: 100vw;
+                height: 100vh;
+                overflow: hidden;
+            }
+
+            #app {
+                max-width: 800px;
+                margin: 0 auto;
+            }
+
+            * {
+                padding: 0;
+                margin: 0;
+            }
+
+            [v-cloak] {
+                opacity: 0 !important;
+            }
+
+            .van-overlay {
+                -webkit-backdrop-filter: blur(5px);
+                backdrop-filter: blur(5px);
+            }
+            .videoArea{
+                position: relative;
+                -webkit-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
+                user-select: none;
+                margin: 60px 0 0 0;
+            }
+            #video {
+                display: block;
+                width: 100%;
+                background-color: #000;
+            }
+            .videoTape{
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                display: block;
+                width: 15px;
+                height: 15px;
+                background-color: red;
+                border-radius: 100px;
+                opacity:0.8;
+            }
+            .videoDialog .van-dialog__message{
+                line-height:1;
+                white-space: unset;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div id="app" v-cloak>
+            <div style="padding:15px">
+                <div class="videoArea">
+                    <video id="video" ref="video" @play="VideoPlay" @pause="VideoPause" webkit-playsinline="true" playsinline="true" preload autoplay loop
+                        muted></video>
+                    <transition name="van-fade">
+                        <div v-if="inProgress"  class="videoTape"></div>
+                    </transition>
+                </div>
+                <div style="text-align: center;padding: 15px;">
+                    <van-button v-if="!inProgress" @click="Start" native-type="button" type="info" round>开始录制</van-button>
+                    <van-button v-else @click="Stop" native-type="button" type="danger" round>停止录制</van-button>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            new Vue({
+                el: '#app',
+                data: {
+                    inProgress: false, //是否正在录制
+                    mediaDevices: null, //MediaDevices对象
+                    mediaRecorder: null, //录制器
+                    mediaStreamTrack: null, //音频或视频流
+                    blob: null, //录制的视频
+                },
+                mounted() {
+                    this.initStats();
+                },
+                methods: {
+                    isObjEmpty(obj) {
+                        return (
+                            obj === undefined ||
+                            obj === "undefined" ||
+                            obj == null ||
+                            obj === "" ||
+                            obj.length === 0 ||
+                            (typeof obj === "object" && Object.keys(obj).length === 0)
+                        );
+                    },
+                    //查看性能统计
+                    initStats() {
+                        const stats = new Stats();
+                        stats.showPanel(1); // 0: fps, 1: ms, 2: mb, 3+: custom
+                        stats.domElement.style.position = 'absolute';
+                        stats.domElement.style.left = '0px';
+                        stats.domElement.style.top = '0px';
+                        document.body.appendChild(stats.dom);
+                        requestAnimationFrame(function loop() {
+                            stats.update();
+                            requestAnimationFrame(loop)
+                        });
+                    },
+                    Start() {
+                        const toast = vant.Toast.loading({
+                            duration: 0, // 持续展示 toast
+                            forbidClick: true,
+                            message: '选择录制窗口',
+                        });
+                        const mediaOpts = {
+                            audio: true,
+                            video: {
+                                width: 1920,
+                                height: 1080,
+                                frameRate: { ideal: 100, max: 150 } //最佳帧率
+                            }
+                        }
+                        if (!this.isObjEmpty(typeof navigator.mediaDevices)) {
+                            try {
+                                navigator.mediaDevices.getDisplayMedia(mediaOpts).then(stream => {
+                                    this.mediaStreamTrack = stream;
+                                    const video = this.$refs.video;
+                                    if ("srcObject" in video) {
+                                        video.srcObject = stream
+                                    } else {
+                                        video.src = window.URL && window.URL.createObjectURL(stream) || stream
+                                    };
+                                    video.play();
+                                    video.addEventListener('pause', () => {
+                                        console.log("暂停播放");
+                                        this.Stop();
+                                    });
+                                }).catch(err => {
+                                    let message = err.message || err;
+                                    console.log(err);
+                                    if(message=='Permission denied'){
+                                        vant.Toast(`${message}[取消选择录制窗口]`);
+                                    }else{
+                                        vant.Toast(message);
+                                    }
+                                })
+                            } catch (error) {
+                                console.log(error);
+                                vant.Toast(`${error}[catch]`);
+                            }
+                        } else {
+                            vant.Toast('该浏览器不支持屏幕录制');
+                        }
+                    },
+                    VideoPlay() {
+                        vant.Toast.clear();
+                        this.MediaRecorderInit();
+                    },
+                    VideoPause() {
+                        vant.Toast.clear();
+                        this.Stop();
+                    },
+                    MediaRecorderInit() {
+                        this.inProgress = false;
+                        this.blob = null;
+                        const toast = vant.Toast.loading({
+                            duration: 0, // 持续展示 toast
+                            forbidClick: true,
+                            message: '准备录制',
+                        });
+                        this.mediaRecorder = new MediaRecorder(this.mediaStreamTrack, {
+                            audioBitsPerSecond: 1280000, //音频码率
+                            videoBitsPerSecond: 1000000*20, //视频码率 (数值越大视频越清晰)
+                            mimeType: 'video/webm;codecs=h264' //视频编码格式
+                        });
+
+                        this.mediaRecorder.start();
+                        // this.mediaRecorder.resume();
+
+                        this.mediaRecorder.ondataavailable = e => {
+                            this.blob = new Blob([e.data], {
+                                'type': e.currentTarget.mimeType
+                            });
+                        }
+                        this.mediaRecorder.onerror = e => {
+                            this.inProgress = false;
+                            console.error(e)
+                            vant.Toast.fail('录制失败');
+                            toast.clear();
+                        }
+                        this.mediaRecorder.onstart = e => {
+                            this.inProgress = true;
+                            console.log('开始', e);
+                            vant.Toast('开始录制');
+                            toast.clear();
+                        }
+                        this.mediaRecorder.onresume = e => {
+                            this.inProgress = true;
+                            console.log('恢复', e);
+                            vant.Toast('恢复录制');
+                            toast.clear();
+                        }
+                        this.mediaRecorder.onstop = e => {
+                            this.inProgress = false;
+                            console.log('结束', e);
+                            vant.Toast('录制结束');
+                            toast.clear();
+                            console.log(this.blob.size);
+                            const url = window.URL && window.URL.createObjectURL(this.blob);
+                            vant.Dialog.alert({
+                                title: '录制完成',
+                                message:`
+                                   <video src="${url}" style="display: block;width: 100%;" webkit-playsinline="true" playsinline="true" controls autoplay></video>
+                                   <div class="van-cell van-cell--center">
+                                        <div class="van-cell__title" style="text-align: left;">
+                                           <span>文件大小</span>
+                                        </div>
+                                        <div class="van-cell__value">
+                                            <span>${(this.blob.size/1024).toFixed(2)}kb</span>
+                                        </div>
+                                    </div>
+                                `,
+                                theme: 'round',
+                                confirmButtonText: '完成',
+                                className:'videoDialog',
+                            })
+                            .then(() => {
+                                // on confirm
+                            })
+                            .catch(() => {
+                                // on cancel
+                            });
+                        }
+                    },
+                    Stop(){
+                        this.inProgress = false;
+                        this.mediaStreamTrack.getVideoTracks().forEach(track => {
+                            track.stop();
+                        })
+                        this.mediaRecorder.stop();
+                    }
+                }
+            });
+        </script>
+    </body>
+
+</html>

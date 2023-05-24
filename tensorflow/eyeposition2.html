@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+    <head>
+        <meta charset="utf-8">
+        <title>飞机</title>
+        <meta name="viewport"
+            content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+        <link rel="icon" href="./icon.jpg">
+        <meta name="format-detection" content="telephone=no">
+        <link href="https://cdn.bootcdn.net/ajax/libs/vant/2.12.25/index.min.css" rel="stylesheet">
+        <script src="https://cdn.bootcdn.net/ajax/libs/vue/2.6.11/vue.min.js"></script>
+        <script src="https://cdn.bootcdn.net/ajax/libs/vant/2.12.25/vant.min.js"></script>
+        <script src="https://cdn.bootcdn.net/ajax/libs/dat-gui/0.7.9/dat.gui.min.js"></script>
+        <script src="https://cdn.bootcdn.net/ajax/libs/tensorflow/3.19.0/tf.min.js"></script>
+        <script src="https://unpkg.com/@mediapipe/face_mesh"></script>
+        <script src="https://unpkg.com/@tensorflow-models/face-landmarks-detection"></script>
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+        <style>
+            * {
+                padding: 0;
+                margin: 0;
+            }
+
+            [v-cloak] {
+                opacity: 0 !important;
+            }
+
+            html,
+            body,
+            #app {
+                width: 100vw;
+                height: 100vh;
+            }
+
+            body {
+                color: #323233;
+                font-size: 16px;
+                font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Segoe UI, Arial, Roboto, 'PingFang SC', 'miui', 'Hiragino Sans GB', 'Microsoft Yahei', sans-serif;
+                background-color: #222222;
+                -webkit-font-smoothing: antialiased;
+            }
+
+            #app {
+                margin: 0 auto;
+                max-width: 450px;
+                position: relative;
+                z-index: 10;
+            }
+
+            .row {
+                display: flex;
+            }
+
+            .row .van-form {
+                flex: 1;
+            }
+
+            .row .van-form .van-field {
+                font-size: 12px;
+            }
+
+            .row .van-form .van-field__label {
+                width: 40px;
+                margin-right: 5px;
+            }
+            .Camera-wrapper-view{
+                display: block;
+                width:100%;
+                height:100%;
+            }
+            .Camera-wrapper-view {
+                background: #000;
+                position: relative;
+                overflow: hidden;
+            }
+
+
+            .Camera-wrapper {
+                width: 100%;
+                position: relative;
+                overflow: hidden;
+                z-index: 10;
+            }
+
+            .Camera-wrapper>video {
+                width: 100%;
+                background: #000;
+                display: block;
+                overflow: hidden;
+                object-fit: cover;
+            }
+
+            .Camera-wrapper>canvas {
+                position: absolute;
+                display: block;
+                top: 0;
+                left: 0;
+                z-index: 1;
+                overflow: hidden;
+            }
+
+            .van-cell-group--inset+.van-cell-group--inset {
+                margin-top: 10px;
+            }
+
+            .van-radio:not(:last-child) {
+                margin-bottom: 8px;
+            }
+
+            select.van-field__control {
+                -webkit-appearance: none;
+                border: 0;
+                outline: 0;
+                vertical-align: bottom;
+                box-sizing: border-box;
+                font-size: 12px;
+            }
+
+            .GameOvdialog .van-dialog__message {
+                line-height: 1;
+                white-space: unset;
+            }
+
+            .van-overlay {
+                -webkit-backdrop-filter: blur(5px);
+                backdrop-filter: blur(5px);
+            }
+
+            .modelLoad {
+                background-color: rgba(0, 0, 0, 0.7);
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                z-index: 50;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+
+            body>canvas {
+                position: fixed;
+                top: 0;
+                left: 0;
+                z-index: 5;
+            }
+            .fixedGroup{
+                position: fixed;
+                bottom: 15px;
+                left:50%;
+                margin: 0;
+                transform: translateX(-50%);
+                z-index:4;
+                border-radius:10px;
+                overflow: hidden;
+            }
+            @font-face {
+                font-family: ZenDots font;
+                src: url('https://lf3-cdn-tos.bytescm.com/obj/static/xitu_juejin_web/fonts/ZenDots-Regular.d5ef58e.ttf');
+                font-style: normal
+            }
+            .score{
+                font-family: ZenDots font!important;
+            }
+            .scoreFixed{
+                position: fixed;
+                top: 0;
+                left: 0;
+                z-index: 6;
+                color: #fff;
+                opacity:0.8;
+                font-size:25px;
+                padding:1em;
+            }
+            .dg.ac{
+                z-index:20;
+            }
+            .dg textarea,
+            .dg button,
+            .dg input {
+                font: menu;
+            }
+            .prompt-text{
+                font-size: 18px;
+                padding:15px;
+                color: #000;
+            }
+            .prompt-text>h5{
+                opacity:0.9;
+                padding-bottom: 1em;
+            }
+            .prompt-text>ol{
+                text-align: left;
+                opacity: 0.8;
+                list-style: revert;
+                font-size: 13px;
+                line-height: 1.7;
+                padding-left: 1em;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div id="app" v-cloak>
+            <div class="fixedGroup" :style="{width:width+'px',height:height+'px'}">
+                <transition name="van-fade">
+                    <div v-if="modelLoad" class="modelLoad">
+                        <van-loading color="#1989fa" vertical>模型加载中</van-loading>
+                    </div>
+                </transition>
+                <div class="Camera-wrapper-view">
+                    <div class="Camera-wrapper" id="Camera-wrapper"
+                        :style="{width:width+'px',height:height+'px'}">
+                        <video ref="video"
+                            :style="{'transform':flipHorizontal ? 'scale(-1, 1)' : 'scale(1, 1)'}"
+                            :width="width" :height="height" webkit-playsinline="true" playsinline="true" preload
+                            autoplay loop muted></video>
+                        <canvas ref="canvas"
+                            :style="{'transform':flipHorizontal ? 'scale(-1, 1)' : 'scale(1, 1)'}"
+                            :width="width" :height="height"></canvas>
+                        <div ref="score" class="score" score="0"></div>
+                        <div ref="distance" class="distance" distance="0"></div>
+                    </div>
+                </div>
+                <!-- <div class="Camera-wrapper-form">
+                    <van-form @submit.native.prevent>
+                        <van-field label="摄像头" center is-link>
+                            <template #input>
+                                <select class="van-field__control" v-model="deviceId" @change="actionSelect">
+                                    <option v-for="(item,index) in deviceList" :key="index"
+                                        :value="item.deviceId" v-text="item.name"></option>
+                                </select>
+                            </template>
+                        </van-field>
+                        <van-field label="镜像" center>
+                            <template #input>
+                                <van-switch v-model="modelParams.flipHorizontal" size="15"></van-switch>
+                            </template>
+                        </van-field>
+                    </van-form>
+                </div> -->
+            </div>
+        </div>
+        <div class="score scoreFixed" id="score">0</div>
+        <script>
+            // https://zhuanlan.zhihu.com/p/407447655
+
+            const DEV_MODE = false; //碰撞体积轮廓
+            const stage = document.createElement('canvas');
+            const ctx = stage.getContext('2d');
+
+            let gameImage = {
+                //自己
+                oneself:`data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADwAAAA8CAYAAAA6/NlyAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyJpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMy1jMDExIDY2LjE0NTY2MSwgMjAxMi8wMi8wNi0xNDo1NjoyNyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNiAoV2luZG93cykiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6RkREREM0RTM1Q0QyMTFFREIxRTVCOTVDQTU4OTc1NDIiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6RkREREM0RTQ1Q0QyMTFFREIxRTVCOTVDQTU4OTc1NDIiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDpGREREQzRFMTVDRDIxMUVEQjFFNUI5NUNBNTg5NzU0MiIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDpGREREQzRFMjVDRDIxMUVEQjFFNUI5NUNBNTg5NzU0MiIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PlQmkHIAABFASURBVHja5FoJdFXV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`,
+                //敌人
+                enemy:`data:image/png;base64,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BQ3IynS/zlolBH0ffVR45cUX5UD/hajrumPAP1SEb9ymhs90nrcoNxrypmnmx8fGvlksFtU7d+/hvsOHOdvXR7FY5MEHH0IIUFWFjo4O4okEQohrIiuEQNPK29/m9c1CSdM0PvrwQ+fln7ygDA4MRD3PGwV+SDnVb1s43F7aX40PLAkh0q7r7sjlcnsDgQCtrW0sLi1ilEq4rsPc7CyJRIJQKMzC/DyRSIRINLol3PM8xsdGWVlZ4dChe2hrb99ywtm+Pu+1l1+SgwMDIc/zhq4SflupfjXb0clxpZT9FaPUiYmJb3hv/1LZvWcPsWiM3tOnAYjF4liWheu6eJ53TQtb13VSqSaSySRUVntN0zhz+rT/2iuvMDg4EHBdt4/yHH+b8suPz8x2tbFcynvsc5ZpuhOXLz9lWRbJZBJFUejq6qK7p4eD99yDEIJoNLoVWSklAV2nYUcDtbW1Wwees30fcfT118XgQL/ium4v8BxwjG1sYH7WtL+azSkw7vt+bT6f37exsUF3Tw979u/HrlSDNTU1WwXQlhGKQi6XJZ/Pc8cdu8gsL8lXX3qJs319wnXd9ygXMLe8j3+R4qG8VC8LIYZ831cd296tqKpuWxbjY6MsLS2hqSp1dXWEI5GtmxRFYW5ulsX5BZK1Sfu3Jz/IHzv2nm9b1tuUC5hTfMoJ7XbY1tc/FTwp5SUhxPNSyuTc7Oy3lxYXqamp4d7Dh9l1553E4vFrbhBCYX1tncXFBZbfXbpy/ty5BdMweoGjwCU+bpB+6cUDSCnlCPD3ruPoruP8YTQaVZLJJKlUCsdxcBwHXdeRUjI/N8v09LQzMz0zOTc7M5LL5d4C3qLcyv7cWtfb9Yr6k1CBu4G/1DTtqfaOjujuPXt9TVO1gK4TjUSstbU1Y3FhQWaz2dHsykpfIZ8/7vn++5R7Cf/rUYE9wN8JIRZ0XZehUEiGw2EZjUZ9Xdc9RVHeURTlu5UWeeMXZdjnHfmrHbADuBfYo+t6DaDatm1RPi2eAkYoz22HzzHV/yfEbxIAQrFYTFMUhXw+L6WUDh+/eanyf5EvOsuqVKlSpUqVKlX+f/Jfg+yBjzwIfiwAAAAldEVYdGRhdGU6Y3JlYXRlADIwMjItMDYtMDVUMTQ6MzA6MTYrMDg6MDBr04ndAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDIyLTA2LTA1VDE0OjMwOjE2KzA4OjAwGo4xYQAAACB0RVh0c29mdHdhcmUAaHR0cHM6Ly9pbWFnZW1hZ2ljay5vcme8zx2dAAAAGHRFWHRUaHVtYjo6RG9jdW1lbnQ6OlBhZ2VzADGn/7svAAAAF3RFWHRUaHVtYjo6SW1hZ2U6OkhlaWdodAA2NLzgqYQAAAAWdEVYdFRodW1iOjpJbWFnZTo6V2lkdGgANjRET2kJAAAAGXRFWHRUaHVtYjo6TWltZXR5cGUAaW1hZ2UvcG5nP7JWTgAAABd0RVh0VGh1bWI6Ok1UaW1lADE2NTQ0MTA2MTbspNZ0AAAAD3RFWHRUaHVtYjo6U2l6ZQAwQkKUoj7sAAAAR3RFWHRUaHVtYjo6VVJJAGZpbGU6Ly8vYXBwL3RtcC9pbWFnZWxjL2ltZ3ZpZXcyXzlfMTY1NDA2MjU5OTk0OTAxNDNfMzA1X1swXRrLaE8AAAAASUVORK5CYII=`,
+            };
+
+            let ship, lasers = [], enemies = [],
+                playing = false,
+                gameStarted = false,
+                speedMultiplier,
+                enemySeedFrameInterval,
+                score = 0,
+                tick = 0,
+                laserTick = 0;
+
+            function randomBetween(min, max) {
+                return Math.floor(Math.random() * (max - min + 1)) + min;
+            }
+
+            function calcScore(x) {
+                return Math.floor((1 / x) * 500);
+            }
+
+            function Ship(options) {
+                //自己飞机大小
+                this.radius = 25;
+                this.x = options.x || stage.width * .5 - this.radius - .5;
+                this.y = options.y || stage.height - this.radius - 30;
+                this.width = this.radius * 2;
+                this.height = this.width;
+                this.color = options.color || 'red';
+                this.left = false;
+                this.right = false;
+                this.speed = 10;
+                this.active = true;
+                document.addEventListener('keydown', this.onKeyDown.bind(this));
+                document.addEventListener('keyup', this.onKeyUp.bind(this));
+            }
+
+            Ship.prototype.update = function (x) {
+                this.x = x;
+                this.y = stage.height - this.radius - 30;
+            }
+
+            Ship.prototype.draw = function () {
+                ctx.save();
+
+                if (DEV_MODE) {
+                    ctx.fillStyle = 'skyblue';
+                    ctx.fillRect(this.x, this.y, this.width, this.width);
+                }
+
+                // 自己飞机
+                ctx.drawImage(gameImage.oneself,this.x, this.y, this.width, this.width);
+                ctx.restore();
+            }
+
+            Ship.prototype.onKeyDown = function (e) {
+                if (ship.active) {
+                    if (e.keyCode === 39) this.right = true;
+                    else if (e.keyCode === 37) this.left = true;
+                }
+            }
+
+            Ship.prototype.onKeyUp = function (e) {
+                if (e.key === 'ArrowRight') this.right = false;
+                else if (e.key === 'ArrowLeft') this.left = false;
+            }
+
+            function Laser(options) {
+                this.x = options.x - .5;
+                this.y = options.y || stage.height - 50;
+                this.width = 6;
+                this.height = 20;
+                this.speed = 15;
+                this.color = options.color || 'white';
+                this.active = true;
+            }
+
+            Laser.prototype.update = function (y) {
+                this.y = y;
+            }
+
+            Laser.prototype.draw = function () {
+                ctx.save();
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.rect(this.x, this.y, this.width, this.height);
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+            }
+
+            function Enemy(options) {
+                //敌机大小
+                this.radius = randomBetween(20, 50);
+                this.width = this.radius * 2;
+                this.height = this.width;
+                this.x = randomBetween(0, stage.width - this.width);
+                this.y = -this.radius * 2;
+                this.color = options != undefined && options.color ? options.color : 'red';
+                this.speed = 2;
+                this.active = true;
+            }
+
+            Enemy.prototype.update = function (x, y) {
+                this.x = x;
+                this.y = y;
+            }
+
+            Enemy.prototype.draw = function () {
+                if (DEV_MODE) {
+                    ctx.fillStyle = 'skyblue';
+                    ctx.fillRect(this.x, this.y, this.width, this.width);
+                }
+                //敌机
+                ctx.drawImage(gameImage.enemy,this.x, this.y, this.width, this.width);
+                ctx.restore();
+
+            }
+
+            function hitTest(item1, item2) {
+                let collision = true;
+                if (
+                    item1.x > item2.x + item2.width ||
+                    item1.y > item2.y + item2.height ||
+                    item2.x > item1.x + item1.width ||
+                    item2.y > item1.y + item1.height
+                ) {
+                    collision = false;
+                }
+                return collision;
+            }
+
+            function handleLaserCollision() {
+                for (let enemy of enemies) {
+                    for (let laser of lasers) {
+                        let collision = hitTest(laser, enemy);
+                        if (collision && laser.active) {
+                            enemy.active = false;
+                            laser.active = false;
+                            // 增加敌人刷出的速度和频率
+                            // increase enemy speed and frequency of enemy spawns
+                            speedMultiplier += .025;
+                            if (enemySeedFrameInterval > 20) {
+                                enemySeedFrameInterval -= 2;
+                            }
+                            // increase score
+                            score += calcScore(enemy.radius);
+                            document.querySelector('#score').innerHTML = score;
+                        }
+                    }
+                }
+            };
+
+            function handleShipCollision() {
+                // 检查船只和敌人之间的碰撞
+                if (enemies.length) {
+                    for (let enemy of enemies) {
+                        let collision = hitTest(ship, enemy);
+                        if (collision) {
+                            console.log('你的船被毁了');
+                            ship.active = false;
+                            vant.Dialog.alert({
+                                title: '游戏结束',
+                                message: `<h2 class="score" style="padding: 30px 0;">分数：${score}</h2>`,
+                                theme: 'round-button',
+                                className: 'GameOvdialog',
+                                confirmButtonText:'重新开始'
+                            })
+                            .then(() => {
+                                startGame()
+                            })
+                        }
+                    }
+                }
+            }
+
+            function drawShip(xPosition) {
+                if (ship.active) {
+                    ship.update(xPosition);
+                    ship.draw();
+                }
+            }
+
+            function drawEnemies() {
+                if (enemies.length) {
+                    for (let enemy of enemies) {
+                        // draw an enemy if it's active
+                        if (enemy.active) {
+                            enemy.update(enemy.x, enemy.y += enemy.speed * speedMultiplier);
+                            enemy.draw();
+                        }
+                    }
+                }
+            }
+
+            function enemyCleanup() {
+                if (enemies.length) {
+                    enemies = enemies.filter(enemy => {
+                        let visible = enemy.y < stage.height + enemy.width;
+                        let active = enemy.active === true;
+                        return visible && active;
+                    });
+                }
+            }
+
+            function drawLasers() {
+                if (lasers.length) {
+                    for (let laser of lasers) {
+                        if (laser.active) {
+                            laser.update(laser.y -= laser.speed);
+                            laser.draw();
+                        }
+                    }
+                }
+            }
+
+            function laserCleanup() {
+                lasers = lasers.filter(laser => {
+                    let visible = laser.y > -laser.height;
+                    let active = laser.active === true;
+                    return visible && active;
+                });
+            }
+
+            function render(delta) {
+                if (playing) {
+                    let xPos = ship.x;
+                    // seed new enemies
+                    if (tick % enemySeedFrameInterval === 0 && ship.active) {
+                        const enemy = new Enemy();
+                        enemies.push(enemy);
+                        // console.log({ enemySeedFrameInterval, speedMultiplier })
+                    }
+
+                    // background
+                    ctx.save();
+                    ctx.fillStyle = '#222222';
+                    ctx.fillRect(0, 0, stage.width, stage.height);
+                    ctx.restore();
+
+                    // ship movement
+                    if (ship.left)
+                        xPos = ship.x -= ship.speed;
+                    else if (ship.right)
+                        xPos = ship.x += ship.speed;
+
+                    // 阶段的界限
+                    if (gameStarted) {
+                        if (xPos < 0)
+                            xPos = 0;
+                        else if (xPos > stage.width - ship.width)
+                            xPos = stage.width - ship.width;
+                    }
+
+                    // create lasers, if shooting
+                    if (ship.active && ship.shooting) {
+                        if (laserTick === 0 || laserTick % 10 === 0) {
+                            let laser = new Laser({
+                                color: 'skyblue',
+                                x: ship.x + ship.radius - 3
+                            });
+                            lasers.push(laser);
+                        }
+                    }
+
+                    drawShip(xPos);
+
+                    handleShipCollision();
+                    handleLaserCollision();
+
+                    drawLasers();
+                    drawEnemies();
+
+                    enemyCleanup();
+                    laserCleanup();
+
+                    if (ship.shooting) laserTick++;
+                    tick++;
+                }
+
+                requestAnimationFrame(render);
+            }
+
+            //开始游戏
+            function startGame() {
+                // reset the demo/intro to the actual game settings:
+                ship.active = true;
+                score = 0;
+                speedMultiplier = 1;
+                enemySeedFrameInterval = 100;
+                ship.x = stage.width * .5 - ship.radius - .5;
+                ship.y = stage.height - (ship.radius - 30);
+
+                ship.shooting = true;//子弹
+                enemies = [];
+                gameStarted = true;
+            }
+
+            function onResize() {
+                stage.width = window.innerWidth;
+                stage.height = window.innerHeight - 120;//130是摄像头区域
+            }
+
+
+            window.addEventListener('resize', onResize);
+            stage.id = 'game';
+            document.body.appendChild(stage);
+            onResize();
+
+            ship = new Ship({ color: '#ff9d00', x: -100, y: -100 });
+            // set up some ridiculous enemy speeds for the intro:
+            speedMultiplier = 6,
+            enemySeedFrameInterval = 20;
+            playing = true;
+
+
+            new Vue({
+                el: '#app',
+                data: {
+                    isPhone: (navigator.userAgent.match(/(phone|pad|pod|iPhone|iPod|ios|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone)/i)),
+                    width: 100,
+                    height: 100,
+                    deviceId: localStorage.getItem(`deviceId`) || '', //设备id
+                    deviceList: [], //设备列表
+                    isCameraOpen: false, //摄像头是否打开
+                    task: null, //任务
+                    model: null, //模型
+                    modelLoad: true, //模型加载中
+                    flipHorizontal: false, // 是否水平翻转
+                    canvas: null,
+                    ctx: null,
+                    ship: null,//游戏
+                    gui:null,
+                },
+                async mounted() {
+                    if (this.isPhone) {
+                        this.flipHorizontal = true;
+                        document.querySelector("#game").style.transform='scale(-1, 1)';
+                    };
+                    this.canvas = this.$refs['canvas'];
+                    this.ctx = this.canvas.getContext('2d');
+                    this.guiInit();
+                    this.loadGameImage();
+
+                    vant.Dialog.alert({
+                        message: `
+                            <div class="prompt-text">
+                                <h5>打飞机游戏</h5>
+                                <ol>
+                                    <li>首次模型加载模型可能需要1-2分钟，请耐心等待</li>
+                                    <li>本游戏需要打开摄像头，（本游戏不会把您的摄像头信息上传到服务端）</li>
+                                    <li>本游戏需要左右摆头来控制游戏</li>
+                                    <li>打开摄像头后如发现摄像头是镜像，可点击右上角“Open Controls”中取消镜像</li>
+                                </ol>
+                            </div>
+                        `,
+                        theme: 'round-button',
+                        className: 'GameOvdialog',
+                        confirmButtonText:'开始游戏'
+                    })
+                    .then(() => {
+                        this.openUserMedia(); //打开摄像头
+                    })
+
+                },
+                watch: {
+                    flipHorizontal: {
+                        deep: true,
+                        handler() {
+                            document.querySelector("#game").style.transform = this.flipHorizontal?'scale(-1, 1)':'scale(1, 1)';
+                        }
+                    }
+                },
+                methods: {
+                    isObjEmpty(obj) {
+                        return (
+                            obj === undefined ||
+                            obj === "undefined" ||
+                            obj == null ||
+                            obj === "" ||
+                            obj.length === 0 ||
+                            (typeof obj === "object" && Object.keys(obj).length === 0)
+                        );
+                    },
+                    guiInit() {
+                        const _this = this;
+                        if (this.gui) {
+                            this.gui.destroy();
+                        }
+                        const controls = new function () {
+                            this.flipHorizontal = _this.flipHorizontal;
+                            this.deviceId = _this.deviceId;
+                        };
+                        const gui = new dat.GUI();
+                        const CameraFolder = gui.addFolder(`摄像头设置`);
+                        const deviceArr = new Object();
+                        this.deviceList.forEach(element => {
+                            deviceArr[element.name] = element.deviceId;
+                        });
+                        CameraFolder.add(controls, 'deviceId', deviceArr).name(`摄像头`).onChange((value) => {
+                            this.deviceId = value;
+                            this.actionSelect();
+                        });
+                        CameraFolder.add(controls, 'flipHorizontal').name(`镜像`).onChange((value) => {
+                            this.flipHorizontal = value;
+                        });
+                        CameraFolder.open();
+                        gui.close();
+                        this.gui = gui;
+                    },
+                    async loadGameImage(){
+                        const object = gameImage;
+                        for (const key in object) {
+                            if (Object.hasOwnProperty.call(object, key)) {
+                                const element = object[key];
+                                gameImage[key] = await this.loadImg(element)
+                            }
+                        };
+                        render();
+                        console.log('gameImage',gameImage);
+                    },
+                    loadImg(src){
+                        return new Promise(resolve => {
+                            const img = new Image();
+                            img.src = src;
+                            img.onload = ()=>{
+                                resolve(img);
+                            };
+                            img.onerror = ()=>{
+                                resolve(img);
+                            };
+                        })
+                    },
+                    //打开摄像头
+                    async openUserMedia() {
+                        const isOpen = await this.getUserMedia();
+                        if (isOpen.code == "ok") {
+                            this.guiInit();
+                            await this.createModel();
+                            window.cancelAnimationFrame(this.task);
+                            this.task = window.requestAnimationFrame(this.recognition);
+                            vant.Toast(`摄像头已打开`);
+                        } else {
+                            vant.Dialog.alert({
+                                title: '失败',
+                                message: `打开摄像头失败：${isOpen.errMsg}`,
+                                theme: 'round-button',
+                            }).then(() => {
+                                this.openUserMedia();
+                            });
+                            return;
+                        };
+                    },
+                    getUserMedia() {
+                        return new Promise(async resolve => {
+                            this.isCameraOpen = false;
+                            const toast = vant.Toast.loading({
+                                duration: 0, // 持续展示 toast
+                                forbidClick: true,
+                                message: '打开摄像头',
+                            });
+                            let mediaOpts = {
+                                audio: false,
+                                video: true,
+                                video: {
+                                    // width: this.width,
+                                    // height: this.height,
+                                    frameRate: {
+                                        ideal: 100,
+                                        max: 150
+                                    } //最佳帧率
+                                }
+                            };
+                            if (this.deviceId === "user" || this.deviceId === "environment") {
+                                mediaOpts.video.facingMode = this.deviceId;
+                            } else if (this.deviceId) {
+                                mediaOpts.video.deviceId = this.deviceId;
+                            } else if (this.isPhone) {
+                                mediaOpts.video.facingMode = 'user';
+                            }
+                            try {
+                                const stream = await navigator.mediaDevices.getUserMedia(mediaOpts);
+                                this.mediaStreamTrack = stream;
+                                //获取设备
+                                this.deviceList = await this.getDevice() || [];
+                                let video = this.$refs['video'];
+                                video.pause();
+                                video.setAttribute("playsinline", true); // required to tell iOS safari we don't want fullscreen
+                                if ("srcObject" in video) {
+                                    video.srcObject = stream
+                                } else {
+                                    video.src = window.URL && window.URL.createObjectURL(stream) || stream
+                                };
+                                video.play();
+                                video.onplaying = () => {
+                                    toast.clear();
+                                    this.isCameraOpen = true;
+                                    resolve({
+                                        code: `ok`
+                                    });
+                                };
+                            } catch (error) {
+                                toast.clear();
+                                console.error(error);
+                                resolve({
+                                    errMsg: error
+                                })
+                            }
+                        })
+                    },
+                    //获取设备信息
+                    getDevice() {
+                        return new Promise(async resolve => {
+                            const toast = vant.Toast.loading({
+                                duration: 0, // 持续展示 toast
+                                forbidClick: true,
+                                message: '获取设备中',
+                            });
+                            try {
+                                const arr = [];
+                                if (this.isPhone) {
+                                    arr.push({
+                                        name: '前置摄像头',
+                                        deviceId: 'user',
+                                    }, {
+                                        name: '后置摄像头',
+                                        deviceId: 'environment',
+                                    })
+                                } else {
+                                    const devicesList = await navigator.mediaDevices.enumerateDevices();
+                                    (devicesList || []).forEach(e => {
+                                        e.name = e.label || e.deviceId;
+                                        if (e.kind === "videoinput" && e.deviceId && !e.name.includes('麦克风')) {
+                                            e.color = e.deviceId == this.deviceId ? '#1989fa' : '#323233';
+                                            arr.push(e)
+                                        }
+                                    });
+                                };
+                                toast.clear();
+                                resolve(arr);
+                            } catch (error) {
+                                toast.clear();
+                                console.log(error);
+                                resolve([]);
+                            };
+                        })
+                    },
+                    actionSelect() {
+                        localStorage.setItem(`deviceId`, this.deviceId);
+                        this.openUserMedia();
+                    },
+                    //创建模型
+                    createModel() {
+                        return new Promise(async resolve => {
+                            ship.active = false;
+                            this.modelLoad = true;
+                            const model = faceLandmarksDetection.SupportedModels.MediaPipeFaceMesh;
+                            // this.modelParams.maxHands
+                            const detectorConfig = {
+                                maxFaces: 1, //检测到的最大面部数量
+                                refineLandmarks: false, //可以完善眼睛和嘴唇周围的地标坐标，并在虹膜周围输出其他地标
+                                runtime: 'mediapipe',
+                                solutionPath: 'https://unpkg.com/@mediapipe/face_mesh', //WASM二进制文件和模型文件所在的路径
+                            };
+                            this.model = await faceLandmarksDetection.createDetector(model, detectorConfig);
+                            this.modelLoad = false;
+                            startGame();
+                            resolve(this.model);
+                        })
+                    },
+                    //识别
+                    async recognition() {
+                        try {
+                            if (this.isCameraOpen && !this.modelLoad && ship.active) {
+                                const video = this.$refs['video'];
+                                const faces = await this.model.estimateFaces(video, {
+                                    flipHorizontal: false, //镜像
+                                });
+                                this.drawResults(faces, video);
+                                // console.log('faces', faces);
+                            };
+                            this.task = window.requestAnimationFrame(this.recognition);
+                        } catch (error) {
+                            console.log(error);
+                            this.task = window.requestAnimationFrame(this.recognition);
+                        }
+                    },
+                    //绘制
+                    drawResults(faces, video) {
+                        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                        // this.ctx.drawImage(video,10,10);
+                        faces.forEach(faceItem => {
+                            // this.ctx.fillStyle = '#1af117';
+                            // (faceItem.keypoints || []).forEach((element, index) => {
+                            //     /* arc */
+                            //     this.ctx.beginPath();
+                            //     this.ctx.arc(element.x, element.y, 1, 0, 2 * Math.PI);
+                            //     this.ctx.fill();
+                            //     /* arc */
+                            // });
+                            this.isSwivel(faceItem); //转头左右
+                        });
+                    },
+                    //获取夹角
+                    getAngle({ x: x1, y: y1 }, { x: x2, y: y2 }) {
+                        const dot = x1 * x2 + y1 * y2
+                        const det = x1 * y2 - y1 * x2
+                        const angle = Math.atan2(det, dot) / Math.PI * 180
+                        return Math.round(angle + 360) % 360
+                    },
+                    isSwivel(face) {
+                        const place1 = (face.keypoints || []).find((e, i) => i === 10); //额头位置
+                        const place2 = (face.keypoints || []).find((e, i) => i === 152); //下巴位置
+                        /*
+                                              x1,y1
+                                                |
+                                                |
+                                                |
+                                  x2,y2  -------|------- x4,y4
+                                              x3,y3
+                        */
+                        const [x1, y1, x2, y2, x3, y3, x4, y4] = [
+                            place1.x, place1.y,
+                            0, place2.y,
+                            place2.x, place2.y,
+                            this.canvas.width, place2.y
+                        ];
+                        // this.ctx.beginPath();
+                        // this.ctx.lineCap = 'round';
+                        // this.ctx.strokeStyle = 'red';
+                        // this.ctx.lineWidth = 2;
+                        // this.ctx.moveTo(x1,y1);
+                        // this.ctx.lineTo(x3,y3);
+                        // this.ctx.stroke();
+
+                        // this.ctx.beginPath();
+                        // this.ctx.lineCap = 'round';
+                        // this.ctx.strokeStyle = 'blue';
+                        // this.ctx.lineWidth = 2;
+                        // this.ctx.moveTo(x2,y2);
+                        // this.ctx.lineTo(x4,y4);
+                        // this.ctx.stroke();
+
+
+                        // this.ctx.font = '11px Helvetica';
+                        // this.ctx.fillStyle = `#fff`;
+                        // this.ctx.fillText(`x2,y2`,x2+100,y2-10);
+                        // this.ctx.fillText(`x4,y4`,x4-130,y4-10);
+                        // this.ctx.fillText(`x1,y1`,x1,y1);
+                        // this.ctx.fillText(`x3,y3`,x3,y3);
+
+                        const angle = this.getAngle({
+                            x: x1 - x3,
+                            y: y1 - y3,
+                        }, {
+                            x: x2 - x3,
+                            y: y2 - y3,
+                        });
+                        // this.ctx.fillStyle = `red`;
+                        // this.ctx.fillText(`角度:${angle}`,x3-20,y3+15);
+                        // //
+                        const differ = 270 - angle;
+                        const maxW = stage.width - ship.width;
+                        const differNum = differ >= 20 ? 20 : differ <= -20 ? -20 : differ;
+                        // this.modelParams.flipHorizontal
+                        ship.x = this.computedRange(maxW,differNum);
+                    },
+                    computedRange(maxW,differNum){
+                        var s = (maxW/2)/20;
+                        var r = s*differNum+(maxW/2);
+                        var l = maxW - (s*Math.abs(differNum)+(maxW/2));
+                        if(differNum===0){
+                            return maxW/2
+                        }else if(differNum>0){
+                            return r;
+                        }else if(differNum<0){
+                            return l;
+                        }
+                    },
+                    /**
+                     * @ 占比计算
+                     * @ num 当前数
+                     * @ total 总数
+                     */
+                    GetPercent(num, total) {
+                        num = parseFloat(num);
+                        total = parseFloat(total);
+                        if (isNaN(num) || isNaN(total)) {
+                            return "-";
+                        }
+                        return total <= 0 ? 0 : (Math.round(num / total * 100) / 100.00);
+                    },
+                },
+            });
+        </script>
+    </body>
+
+</html>

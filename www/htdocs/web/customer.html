@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+    <head>
+        <meta charset="utf-8">
+        <title>客户列表</title>
+        <meta name="viewport"
+            content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+        <link href="/static/icon/customer57.png" rel="shortcut icon" />
+        <!-- 书签icon -->
+        <link href="/static/icon/customer57.png.png" rel="Bookmark" />
+        <!-- 隐藏浏览器的地址栏和toolbar -->
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <!-- 控制状态栏显示样式 [default、black、black-translucent] [即白色、黑色、灰色半透明] -->
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+        <!-- 添加到主屏后的标题 -->
+        <meta name="apple-mobile-web-app-title" content="客户列表">
+        <link rel="apple-touch-icon" sizes="57x57" href="/static/icon/customer57.png.png" />
+        <link rel="apple-touch-icon" sizes="72x72" href="/static/icon/customer72.png.png" />
+        <link rel="apple-touch-icon" sizes="114x114" href="/static/icon/customer114.png.png" />
+        <link rel="apple-touch-icon" sizes="144x144" href="/static/icon/customer144.png" />
+        <meta name="format-detection" content="telephone=no">
+        <link href="https://cdn.bootcdn.net/ajax/libs/vant/2.12.54/index.min.css" rel="stylesheet">
+        <script src="https://res.wx.qq.com/open/js/jweixin-1.6.0.js"></script>
+        <script src="https://cdn.bootcdn.net/ajax/libs/vue/2.6.11/vue.min.js"></script>
+        <script src="https://cdn.bootcdn.net/ajax/libs/vant/2.12.54/vant.min.js"></script>
+        <script src="https://cdn.bootcdn.net/ajax/libs/vue-resource/1.5.2/vue-resource.min.js"></script>
+        <script src="/static/js/index.js"></script>
+        <style>
+            body {
+                color: #657180;
+                background-color: #f7f8fa;
+            }
+
+            [v-cloak] {
+                opacity: 0 !important;
+            }
+
+            #app {
+                max-width: 500px;
+                margin: 0 auto;
+            }
+
+            input[type="date"] {
+                background-color: aliceblue;
+            }
+
+            .preline {
+                white-space: pre-line !important;
+            }
+
+            .tablePanel {
+                margin-bottom: 10px;
+            }
+
+            .tablePanel .van-panel__content .van-cell {
+                padding: 8px 15px;
+            }
+
+            .tablePanel .van-panel__footer {
+                text-align: right;
+            }
+
+            .tablePanel .van-panel__footer>button {
+                min-width: 55px;
+            }
+
+            a.tel:link,
+            a.tel:hover a.tel:active {
+                color: #1989fa;
+            }
+
+            a.tel:visited {
+                opacity: 0.5;
+            }
+
+            .scrollbar-y {
+                overflow: hidden auto;
+                -webkit-overflow-scrolling: touch;
+                position: relative;
+            }
+
+            .van-panel__header .van-cell__title>span {
+                font-size: 15px;
+                font-weight: bold;
+            }
+
+            .searchForm {
+                position: fixed;
+                top: 0;
+                left: 50%;
+                transform: translateX(-50%);
+                display: block;
+                width: 100%;
+                max-width: 500px;
+                z-index: 10;
+                box-shadow: 0 0 4px 0 rgba(0, 0, 0, 0.16);
+            }
+
+            .buttonAdd {
+                position: fixed;
+                bottom: 40px;
+                left: 50%;
+                transform: translateX(-50%);
+                min-width: 70px;
+            }
+
+            .van-empty__image>svg {
+                display: block;
+                width: 100%;
+                height: 100%;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div id="app" v-cloak>
+            <template>
+                <form class="searchForm" action="/" @submit.native="onSubmitSearch">
+                    <van-search v-model="keyword" placeholder="请输入客户姓名或手机号" @clear="onSubmitSearch"
+                        @search="onSubmitSearch" shape="round"></van-search>
+                </form>
+                <div style="height:55px"></div>
+                <van-list class="vanList" v-model="listLoading" :finished="finished" :error="listError"
+                    :immediate-check="false" @load="getInfo">
+                    <van-panel v-for="(item,index) in tableData" :key="item.Id" :title="item.Name"
+                        :desc="item.UpdateTimeStr" class="tablePanel">
+                        <van-cell title="生日" :border="false" v-if="!isObjEmpty(item.Birthday)">
+                            {{item.Birthday}}<br />
+                            <span style="font-size: 12px;">距生日还有{{item.BirthdayDay}}天</span>
+                        </van-cell>
+                        <van-cell title="年龄" :border="false" v-if="!isObjEmpty(item.Age)">{{item.Age}}岁</van-cell>
+                        <van-cell title="次数" :border="false" v-if="!isObjEmpty(item.Quantity)||item.Quantity===0">
+                            <b style="color:#ee0a24">{{item.Quantity}}次</b>
+                        </van-cell>
+                        <van-cell title="手机号" :border="false" v-if="!isObjEmpty(item.Phone)">
+                            <a class="tel" :href="'tel:'+item.Phone" v-text="item.Phone"></a>
+                        </van-cell>
+                        <van-cell title="备注" :value="item.Remark" value-class="preline" :border="false"
+                            v-if="!isObjEmpty(item.Remark)"></van-cell>
+                        <template #footer>
+                            <van-button @click="DeleteInfo(item.Id,item.Name)" native-type="button" size="small" round
+                                type="danger">删除</van-button>
+                            <van-button @click="Editor(item)" native-type="button" size="small" round>编辑</van-button>
+                        </template>
+                    </van-panel>
+                    <template #finished>
+                        <template v-if="pageNum===1 && tableData.length===0">
+                            <van-empty description="客户为空">
+                                <template #image>
+                                    <svg t="1677568036529" class="icon" viewBox="0 0 1030 1024" version="1.1"
+                                        xmlns="http://www.w3.org/2000/svg" p-id="2991" width="500" height="500">
+                                        <path
+                                            d="M182.4 896c-6.4-3.2-9.6-9.6-16-12.8 3.2 3.2 9.6 9.6 16 12.8zM188.8 902.4l-6.4-6.4c0 3.2 3.2 3.2 6.4 6.4zM201.6 915.2l-3.2-3.2s3.2 0 3.2 3.2zM195.2 908.8c-3.2 0-3.2-3.2-6.4-3.2 3.2 0 6.4 0 6.4 3.2zM476.8 1020.8zM492.8 1020.8h-6.4 6.4zM121.6 835.2c0-3.2-3.2-3.2-3.2-6.4 0 0 0 3.2 3.2 6.4zM505.6 1024h-6.4 6.4zM112 822.4zM128 841.6l-6.4-6.4 6.4 6.4zM156.8 873.6l-22.4-22.4 22.4 22.4zM134.4 851.2l-6.4-6.4c3.2 3.2 6.4 3.2 6.4 6.4zM166.4 883.2l-6.4-6.4 6.4 6.4zM838.4 912c-3.2 0-3.2 0 0 0-3.2 0-3.2 0 0 0zM905.6 844.8l-6.4 6.4 6.4-6.4zM537.6 1020.8h-6.4c3.2 3.2 3.2 3.2 6.4 0zM912 838.4c0 3.2-3.2 3.2-3.2 6.4 0-3.2 0-6.4 3.2-6.4zM876.8 873.6l-6.4 6.4c3.2 0 3.2-3.2 6.4-6.4zM924.8 822.4zM918.4 828.8s0 3.2 0 0c0 3.2 0 0 0 0zM899.2 851.2c-6.4 6.4-12.8 16-22.4 22.4 9.6-6.4 16-12.8 22.4-22.4zM870.4 883.2c-6.4 3.2-9.6 9.6-16 12.8 6.4-3.2 9.6-9.6 16-12.8zM560 1020.8zM105.6 816zM854.4 896l-6.4 6.4 6.4-6.4zM844.8 905.6l-3.2 3.2c0-3.2 3.2-3.2 3.2-3.2zM547.2 1020.8h-6.4 6.4zM22.4 627.2l134.4-134.4 3.2-6.4v3.2l76.8 121.6 3.2-185.6c9.6-60.8 57.6-83.2 118.4-83.2h188.8c48 0 83.2 38.4 86.4 86.4h-86.4 3.2v185.6l121.6-124.8v3.2l3.2-3.2 28.8 32 105.6-147.2 201.6 259.2c9.6-38.4 12.8-76.8 12.8-115.2 0-281.6-227.2-512-512-512-278.4 0-505.6 220.8-512 499.2v25.6c6.4 28.8 12.8 60.8 22.4 96zM508.8 1024h19.2-19.2z"
+                                            fill="#F7F7F7" p-id="2992"></path>
+                                        <path
+                                            d="M137.6 851.2s-3.2 0 0 0c-3.2 0 0 0 0 0zM156.8 873.6zM131.2 844.8s-3.2 0 0 0c-3.2 0 0 0 0 0zM848 902.4s-3.2 0 0 0c-3.2 0 0 0 0 0zM560 1020.8c102.4-9.6 198.4-48 275.2-108.8-19.2 16-38.4 28.8-60.8 41.6-67.2 38.4-140.8 60.8-214.4 67.2zM166.4 883.2zM854.4 896zM112 822.4c0-3.2-3.2-3.2-3.2-6.4 0 3.2 0 3.2 3.2 6.4zM124.8 838.4c-3.2-3.2-3.2-3.2 0 0-3.2-3.2-3.2-3.2 0 0zM118.4 828.8l-3.2-3.2 3.2 3.2zM198.4 912c0-3.2-3.2-3.2 0 0-3.2-3.2 0-3.2 0 0zM508.8 1024c-3.2 0-3.2 0 0 0-3.2 0-3.2 0 0 0zM201.6 915.2c76.8 60.8 169.6 99.2 275.2 108.8-73.6-6.4-147.2-28.8-214.4-67.2-22.4-16-41.6-28.8-60.8-41.6zM841.6 908.8l-3.2 3.2c0-3.2 0-3.2 3.2-3.2zM540.8 1020.8h-3.2 3.2zM19.2 627.2c16 70.4 44.8 134.4 86.4 188.8-38.4-57.6-70.4-121.6-86.4-188.8zM556.8 1020.8h-9.6 9.6zM531.2 1024s-3.2 0 0 0c-3.2 0 0 0 0 0zM188.8 905.6c0-3.2 0-3.2 0 0 0-3.2 0-3.2 0 0zM499.2 1020.8h-3.2 3.2zM182.4 896zM870.4 883.2zM489.6 1020.8h-9.6 9.6zM19.2 627.2zM899.2 851.2zM905.6 841.6c0 3.2 0 3.2 0 0 0 3.2 0 3.2 0 0zM876.8 873.6zM924.8 822.4c44.8-57.6 73.6-121.6 92.8-195.2-19.2 70.4-51.2 137.6-92.8 195.2zM915.2 832c0 3.2-3.2 3.2-3.2 6.4 0-3.2 3.2-3.2 3.2-6.4zM921.6 822.4c0 3.2-3.2 3.2-3.2 6.4 3.2-3.2 3.2-3.2 3.2-6.4z"
+                                            fill="#E8EBEF" p-id="2993"></path>
+                                        <path
+                                            d="M800 627.2h-243.2c0 51.2 0 96-3.2 124.8-3.2 38.4-25.6 67.2-57.6 86.4 38.4 3.2 64 6.4 64 12.8 0 12.8-89.6 22.4-201.6 22.4s-201.6-9.6-201.6-22.4c0-3.2 3.2-3.2 12.8-6.4-6.4-6.4 3.2-19.2 6.4-22.4 64-25.6 64-54.4 64-54.4l3.2-144h-217.6c16 67.2 44.8 131.2 86.4 188.8 0 3.2 3.2 3.2 3.2 6.4l3.2 3.2 3.2 3.2c0 3.2 3.2 3.2 3.2 6.4 0 0 0 3.2 3.2 3.2l6.4 6.4v3.2l6.4 6.4c6.4 6.4 12.8 16 22.4 22.4l6.4 6.4c6.4 6.4 9.6 9.6 16 12.8l6.4 6.4 3.2 3.2c3.2 0 3.2 3.2 6.4 3.2l3.2 3.2 3.2 3.2c19.2 16 38.4 28.8 60.8 41.6 67.2 38.4 140.8 60.8 214.4 67.2h76.8c73.6-6.4 147.2-28.8 214.4-67.2 22.4-12.8 41.6-25.6 60.8-41.6l3.2-3.2 3.2-3.2 3.2-3.2s3.2 0 3.2-3.2l6.4-6.4c6.4-3.2 9.6-9.6 16-12.8l6.4-6.4c6.4-6.4 12.8-16 22.4-22.4v-3.2l6.4-6.4 3.2-3.2c0-3.2 3.2-3.2 3.2-6.4 3.2-3.2 3.2-3.2 3.2-6.4l3.2-3.2c0-3.2 3.2-3.2 3.2-6.4 44.8-57.6 73.6-124.8 92.8-195.2l-214.4 6.4zM22.4 627.2c-3.2 0-3.2 0 0 0z"
+                                            fill="#E8EBEF" p-id="2994"></path>
+                                        <path
+                                            d="M1014.4 627.2zM816 368h-3.2l-105.6 147.2h3.2zM240 627.2v-19.2l-76.8-118.4-44.8 137.6zM752 563.2l60.8 64h201.6l-198.4-259.2zM160 486.4l-3.2 6.4 6.4-6.4zM1014.4 627.2zM796.8 627.2h217.6-217.6zM118.4 627.2h-57.6 179.2z"
+                                            fill="#DDE3ED" p-id="2995"></path>
+                                        <path d="M816 368zM752 563.2l64-195.2-105.6 147.2z" fill="#C3CEE0" p-id="2996">
+                                        </path>
+                                        <path
+                                            d="M624 627.2h-67.2 243.2-176zM796.8 627.2h16-16zM707.2 515.2l-28.8-32-3.2 3.2-51.2 140.8h188.8l-60.8-64-41.6-48"
+                                            fill="#D6DCE5" p-id="2997"></path>
+                                        <path
+                                            d="M19.2 627.2zM163.2 486.4v3.2zM19.2 627.2h44.8H19.2zM163.2 486.4l-6.4 6.4-134.4 134.4h96l44.8-137.6zM118.4 627.2h-54.4 54.4z"
+                                            fill="#C3CEE0" p-id="2998"></path>
+                                        <path
+                                            d="M355.2 857.6h6.4c-64 3.2-147.2 3.2-185.6-3.2-6.4 0-12.8-3.2-16-6.4-6.4 3.2-12.8 3.2-12.8 6.4 0 12.8 89.6 22.4 201.6 22.4s201.6-9.6 201.6-22.4c0-6.4-25.6-9.6-64-12.8-19.2 9.6-38.4 16-60.8 16 6.4-3.2-48 0-70.4 0zM556.8 611.2v12.8h67.2l51.2-137.6v-3.2l-118.4 128z"
+                                            fill="#BFC9D8" p-id="2999"></path>
+                                        <path d="M553.6 425.6h86.4c0-48-38.4-83.2-86.4-86.4v86.4z" fill="#FFA033"
+                                            p-id="3000"></path>
+                                        <path d="M249.6 627.2l-9.6-19.2v19.2zM249.6 627.2h-9.6 12.8z" fill="#665C5C"
+                                            p-id="3001"></path>
+                                        <path
+                                            d="M553.6 425.6v-86.4h-188.8c-64 0-112 25.6-118.4 83.2l-3.2 185.6 9.6 16v3.2h-12.8l-3.2 144s-3.2 25.6-64 54.4c-3.2 3.2-12.8 12.8-6.4 22.4 3.2 3.2 6.4 6.4 16 6.4 38.4 6.4 121.6 6.4 185.6 3.2 6.4 0 9.6-3.2 12.8-3.2 9.6-3.2 16-9.6 22.4-16 3.2-6.4 6.4-12.8 6.4-19.2 9.6-44.8 3.2-128 0-192V576c0-118.4 102.4-144 144-150.4z"
+                                            fill="#665C5C" p-id="3002"></path>
+                                        <path
+                                            d="M553.6 627.2h3.2-3.2zM355.2 857.6zM556.8 627.2v-6.4l-3.2 3.2v3.2h3.2zM547.2 627.2h3.2-3.2zM553.6 627.2c0-3.2 0-3.2 0 0zM400 835.2z"
+                                            fill="#FFFFFF" p-id="3003"></path>
+                                        <path
+                                            d="M553.6 624l3.2-3.2v-6.4-185.6h-3.2c-41.6 6.4-140.8 32-147.2 147.2v51.2c3.2 64 6.4 144 0 192 0 6.4-3.2 12.8-6.4 19.2-3.2 6.4-12.8 12.8-22.4 16-3.2 0-9.6 3.2-12.8 3.2h-6.4c22.4 0 76.8-3.2 76.8-3.2 22.4 0 41.6-6.4 60.8-16 32-19.2 54.4-48 57.6-86.4 3.2-28.8 3.2-73.6 3.2-124.8h-6.4l3.2-3.2z"
+                                            fill="#FFFFFF" p-id="3004"></path>
+                                        <path
+                                            d="M790.4 182.4c-9.6-6.4-19.2-6.4-28.8 0-6.4 3.2-9.6 9.6-12.8 16h-22.4l-28.8-32c-9.6 9.6-9.6 22.4-3.2 32h-28.8c0 28.8 22.4 51.2 51.2 51.2 19.2 0 32-9.6 41.6-22.4 9.6 6.4 19.2 6.4 28.8 0 9.6-6.4 12.8-12.8 12.8-25.6 3.2-3.2-3.2-12.8-9.6-19.2z"
+                                            fill="#CCC2B8" p-id="3005"></path>
+                                        <path
+                                            d="M796.8 204.8c3.2 0 3.2 0 0 0 3.2 0 3.2-3.2 0 0 3.2-3.2 3.2 0 0 0 3.2 0 3.2 0 0 0z"
+                                            fill="#CCC2B8" p-id="3006"></path>
+                                        <path
+                                            d="M793.6 211.2zM793.6 211.2zM796.8 201.6zM796.8 208zM796.8 201.6zM796.8 201.6v3.2c0 3.2 0 3.2-3.2 6.4 3.2 3.2 6.4 3.2 9.6 3.2 9.6 0 16-6.4 16-16h-22.4zM796.8 201.6z"
+                                            fill="#F27961" p-id="3007"></path>
+                                        <path
+                                            d="M793.6 211.2zM793.6 208s0 3.2 0 0c0 3.2 0 0 0 0zM796.8 201.6zM614.4 211.2c0 6.4 3.2 9.6 9.6 9.6 6.4 0 9.6-3.2 9.6-9.6 0-6.4-3.2-9.6-9.6-9.6-6.4 0-9.6 3.2-9.6 9.6z m0 0M569.6 211.2c0 6.4 3.2 9.6 9.6 9.6 6.4 0 9.6-3.2 9.6-9.6 0-6.4-3.2-9.6-9.6-9.6-6.4 0-9.6 3.2-9.6 9.6z m0 0M524.8 211.2c0 6.4 3.2 9.6 9.6 9.6s9.6-3.2 9.6-9.6c0-6.4-3.2-9.6-9.6-9.6s-9.6 3.2-9.6 9.6z m0 0"
+                                            fill="#CCC2B8" p-id="3008"></path>
+                                        <path
+                                            d="M499.2 396.8c16 0 25.6-12.8 25.6-25.6h-51.2c0 12.8 12.8 25.6 25.6 25.6z m0 0"
+                                            fill="#332E2E" p-id="3009"></path>
+                                        <path
+                                            d="M796.8 208c-3.2 3.2-3.2 3.2 0 0h-6.4c-3.2 0-3.2-3.2-3.2-6.4s0-3.2 3.2-6.4h6.4v0c0-3.2-3.2-3.2-3.2-3.2-3.2-3.2-6.4-3.2-9.6 0-3.2 3.2-6.4 6.4-6.4 9.6s3.2 6.4 6.4 9.6c3.2 3.2 6.4 3.2 9.6 0l3.2-3.2s3.2 0 3.2-3.2l-3.2 3.2z"
+                                            fill="#FFFFFF" p-id="3010"></path>
+                                    </svg>
+                                </template>
+                            </van-empty>
+                        </template>
+                        <span v-if="pageNum>1">没有更多了</span>
+                    </template>
+                    <template #error>
+                        <van-empty image="network"  :description="errorText">
+                            <van-button :loading="listLoading" round type="danger" @click="getInfo">重新加载</van-button>
+                        </van-empty>
+                    </template>
+                </van-list>
+
+                <van-popup v-model="formShow" :style="{ 'width': '80%','max-width':'500px' }"
+                    :close-on-click-overlay="false" round>
+                    <van-nav-bar :title="(!isObjEmpty(form.id)||form.id===0)?'编辑['+form.Name+']':'新增客户'"
+                        @click-right="formShow=false">
+                        <template #right>
+                            <van-icon name="cross" size="18"></van-icon>
+                        </template>
+                    </van-nav-bar>
+                    <div class="scrollbar-y" style="max-height: 400px;">
+                        <van-form @submit="onSubmit" ref="customerForm">
+                            <van-field v-model.trim="form.Name" name="Name" type="text" label="姓名" placeholder="客户姓名"
+                                :rules="[{ required: true, message: '请填写客户姓名' }]" maxlength="20" required></van-field>
+                            <van-field v-model.trim="form.Birthday" name="Birthday" type="date" label="生日"
+                                placeholder="客户生日" @input="BirthdayChange" :max="maxBirthday" clickable></van-field>
+                            <van-field v-model.trim="form.Age" name="Age" type="digit" label="年龄" placeholder="客户年龄"
+                                disabled></van-field>
+                            <van-field v-model.trim="form.Phone" name="Phone" type="tel" label="手机号" placeholder="客户手机号"
+                                maxlength="11"></van-field>
+                            <van-field name="Quantity" label="次数">
+                                <template #input>
+                                    <van-stepper v-model="form.Quantity" :min="0" ></van-stepper>
+                                </template>
+                            </van-field>
+                            <van-field v-model="form.Remark" name="Remark" type="textarea" label="备注" placeholder="客户备注"
+                                rows="2" autosize maxlength="300"></van-field>
+                        </van-form>
+                    </div>
+                    <div style="margin: 16px;">
+                        <van-button @click="$refs.customerForm.submit()" round block type="info" native-type="button"
+                            :loading="formLoading" color="linear-gradient(to right, #258bf3, #0a7ff5)">提交</van-button>
+                    </div>
+                </van-popup>
+
+                <van-button v-if="!formShow" class="buttonAdd" @click="Add" size="small" type="info"
+                    native-type="button" icon="plus" round></van-button>
+
+            </template>
+        </div>
+        <script>
+            const scrollToTop = () => {
+                const c = document.documentElement.scrollTop || document.body.scrollTop
+                if (c > 0) {
+                    window.requestAnimationFrame(scrollToTop)
+                    window.scrollTo(0, c - c / 8)
+                }
+            };
+            new Vue({
+                el: '#app',
+                data: {
+                    root: `http://101.34.52.7:520/sqlite/api`,
+                    keyword: "",
+                    searchForm: {
+                        Name: ""
+                    },
+                    SubmitSearchForm: {},
+                    maxBirthday: dateFormat('YYYY-mm-dd', new Date()),
+                    form: {
+                        Id: "",
+                        Name: "",
+                        Birthday: "",
+                        Age: "",
+                        Phone: "",
+                        Quantity: 0,
+                        Remark: "",
+                    },
+                    formLoading: false,
+                    formShow: false,
+                    tableData: [],
+                    pageNum: 1,
+                    total:0,
+                    listLoading: false, //列表加载中
+                    finished: false, //加载完成
+                    listError: false, //加载失败
+                    errorText: "获取信息失败！请稍后再试", //加载失败文字
+                },
+                mounted() {
+                    this.onSubmitSearch();
+                },
+                methods: {
+                    isObjEmpty(obj) {
+                        return isObjEmpty(obj)
+                    },
+                    //YYYY-mm-dd HH:MM:SS
+                    dateFormat(fmt, date = new Date()) {
+                        return dateFormat(fmt, date = new Date())
+                    },
+                    BirthdayChange() {
+                        const { Birthday } = this.form;
+                        if (this.isObjEmpty(Birthday)) {
+                            this.$set(this.form, 'Age', '');
+                            return;
+                        };
+                        const BirthdayYear = Number(dateFormat('YYYY', Birthday));
+                        const Year = new Date().getFullYear();
+                        const Age = Year - BirthdayYear;
+                        if (Age >= 0) {
+                            this.$set(this.form, 'Age', Age);
+                        } else {
+                            this.$set(this.form, 'Age', '');
+                            this.$set(this.form, 'Birthday', '');
+                            this.$notify({
+                                type: 'danger',
+                                message: '客户生日不合法'
+                            });
+                        }
+                    },
+                    Add() {
+                        this.form = {
+                            Id: "",
+                            Name: "",
+                            Birthday: "",
+                            Age: "",
+                            Phone: "",
+                            Quantity: 0,
+                            Remark: "",
+                        };
+                        this.formShow = true;
+                    },
+                    Editor(info) {
+                        this.form = JSON.parse(JSON.stringify(info || {}));
+                        this.formShow = true;
+                    },
+                    onSubmit() {
+                        const { Age, Quantity, Phone } = this.form;
+                        if (!this.isObjEmpty(Phone) && !/^[1][0-9]{10}$/.test(Phone)) {
+                            this.$notify({
+                                type: 'danger',
+                                message: '请填写正确的客户手机号'
+                            });
+                            return;
+                        }
+                        if (!this.isObjEmpty(Age) && (!/^-?\d+$/.test(Age) || Number(Age) <= 0)) {
+                            this.$notify({
+                                type: 'danger',
+                                message: '请填写客户的正确年龄'
+                            });
+                            return;
+                        }
+                        if (!this.isObjEmpty(Quantity) && (!/^-?\d+$/.test(Quantity) || Number(Age) < 0)) {
+                            this.$notify({
+                                type: 'danger',
+                                message: '请填写正确次数'
+                            });
+                            return;
+                        }
+                        const form = this.form;
+                        let url = `${this.root}/add`;
+                        if (!this.isObjEmpty(form.Id) || form.Id === 0) {
+                            url = `${this.root}/updata`;
+                        }
+                        this.formLoading = true;
+                        this.$http.post(url, form, {
+                            emulateJSON: true
+                        }).then(xml => {
+                            this.formLoading = false;
+                            var res = xml.body;
+                            if (res.status == 200) {
+                                this.$toast('提交成功');
+                                this.onSubmitSearch();
+                                this.formShow = false;
+                            } else {
+                                this.$notify({
+                                    type: 'danger',
+                                    message: `${res.errmsg}`
+                                });
+                            }
+                        }, (err) => {
+                            this.formLoading = false;
+                            console.log(err);
+                            this.$notify({
+                                type: 'danger',
+                                message: `提交失败！请稍后再试`
+                            });
+                        });
+                        console.log(this.form);
+                    },
+                    DeleteInfo(Id, Name) {
+                        vant.Dialog.confirm({
+                            title: '提示',
+                            message: `确定删除[${Name}]？`,
+                            confirmButtonText: '确定',
+                            cancelButtonText: '取消'
+                        })
+                            .then(() => {
+                                vant.Toast.loading({
+                                    duration: 0,
+                                    forbidClick: true,
+                                    message: 'loading',
+                                });
+                                this.$http.post(`${this.root}/delete`, {
+                                    Id
+                                }, {
+                                    emulateJSON: true
+                                }).then((xml) => {
+                                    vant.Toast.clear();
+                                    var res = xml.body;
+                                    if (res.status === 200) {
+                                        this.onSubmitSearch();
+                                        this.$toast('删除成功');
+                                        this.formShow = false;
+                                    } else {
+                                        vant.Notify({
+                                            type: 'warning',
+                                            message: res.errmsg || '删除失败！请稍后再试'
+                                        });
+                                    }
+                                }).catch((err) => {
+                                    vant.Toast.clear();
+                                    vant.Notify({
+                                        type: 'danger',
+                                        message: '删除失败！请稍后再试'
+                                    });
+                                })
+                            })
+                            .catch(() => {
+                                console.log('取消删除');
+                            });
+                    },
+                    getDaysToBirthday(month, day) {
+                        const now = new Date();
+                        const thisYear = now.getFullYear();
+                        const birthday = new Date(thisYear, month - 1, day);
+                        if (birthday < now) {
+                            birthday.setFullYear(now.getFullYear() + 1);
+                        }
+                        const timeDec = birthday - now;
+                        const days = timeDec / (24 * 60 * 60 * 1000);
+                        return Math.ceil(days);
+                    },
+                    onSubmitSearch() {
+                        vant.Toast.loading({
+                            duration: 0,
+                            forbidClick: true,
+                            message: 'loading',
+                        });
+                        this.SubmitSearchForm = this.searchForm;
+                        const keyword = this.keyword;
+                        if (!this.isObjEmpty(keyword)) {
+                            if (/^[1][0-9]{10}$/.test(keyword)) {
+                                this.SubmitSearchForm.Phone = keyword;
+                            } else {
+                                this.SubmitSearchForm.Name = keyword;
+                            }
+                        } else {
+                            this.SubmitSearchForm.Phone = '';
+                            this.SubmitSearchForm.Name = '';
+                        }
+                        this.pageNum = 1;
+                        this.getInfo('clear');
+                    },
+                    getInfo(isClear) {
+                        const page = this.pageNum;
+                        const SubmitSearchForm = this.SubmitSearchForm;
+                        const data = Object.assign(
+                            SubmitSearchForm, {
+                            pageSize:50,
+                            page,
+                        }
+                        );
+                        this.$http.post(`${this.root}/get`, data, {
+                            emulateJSON: true
+                        }).then((xml) => {
+                            vant.Toast.clear();
+                            this.listLoading = false;
+                            var res = xml.body;
+                            if (res.status === 200 && res.data) {
+                                const {
+                                    hasMore,
+                                    page,
+                                    total,
+                                    data
+                                } = res.data;
+                                if (isClear == "clear") {
+                                    this.tableData = [];
+                                }
+                                const oldList = this.tableData || [];
+                                const array = data || [];
+                                array.forEach((element, index) => {
+                                    if(element.Birthday){
+                                        var Birthday = new Date(element.Birthday.replace(/-/g, "/"));
+                                        element.BirthdayDay = this.getDaysToBirthday(Birthday.getMonth() + 1,Birthday.getDate());
+                                    }
+                                    if(element.UpdateTime){
+                                        element.UpdateTimeStr = new Date(element.UpdateTime).toLocaleString();
+                                    }
+
+                                    oldList.push(element)
+                                });
+                                this.tableData = oldList;
+                                console.log('hasMore', hasMore);
+                                if (!hasMore) {
+                                    //没有更多了
+                                    this.finished = true;
+                                } else {
+                                    this.listError = false;
+                                    this.finished = false;
+                                    this.pageNum = page + 1;
+                                }
+                                this.total = total;
+                                document.title = `共${total}个客户`;
+                                if (page === 1 && total > 0) {
+                                    vant.Notify({
+                                        type: 'success',
+                                        duration: 1000,
+                                        message: `共${total}个客户`
+                                    });
+                                }
+
+                            } else {
+                                this.listError = true;
+                                this.errorText = res.msg || '获取信息失败！请稍后再试';
+                                vant.Dialog.alert({
+                                    title: '警告',
+                                    message: this.errorText,
+                                }).then(() => {
+                                    window.location.reload();
+                                });
+                            }
+                        }).catch((err) => {
+                            console.log('err', err);
+                            vant.Toast.clear();
+
+                            this.listLoading = false;
+                            this.listError = true;
+                            vant.Dialog.alert({
+                                title: '错误',
+                                message: '获取信息失败！请稍后再试',
+                            }).then(() => {
+                                window.location.reload();
+                            });
+                        })
+
+                    },
+
+                }
+            });
+        </script>
+    </body>
+
+</html>

@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport"
+            content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+        <title>舞台</title>
+        <style>
+            html,
+            body,
+            #app {
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+                background-color: #333;
+            }
+
+            * {
+                padding: 0;
+                margin: 0;
+            }
+
+            :root {
+                color-scheme: light dark;
+            }
+
+            [v-cloak] {
+                opacity: 0 !important;
+            }
+
+            canvas {
+                display: block;
+            }
+
+            .progress {
+                position: fixed;
+                left: 0;
+                bottom: 0;
+                width: 100%;
+                height: 100%;
+                z-index: 10;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-direction: column;
+                background-color: #333;
+            }
+
+            .progress .progress-text {
+                font-size: 12px;
+                padding: 10px 0 0 0;
+            }
+
+            .progress .progress-bar {
+                width: 50%;
+                height: 10px;
+                overflow: hidden;
+                background-color: #f5f5f5;
+                border-radius: 10px;
+                box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+                position: relative;
+            }
+
+            .progress .progress-bar::before {
+                content: ' ';
+                display: block;
+                width: var(--progress);
+                height: 100%;
+                transition: width .6s ease;
+                background-color: #5bc0de;
+            }
+
+            video {
+                position: fixed;
+                top: -200vh;
+            }
+
+            .settings {
+                color: #888;
+                background-color: #111;
+                height: 300px;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .settings .row {
+                font-size: 12px;
+                display: flex;
+                align-items: center;
+                padding: 10px 0;
+            }
+
+            .settings .row .text {
+                width: 80px;
+                margin-right: 10px;
+                word-wrap: break-word;
+            }
+
+            .settings .row input+input:not([type="range"]) {
+                margin-left: 10px;
+            }
+
+            .settings .row input {
+                background-color: #222;
+                border: 1px solid transparent;
+                color: #888;
+                transition: 0.3s;
+
+            }
+
+            .settings .row input[type="range"] {
+                flex: 1;
+            }
+
+            .settings .row input[type="number"] {
+                text-align: center;
+                width: 100px;
+                padding: 3px 0;
+            }
+
+            .settings .row select,
+            .settings .row input[type="button"] {
+                padding: 3px 5px;
+                font-size: 12px;
+            }
+
+            .settings .row select {
+                color: #aaa;
+                background-color: #222;
+            }
+
+            .settings .row input[disabled] {
+                opacity: 0.5;
+            }
+
+            .fade-enter-active {
+                animation: .3s fade-in both ease-out
+            }
+
+            .fade-leave-active {
+                animation: .3s fade-out both ease-in
+            }
+
+            @keyframes fade-in {
+                from {
+                    opacity: 0
+                }
+
+                to {
+                    opacity: 1
+                }
+            }
+        </style>
+    </head>
+
+    <body>
+        <div class="progress" ref="progress">
+            <div class="progress-bar" ref="progressBar" style="--progress:0%;"></div>
+            <div class="progress-text">模型加载中</div>
+        </div>
+
+        <div id="app" v-cloak>
+            <video ref="video" width="200"
+                src="https://dcdn.it120.cc/2022/11/04/87b7b5af-476c-4d2b-ae90-36724d66a407.mp4"
+                webkit-playsinline="true" crossorigin="anonymous" playsinline="true" autoplay preload loop muted
+                controls></video>
+            <canvas ref="canvas"></canvas>
+            <div class="settings">
+                <div style="padding: 15px;">
+                    <!-- <template v-if="test">
+                        <div class="row">
+                            <span class="text">粗糙度</span>
+                            <input type="range" min="0" max="1" step="0.1" v-model="test.material.roughness">
+                        </div>
+                        <div class="row">
+                            <span class="text">金属感</span>
+                            <input type="range" min="0" max="1" step="0.1" v-model="test.material.metalness">
+                        </div>
+                        <div class="row">
+                            <span class="text">反射率</span>
+                            <input type="range" min="0" max="1" step="0.1" v-model="test.material.reflectivity">
+                        </div>
+                        <div class="row">
+                            <span class="text">透明涂层</span>
+                            <input type="range" min="0" max="1" step="0.01" v-model="test.material.clearcoat">
+                        </div>
+                        <div class="row">
+                            <span class="text">清漆粗糙度</span>
+                            <input type="range" min="0" max="1" step="0.01" v-model="test.material.clearcoatRoughness">
+                        </div>
+                        <div class="row">
+                            <span class="text">线框图</span>
+                            <input type="checkbox" v-model="test.material.wireframe" >
+                        </div>
+                    </template> -->
+                    <div class="row" v-if="axesHelper">
+                        <span class="text">坐标轴</span>
+                        <input type="checkbox" v-model="axesHelper.visible">
+                    </div>
+                    <div class="row" v-if="control">
+                        <span class="text">控制器阻尼</span>
+                        <input type="checkbox" v-model="control.enableDamping">
+                    </div>
+                    <div class="row" v-if="control">
+                        <span class="text">自动旋转</span>
+                        <input type="checkbox" v-model="control.autoRotate">
+                    </div>
+                    <transition name="fade">
+                        <div class="row" v-if="control && control.autoRotate">
+                            <span class="text">旋转速度</span>
+                            <input type="range" min="0.5" max="10" step="0.2" v-model="control.autoRotateSpeed">
+                        </div>
+                    </transition>
+                    <template v-if="light">
+                        <div class="row">
+                            <span class="text">灯光颜色</span>
+                            <input type="color" v-model="light.inputColor" @change="lightChange($event,light)">
+                        </div>
+                        <div class="row">
+                            <span class="text">灯光阴影</span>
+                            <input type="checkbox" v-model="light.castShadow">
+                        </div>
+                        <div class="row">
+                            <span class="text">灯光-x</span>
+                            <input type="range" min="-500" max="500" step="0.1" v-model="light.position.x">
+                        </div>
+                        <div class="row">
+                            <span class="text">灯光-y</span>
+                            <input type="range" min="-500" max="500" step="0.1" v-model="light.position.y">
+                        </div>
+                        <div class="row">
+                            <span class="text">灯光-z</span>
+                            <input type="range" min="-500" max="500" step="0.1" v-model="light.position.z">
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+        <!-- https://cdn.jsdelivr.net/npm -->
+        <script async src="https://cdn.jsdelivr.net/npm/es-module-shims@1.3.6/dist/es-module-shims.min.js"></script>
+        <script type="importmap">
+            {
+                "imports": {
+                    "vue": "https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.esm.browser.min.js",
+                    "three": "https://cdn.jsdelivr.net/npm/three@0.148.0/build/three.module.min.js",
+                    "examples/jsm/": "https://cdn.jsdelivr.net/npm/three@0.148.0/examples/jsm/"
+                }
+            }
+        </script>
+        <script type="module">
+            import Vue from 'vue'
+            import * as THREE from 'three';
+            // import { GUI } from 'examples/jsm/libs/lil-gui.module.min.js';
+            import { GLTFLoader } from 'examples/jsm/loaders/GLTFLoader.min.js';
+            import { RoomEnvironment } from 'examples/jsm/environments/RoomEnvironment.min.js';
+            import { OrbitControls } from 'examples/jsm/controls/OrbitControls.min.js';
+            import { DRACOLoader } from 'examples/jsm/loaders/DRACOLoader.min.js';
+            // import { RGBELoader } from 'examples/jsm/loaders/RGBELoader.min.js';
+            import Stats from 'examples/jsm/libs/stats.module.js';
+
+            new Vue({
+                el: '#app',
+                data: {
+                    scene: null,
+                    camera: null,
+                    renderer: null,
+                    light: null,
+                    axesHelper: null,
+                    control: null,
+                    clock: null,
+                    mixer: null,
+                    task: null,
+                    gltf: null,
+                    videoMesh: null,
+                    allLayer: [],
+                    openingAnimationEnd: false,
+                    test:null,
+                },
+                mounted() {
+                    this.threeInit();
+                    this.loaderGlb();
+                },
+                methods: {
+                    threeInit() {
+                        const canvas = this.$refs.canvas;
+                        const w = (document.documentElement.clientWidth || window.innerWidth);
+                        const h = (document.documentElement.clientHeight || window.innerHeight) - 300;
+                        this.scene = new THREE.Scene();
+                        this.scene.background = new THREE.Color(`#000`);
+
+                        const fov = 50; // 视野范围
+                        const aspect = w / h; // 相机默认值 画布的宽高比
+                        const near = 1; // 近平面
+                        const far = 1000; // 远平面
+                        this.camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+                        this.camera.position.set(0, 0, 0);
+
+                        console.log('镜头', this.camera);
+
+                        this.renderer = new THREE.WebGLRenderer({
+                            canvas,
+                            alpha: true,
+                            antialias: true
+                        });
+                        this.renderer.setPixelRatio(window.devicePixelRatio);
+                        this.renderer.setSize(w, h);
+
+                        // const environment = new RoomEnvironment();
+                        // const pmremGenerator = new THREE.PMREMGenerator(this.renderer);
+                        // this.scene.environment = pmremGenerator.fromScene(environment).texture;
+
+
+                        //灯光
+                        this.scene.add(new THREE.AmbientLight(0x444444))
+
+                        // 平行光
+                        this.light = new THREE.DirectionalLight(0xffffff)
+                        this.light.position.set(0, 20, 20)
+
+                        this.light.castShadow = true
+                        this.light.shadow.camera.top = 10
+                        this.light.shadow.camera.bottom = -10
+                        this.light.shadow.camera.left = -10
+                        this.light.shadow.camera.right = 10
+                        this.light.inputColor = "#" + this.light.color.getHexString()
+                        this.scene.add(this.light)
+                        console.log('平行光', this.light);
+
+                        // 控制器
+                        this.control = new OrbitControls(this.camera, this.renderer.domElement);
+                        this.control.target = new THREE.Vector3(0, 0, 0); //控制焦点
+                        this.control.enableDamping = true; //阻尼
+
+                        this.control.enablePan = false;//启用或禁用摄像机平移
+                        this.control.enableRotate = false; //启用或禁用摄像机水平或垂直旋转
+                        this.control.enableZoom = false; //启用或禁用摄像机的缩放
+
+                        // this.control.minDistance = 2; //最小放大距离
+                        // this.control.maxDistance = 35;//最大放大距离
+                        console.log('控制器', this.control);
+
+                        // 坐标轴
+                        this.axesHelper = new THREE.AxesHelper(14);
+                        this.axesHelper.name = '坐标轴';
+                        this.axesHelper.visible = false;
+                        this.scene.add(this.axesHelper);
+                        console.log('坐标轴', this.axesHelper);
+
+                        this.stats = new Stats();
+                        document.body.appendChild(this.stats.dom);
+                        console.log('性能监测', this.stats);
+
+                        // --------
+                    },
+                    loaderGlb() {
+                        const dracoLoader = new DRACOLoader();
+                        dracoLoader.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.148.0/examples/jsm/libs/draco/gltf');
+                        const loader = new GLTFLoader();
+                        loader.setPath('https://dcdn.it120.cc/2023/01/12/');
+                        loader.setDRACOLoader(dracoLoader);
+                        // https://dcdn.it120.cc/2023/01/12/af0be3b4-7339-41ce-9de6-91e125804b51.glb
+                        // https://dcdn.it120.cc/2023/01/12/18bcb9e1-ff3c-4599-96e3-aebc6008791f.glb
+                        loader.load(`18bcb9e1-ff3c-4599-96e3-aebc6008791f.glb`, (gltf) => {
+                            this.gltf = gltf;
+                            console.log('gltf', gltf);
+                            const object = gltf.scene;
+                            const box = new THREE.Box3().setFromObject(object)
+                            const size = box.getSize(new THREE.Vector3()).length()
+                            console.log('box', box);
+
+                            //自适应
+                            const height = box.max.y;
+                            const dist = height / (2 * Math.tan(this.camera.fov * Math.PI / 360));
+                            const pos = this.scene.position;
+                            this.camera.position.set(pos.x, pos.y, dist * 8);
+                            this.camera.lookAt(pos);
+
+
+                            object.scale.setScalar(1);
+
+                            const center = box.getCenter(new THREE.Vector3())
+                            object.position.x += (object.position.x - center.x);
+                            object.position.y += (object.position.y - center.y);
+                            object.position.z += (object.position.z - center.z);
+                            console.log('center', center);
+
+                            this.allLayer = this.getMesh(object, '*');
+                            console.log('allLayer', this.allLayer);
+
+                            this.addVideo(object);
+                            this.setMaterial(object);
+                            this.scene.add(object);
+                            window.cancelAnimationFrame(this.task);
+                            this.task = window.requestAnimationFrame(this.render3D);
+                        }, xhr => {
+                            const progress = (xhr.loaded / xhr.total) * 100;
+                            const progressDom = document.querySelector("div.progress");
+                            const progressBarDom = document.querySelector("div.progress > div.progress-bar");
+                            progressBarDom.style.setProperty("--progress", `${progress}%`);
+                            if (progress >= 100) {
+                                setTimeout(() => {
+                                    progressDom.style.display = 'none';
+                                }, 800);
+                            }
+                        }, error => {
+                            alert(`模型加载失败\n${error}`);
+                        });
+                    },
+                    addVideo(object) {
+                        const box = new THREE.Box3().setFromObject(object.getObjectByName('Object_11'));
+                        const video = this.$refs.video;
+                        const videoTexture = new THREE.VideoTexture(video);
+                        videoTexture.name = 'video';
+
+                        //minFilter属性：指定纹理如何缩小。默认值：THREE.LinearMipMapLinearFilter
+                        videoTexture.minFilter = THREE.LinearFilter;
+                        //magFilter属性：指定纹理如何放大。默认值：THREE.LinearFilter
+                        videoTexture.magFilter = THREE.LinearFilter;
+                        videoTexture.wrapS = videoTexture.wrapT = THREE.ClampToEdgeWrapping;
+                        videoTexture.generateMipmaps = false;
+                        const geometry = new THREE.BoxGeometry(1, 1, 0.5);
+                        const videoMeshBasi = new THREE.MeshBasicMaterial({
+                            map: videoTexture
+                        });
+                        this.videoMesh = new THREE.Mesh(geometry, videoMeshBasi);
+                        this.videoMesh.position.set(0, -0.45, -7.17);
+                        this.videoMesh.scale.set(6.9, 3.6, 1);
+                        console.log('box', video, video.videoWidth, video.videoHeight, video.videoWidth / video.videoHeight);
+                        console.log('box', box);
+                        console.log('videoMesh', this.videoMesh);
+                        this.scene.add(this.videoMesh);
+
+                    },
+                    setMaterial(object) {
+                        //圆-正面
+                        object.getObjectByName('Object_7').material = new THREE.MeshPhysicalMaterial({
+                            color: new THREE.Color('#ff0000'),
+                        });
+                        this.test = object.getObjectByName('Object_7');
+
+                        //圆-反面
+                        object.getObjectByName('Object_8').material = new THREE.MeshPhysicalMaterial({
+                            color: new THREE.Color('#2a2c3a')
+                        });
+
+                        //灯带
+                        setInterval(() => {
+                            object.getObjectByName('Object_5').material.color = new THREE.Color(`#${((Math.random() * 0xfffff * 1000000).toString(16)).slice(0, 6)}`);
+                        }, 600);
+
+                        //平台
+                        object.getObjectByName('Object_4').material = new THREE.MeshPhysicalMaterial({
+                            color: new THREE.Color('#2a2c3a')
+                        });
+
+                        //背景墙
+                        object.getObjectByName('Object_13').material = new THREE.MeshPhysicalMaterial({
+                            color: new THREE.Color('#232330'),
+                        });
+
+                        //幕布边框
+                        object.getObjectByName('Object_10').material = new THREE.MeshPhysicalMaterial({
+                            color: new THREE.Color('#2f303a')
+                        });
+
+                        //幕布
+                        object.getObjectByName('Object_11').material = new THREE.MeshPhysicalMaterial({
+                            color: new THREE.Color('#5c00ff')
+                        });
+
+                    },
+                    getMesh(object, type) {
+                        const meshAll = [];
+                        object.traverse(e => {
+                            if (type === "*") {
+                                e.material && (e.material_original = e.material);
+                                meshAll.push(e);
+                                if (e.isMesh) e.castShadow = true, e.receiveShadow = true;
+                            } else if (e.type === type) {
+                                meshAll.push(e);
+                            }
+                        });
+                        return meshAll
+                    },
+                    // 开场动画
+                    openingAnimation() {
+                        if (this.camera.zoom >= 4) {
+                            this.openingAnimationEnd = true;
+
+                            this.control.enableRotate = true; //启用或禁用摄像机水平或垂直旋转
+                            this.control.enableZoom = true; //启用或禁用摄像机的缩放
+                        } else {
+                            this.camera.zoom += 0.02;
+                            if (this.camera.zoom > 4) {
+                                this.camera.zoom = 4;
+                            }
+
+                            this.scene.rotation.x += 0.002;
+                            this.scene.rotation.y += 0.002;
+                            this.camera.updateProjectionMatrix();
+                        }
+
+
+                    },
+                    render3D() {
+                        this.$refs.video.play();
+                        this.task = window.requestAnimationFrame(this.render3D);
+                        this.control && this.control.update();
+
+                        this.stats.begin();
+
+                        // 开场动画
+                        !this.openingAnimationEnd && this.openingAnimation();
+
+                        this.renderer && this.renderer.render(this.scene, this.camera);
+                        this.stats.end();
+                    },
+
+                    lightChange(event, obj) {
+                        const color = event.target.value;
+                        obj.color = new THREE.Color(color);
+                    },
+
+                }
+            });
+        </script>
+    </body>
+
+</html>

@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+    <head>
+        <meta charset="utf-8">
+        <title>颜色追踪</title>
+        <meta name="viewport"
+            content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+        <link href="https://cdn.bootcdn.net/ajax/libs/vant/2.12.25/index.min.css" rel="stylesheet">
+        <script src="https://dcdn.it120.cc/2022/12/09/89f2df97-9b7c-4650-9cce-7d885642564b.js"></script>
+        <script src="https://cdn.bootcdn.net/ajax/libs/vue/2.6.11/vue.min.js"></script>
+        <script src="https://cdn.bootcdn.net/ajax/libs/vant/2.12.25/vant.min.js"></script>
+        <script src="https://cdn.bootcdn.net/ajax/libs/tracking.js/1.1.3/tracking-min.js"></script>
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+        <style>
+            * {
+                padding: 0;
+                margin: 0;
+            }
+
+            html,
+            body,
+            #app {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+                overflow-x: auto;
+                color: #2c3e50;
+                font-size: 13px;
+                background-color: #f7f8fa;
+                -webkit-font-smoothing: antialiased;
+            }
+
+            #app {
+                max-width: 700px;
+                margin: 0 auto;
+            }
+
+            [v-cloak] {
+                opacity: 0 !important;
+            }
+
+            .canvas-wrapper {
+                position: relative;
+                margin: 0 auto;
+                -webkit-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
+                user-select: none;
+                background: #000;
+            }
+
+            .canvas-wrapper,
+            .canvas-wrapper>img,
+            .canvas-wrapper>video,
+            .canvas-wrapper>canvas {
+                overflow: hidden;
+            }
+
+            .canvas-wrapper>img,
+            .canvas-wrapper>video {
+                display: block;
+                width: 100%;
+                height: auto;
+            }
+
+            .canvas-wrapper>canvas {
+                display: block;
+                width: 100%;
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                z-index: 2;
+                transform: translate(-50%, -50%) scale(1, 1);
+            }
+
+            select.van-field__control {
+                -webkit-appearance: none;
+                border: 0;
+                outline: 0;
+                vertical-align: bottom;
+                box-sizing: border-box;
+                font-size: 12px;
+            }
+
+            .van-field--disabled .van-field__label {
+                color: #646566;
+            }
+
+            input[type="color"] {
+                transition: opacity 0.35s;
+                opacity: 1;
+                width: 30px;
+                height: 30px;
+            }
+
+            .van-field--disabled input[type="color"] {
+                opacity: 0.7;
+            }
+
+            .slider {
+                display: inline-block;
+                width: 55px;
+                text-align: right;
+                font-size: 12px;
+                color: #9e9e9e;
+            }
+            .uploader {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 15px;
+                background-color: #fbfdff;
+                border: 1px dashed #c0ccda;
+                border-radius: 6px;
+                box-sizing: border-box;
+                margin: 15px;
+                min-height: 80px;
+                cursor: pointer;
+                box-shadow: transparent 0px 0px 0px 0px;
+                transition: 0.25s;
+            }
+
+            .uploader:hover {
+                border-color: #409eff;
+            }
+
+            .uploader .uploader__text {
+                color: #606266;
+                font-size: 14px;
+                text-align: center;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div id="app" v-cloak>
+            <div class="canvas-wrapper" ref="wrapper">
+                <transition name="van-fade">
+                    <video v-show="inputType==='Camera'"  ref="video" :id="videoId"
+                    :style="{ 'transform': controls.flipHorizontal ? 'scale(-1, 1)' : 'scale(1, 1)' }"
+                    webkit-playsinline="true" playsinline="true" preload autoplay loop muted></video>
+                </transition>
+                <transition name="van-fade">
+                   <img ref="Image" :id="imageId" v-show="inputType==='Image' && previewImages" :src="previewImages">
+                </transition>
+                <canvas ref="canvas" :width="canvasWidth" :height="canvasHeight"
+                    :style="{ 'transform': controls.flipHorizontal ? 'translate(-50%,-50%) scale(-1, 1)' : 'translate(-50%,-50%) scale(1, 1)' }"></canvas>
+            </div>
+            <van-cell-group style="margin:10px 16px;" inset>
+                <van-field label="输入模式">
+                    <template #input>
+                        <van-radio-group @change="changeInputType" v-model="inputType" direction="horizontal">
+                            <van-radio name="Image">图片</van-radio>
+                            <van-radio name="Camera">相机</van-radio>
+                        </van-radio-group>
+                    </template>
+                </van-field>
+            </van-cell-group>
+            <transition name="van-fade">
+                <van-cell-group v-show="inputType==='Image'" style="margin:10px 16px;" inset>
+                    <label for="inputFileColorThief" class="uploader" ref="uploader">
+                        <div class="uploader__text">将文件拖到此处，或<span>点击上传</span></div>
+                    </label>
+                    <div style="text-align:center;font-size: 12px;"><i>支持粘贴上传</i></div>
+                </van-cell-group>
+            </transition>
+            <transition name="van-fade">
+                <van-cell-group v-show="inputType==='Camera'" style="margin:10px 16px;" inset>
+                    <van-field label="摄像头" center is-link>
+                        <template #input>
+                            <select class="van-field__control" v-model="controls.deviceId" @change="openCamera">
+                                <option v-for="(item, index) in deviceList" :key="index" :value="item.deviceId"
+                                    v-text="item.name"></option>
+                            </select>
+                        </template>
+                    </van-field>
+                    <van-field label="镜像">
+                        <template #input>
+                            <van-switch :disabled="!model" v-model="controls.flipHorizontal" size="20" />
+                        </template>
+                    </van-field>
+                </van-cell-group>
+            </transition>
+            <van-cell-group style="margin:10px 16px;" inset>
+                <van-field v-for="(value, key) in Colors" :key="key" :label="key" v-show="key!='custom'"
+                    :value="ColorsName[key]" type="color" center disabled>
+                    <template #button>
+                        <van-checkbox v-model="controls[key]" @change="changeColors" :disabled="!model"></van-checkbox>
+                    </template>
+                </van-field>
+                <van-field label="自定义" v-model="controls.customColor" type="color" center :disabled="!controls.custom"
+                    @input="updateCustomColor">
+                    <template #button>
+                        <van-checkbox v-model="controls.custom" @change="changeColors" :disabled="!model"></van-checkbox>
+                    </template>
+                </van-field>
+                <transition name="van-fade">
+                    <template v-if="inputType==='Camera'">
+                        <van-field label="填充透明度">
+                            <template #input>
+                                <van-slider :disabled="!model" v-model="controls.rectOpacity" min="0.1" max="1" step="0.1"></van-slider>
+                                <span class="slider" v-text="controls.rectOpacity"></span>
+                            </template>
+                        </van-field>
+                    </template>
+                </transition>
+            </van-cell-group>
+            <van-cell-group style="margin:10px 16px;" inset>
+                <van-field label="最小尺寸">
+                    <template #input>
+                        <van-slider :disabled="!model" v-model="controls.minDimension" @drag-end="sliderChange" min="0.1" max="200"
+                            step="0.1"></van-slider>
+                        <span class="slider" v-text="controls.minDimension"></span>
+                    </template>
+                </van-field>
+                <van-field label="最大尺寸">
+                    <template #input>
+                        <van-slider :disabled="!model" v-model="controls.maxDimension" @drag-end="sliderChange" min="1" max="2000"
+                            step="1"></van-slider>
+                        <span class="slider" v-text="controls.maxDimension"></span>
+                    </template>
+                </van-field>
+                <van-field label="最小组大小">
+                    <template #input>
+                        <van-slider :disabled="!model" v-model="controls.minGroupSize" @drag-end="sliderChange" min="1" max="1000"
+                            step="1"></van-slider>
+                        <span class="slider" v-text="controls.minGroupSize"></span>
+                    </template>
+                </van-field>
+            </van-cell-group>
+            <input id="inputFileColorThief" type="file" @change="fileChange($event)" accept="image/*" style="display:none">
+        </div>
+        <script>
+            function isObjEmpty(obj) {
+                return (
+                    obj === undefined ||
+                    obj === "undefined" ||
+                    obj == null ||
+                    obj === "" ||
+                    obj.length === 0 ||
+                    (typeof obj === "object" && Object.keys(obj).length === 0)
+                );
+            };
+            function isPhone() {
+                return (navigator.userAgent.match(/(phone|pad|pod|iPhone|iPod|ios|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone)/i))
+            };
+            new Vue({
+                el: '#app',
+                data() {
+                    return {
+                        videoId: `video_${Math.random().toString(16).substring(2)}`,
+                        imageId: `image_${Math.random().toString(16).substring(2)}`,
+                        inputType: location.search.includes('type=Camera')?"Camera":"Image",
+                        camera: null,
+                        width: document.documentElement.clientWidth || window.innerWidth,
+                        height: document.documentElement.clientHeight || window.innerHeight,
+                        canvasWidth: 0,
+                        canvasHeight: 0,
+                        deviceList: [], //设备列表
+                        isCameraOpen: false, //摄像头是否打开
+                        trackerTask: null,
+                        model: null, //模型
+                        modelLoad: true, //模型加载中
+                        previewImages:"",
+                        Colors: {},
+                        ColorsName: { cyan: '#00ffff', magenta: '#ff00ff', yellow: '#ffff00' },
+                        controls: {
+                            deviceId: localStorage.getItem(`deviceId`) || 'environment', //设备id
+                            flipHorizontal: false,
+                            custom: false,
+                            customColor: "#000000",
+                            minDimension: 20,
+                            maxDimension: 1000,
+                            minGroupSize: 30,
+                            rectOpacity: 0.1,
+                            cyan: true,
+                            magenta: true,
+                            yellow: true
+                        },
+                        canvas: null,
+                        ctx: null,
+                        customColorElement: null,
+                    };
+                },
+                mounted() {
+                    this.canvas = this.$refs.canvas;
+                    this.ctx = this.canvas.getContext('2d');
+                    this.changeInputType();
+                    this.cameraInit();
+                    this.colorsInit();
+                },
+                methods: {
+                    isEmpty(e) {
+                        return isObjEmpty(e)
+                    },
+                    changeColors(){
+                        this.updateColors();
+                        const inputType = this.inputType;
+                        if (inputType == "Image") {
+                            this.createModel();
+                        }
+                    },
+                    async changeInputType() {
+                        this.isCameraOpen = false;
+                        this.trackerTask && await this.trackerTask.stop()
+                        this.camera && await this.camera.stop();
+                        this.model && await this.model.removeAllListeners('track');
+                        this.model = null;
+                        this.controls.flipHorizontal=false;
+                        document.removeEventListener('paste', this.upPaste);
+                        this.$refs.uploader.removeEventListener("dragenter", this.funPreventDefault, false);
+                        this.$refs.uploader.removeEventListener("dragover", this.funDragover, false);
+                        this.$refs.uploader.removeEventListener("dragleave", this.funDragleave, false);
+                        this.$refs.uploader.removeEventListener("drop", this.funDrop, false);
+                        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+                        this.$nextTick(_=>{
+                            const inputType = this.inputType;
+                            if (inputType == "Image") {
+                                // 剪切板上传
+                                document.addEventListener('paste', this.upPaste);
+                                this.$refs.uploader.addEventListener("dragenter", this.funPreventDefault, false);
+                                this.$refs.uploader.addEventListener("dragover", this.funDragover, false);
+                                this.$refs.uploader.addEventListener("dragleave", this.funDragleave, false);
+                                this.$refs.uploader.addEventListener("drop", this.funDrop, false);
+                            }
+                            if (inputType == "Camera") {
+                                this.openCamera();
+                            }
+                            console.log('inputType', inputType);
+                        })
+
+                    },
+                    sliderChange() {
+                        const { minDimension, maxDimension, minGroupSize } = this.controls;
+                        this.model.setMinDimension(minDimension);
+                        this.model.setMaxDimension(maxDimension);
+                        this.model.setMinGroupSize(minGroupSize);
+                        const inputType = this.inputType;
+                        if (inputType == "Image") {
+                            this.createModel();
+                        }
+                    },
+                    updateCustomColor() {
+                        var value = this.controls.customColor;
+                        var components = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(value);
+                        var customColorR = parseInt(components[1], 16);
+                        var customColorG = parseInt(components[2], 16);
+                        var customColorB = parseInt(components[3], 16);
+                        var colorTotal = customColorR + customColorG + customColorB;
+                        if (colorTotal === 0) {
+                            tracking.ColorTracker.registerColor('custom', function (r, g, b) {
+                                return r + g + b < 10;
+                            });
+                        } else {
+                            var rRatio = customColorR / colorTotal;
+                            var gRatio = customColorG / colorTotal;
+                            tracking.ColorTracker.registerColor('custom', function (r, g, b) {
+                                var colorTotal2 = r + g + b;
+                                if (colorTotal2 === 0) {
+                                    if (colorTotal < 10) {
+                                        return true;
+                                    }
+                                    return false;
+                                }
+                                var rRatio2 = r / colorTotal2,
+                                    gRatio2 = g / colorTotal2,
+                                    deltaColorTotal = colorTotal / colorTotal2,
+                                    deltaR = rRatio / rRatio2,
+                                    deltaG = gRatio / gRatio2;
+                                return deltaColorTotal > 0.9 && deltaColorTotal < 1.1 &&
+                                    deltaR > 0.9 && deltaR < 1.1 &&
+                                    deltaG > 0.9 && deltaG < 1.1;
+                            });
+                        }
+                        const inputType = this.inputType;
+                        if (inputType == "Image") {
+                            this.createModel();
+                        }
+                    },
+                    updateColors() {
+                        var colors = [];
+                        for (var key in this.Colors) {
+                            if (Object.hasOwnProperty.call(this.Colors, key)) {
+                                if (this.controls[key]) {
+                                    colors.push(key);
+                                }
+                            }
+                        }
+                        console.log(colors);
+                        this.model && this.model.setColors(colors);
+                    },
+                    colorsInit() {
+                        let Colors = {
+                            custom: this.controls.custom
+                        };
+                        Object.keys(tracking.ColorTracker.knownColors_).forEach((color) => {
+                            Colors[color] = true;
+                        });
+                        this.Colors = Colors;
+
+                        this.controls = Object.assign(this.controls, Colors)
+                    },
+                    async getMediaDevices() {
+                        let deviceList = await this.camera.getMediaDevices();
+                        this.deviceList = deviceList.map(e => {
+                            e.name = e.label || e.deviceId;
+                            e.color = e.deviceId == this.deviceId ? '#1989fa' : '#323233';
+                            return e
+                        })
+                    },
+                    async cameraInit() {
+                        const video = this.$refs.video;
+                        this.camera = new Camera(video, {
+                            audio: false,
+                            video: {
+                                // width: this.width,
+                                // height: this.height,
+                            }
+                        });
+                        await this.getMediaDevices();
+                    },
+                    openCamera() {
+                        const toast = this.$toast.loading({
+                            duration: 0, // 持续展示 toast
+                            forbidClick: true,
+                            message: '打开摄像头',
+                        });
+                        this.isCameraOpen = false;
+                        this.camera.open(this.controls.deviceId)
+                            .then(async res => {
+                                await this.getMediaDevices();
+                                const video = this.$refs.video;
+                                // const { videoWidth, videoHeight } = video;
+                                const { clientWidth, clientHeight } = video;
+                                this.canvasWidth = clientWidth;
+                                this.canvasHeight = clientHeight;
+                                this.$refs.wrapper.style.width = clientWidth + 'px';
+                                this.$refs.wrapper.style.height = clientHeight + 'px';
+                                this.isCameraOpen = true;
+                                if (res.settings && res.settings.deviceId) {
+                                    this.controls.deviceId = res.settings.deviceId;
+                                    if (this.deviceList.filter(e => e.deviceId == this.controls.deviceId).length === 0) {
+                                        this.deviceList.unshift({
+                                            color: `#1989fa`,
+                                            name: res.label || '[未知设备]',
+                                            deviceId: this.controls.deviceId
+                                        })
+                                    }
+                                    window.localStorage.setItem(`deviceId`, this.controls.deviceId);
+                                };
+                                this.createModel();
+                            })
+                            .catch(error => {
+                                this.$dialog.alert({
+                                    title: '失败',
+                                    message: `打开摄像头失败：${error.errMsg}`,
+                                    theme: 'round-button',
+                                }).then(() => {
+                                    this.$router.replace('/')
+                                });
+                            })
+                            .finally(() => {
+                                toast.clear();
+                            })
+                    },
+                    //创建模型
+                    createModel() {
+                        return new Promise(async resolve => {
+                            this.modelLoad = true;
+                            const toast = this.$toast.loading({
+                                duration: 0, // 持续展示 toast
+                                forbidClick: true,
+                                message: '加载模型中',
+                            });
+                            this.model && await this.model.removeAllListeners('track');
+                            this.model = await new tracking.ColorTracker();
+
+                            var colors = [];
+                            for (var key in this.Colors) {
+                                if (Object.hasOwnProperty.call(this.Colors, key)) {
+                                    if (this.controls[key]) {
+                                        colors.push(key);
+                                    }
+                                }
+                            }
+
+                            this.model && await this.model.setColors(colors);
+                            this.model.customColor = this.controls.customColor;
+                            const { minDimension, maxDimension, minGroupSize } = this.controls;
+                            this.model.setMinDimension(minDimension);
+                            this.model.setMaxDimension(maxDimension);
+                            this.model.setMinGroupSize(minGroupSize);
+                            this.trackerTask && await this.trackerTask.stop();
+
+                            const inputType = this.inputType;
+                            if (inputType == "Image") {
+                                this.trackerTask = tracking.track(`#${this.imageId}`, this.model);
+                                this.model && await this.model.removeAllListeners('track');
+                                // once 一次
+                                this.model.once('track', (event) => {
+                                    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                                    event.data.forEach((rect) => {
+                                        this.drawRect(rect);
+                                    });
+                                });
+                            }
+                            if (inputType == "Camera") {
+                                this.trackerTask = tracking.track(`#${this.videoId}`, this.model);
+                                this.model && await this.model.removeAllListeners('track');
+                                // once 一次
+                                this.model.on('track', (event) => {
+                                    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                                    event.data.forEach((rect) => {
+                                        this.drawRect(rect);
+                                    });
+                                });
+                            }
+
+
+
+                            toast.clear();
+                            this.modelLoad = false;
+                            resolve(this.model);
+                        })
+                    },
+                    drawRect(rect) {
+                        if (rect.color === 'custom') {
+                            rect.color = this.controls.customColor;
+                        };
+                        this.ctx.strokeStyle = rect.color;
+                        this.ctx.fillStyle = this.toRGBA(rect.color, this.controls.rectOpacity || 0.1); //填充
+                        this.ctx.strokeRect(rect.x, rect.y, rect.width, rect.height);
+                        this.ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
+                        const fontSize = (rect.width / 13) > 20 ? 20 : (rect.width / 13) < 8 ? 8 : (rect.width / 13);
+                        this.ctx.font = `${fontSize}px bold Helvetica`;
+                        this.ctx.fillStyle = this.colorReverse(rect.color);
+                        const text = `${rect.color}`;
+                        const textWidth = this.ctx.measureText(text).width;
+                        this.ctx.fillText(text, rect.x + (rect.width / 2) - (textWidth / 2), rect.y + (rect.height / 2) + (fontSize / 2));
+                    },
+                    async identifyColors(file){
+                        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                        window.URL && window.URL.revokeObjectURL(this.previewImages);
+                        const Img = await this.fileToImage(file);
+                        this.previewImages = Img.src;
+                        this.$nextTick(_=>{
+                            const { clientWidth, clientHeight } = this.$refs.Image;
+                            this.canvasWidth = clientWidth;
+                            this.canvasHeight = clientHeight;
+                            this.$refs.wrapper.style.width = clientWidth + 'px';
+                            this.$refs.wrapper.style.height = clientHeight + 'px';
+                            window.scrollTo(0, 0);
+                            this.createModel();
+                        })
+
+                    },
+                    //阻止默认行为
+                    funPreventDefault(event) {
+                        event.preventDefault()
+                    },
+                    //拖动悬停
+                    funDragover(event) {
+                        event.preventDefault();
+                        event.target.style.borderColor = '#409eff';
+                        event.target.style.boxShadow = '0 0 11px 3px rgba(64, 158, 255,0.5)';
+                    },
+                    //拖动悬停离开
+                    funDragleave(event) {
+                        event.preventDefault();
+                        event.target.style.borderColor = '#c0ccda';
+                        event.target.style.boxShadow = '0 0 0 0 transparent';
+                    },
+                    //拖动悬停放下
+                    funDrop(event) {
+                        event.preventDefault();
+                        event.target.style.borderColor = '#c0ccda';
+                        event.target.style.boxShadow = '0 0 0 0 transparent';
+                        const file = event.dataTransfer.files[0];
+                        this.identifyColors(file)
+                    },
+                    //剪切板上传
+                    upPaste(event) {
+                        let items = event.clipboardData && event.clipboardData.items;
+                        let file = null;
+                        if (items && items.length) {
+                            // 检索剪切板items
+                            for (var i = 0; i < items.length; i++) {
+                                if (items[i].type.indexOf('image') !== -1) {
+                                    file = items[i].getAsFile();
+                                    break;
+                                }
+                            }
+                        };
+                        this.identifyColors(file)
+                    },
+                    //input上传
+                    fileChange(event) {
+                        if(event&& event.target && event.target.files && event.target.files.length>0){
+                            const file = event.target.files[0];
+                            this.identifyColors(file)
+                        }
+
+                    },
+                    //颜色反转
+                    colorReverse(oldColor) {
+                        if (oldColor == "yellow") {
+                            oldColor = "#ffff00"
+                        } else if (oldColor == "magenta") {
+                            oldColor = "#8b008b"
+                        } else if (oldColor == "cyan") {
+                            oldColor = "#00ffff"
+                        }
+                        oldColor = '0x' + oldColor.replace(/#/g, '');
+                        let str = '000000' + (0xFFFFFF - oldColor).toString(16);
+                        return '#' + str.substring(str.length - 6, str.length);
+                    },
+                    toRGBA(str, opacity) {
+                        if (str == "yellow") {
+                            str = "#ffff00"
+                        } else if (str == "magenta") {
+                            str = "#8b008b"
+                        } else if (str == "cyan") {
+                            str = "#00ffff"
+                        }
+                        // 16进制颜色值的正则
+                        var reg = /^#([0-9a-fA-f]{3}|[0-9a-fA-f]{6})$/;
+                        // 把颜色值变成小写
+                        var color = str.toLowerCase();
+                        if (reg.test(color)) {
+                            // 如果只有三位的值，需变成六位，如：#fff => #ffffff
+                            if (color.length === 4) {
+                                var colorNew = "#";
+                                for (var i = 1; i < 4; i += 1) {
+                                    colorNew += color.slice(i, i + 1).concat(color.slice(i, i + 1));
+                                }
+                                color = colorNew;
+                            }
+                            // 处理六位的颜色值，转为RGB
+                            var rgbc = [];
+                            for (var i = 1; i < 7; i += 2) {
+                                rgbc.push(parseInt("0x" + color.slice(i, i + 2)));
+                            }
+                            //floor 向下取整
+                            for (var i = 0; i < 3; i++) rgbc[i] = Math.floor(rgbc[i] * (1 - 0.1));
+                            return `rgba(${rgbc[0]},${rgbc[1]},${rgbc[2]},${opacity})`
+                        } else {
+                            return color;
+                        }
+                    },
+                    //file => Image
+                    fileToImage(file) {
+                        return new Promise(async resolve => {
+                            const img = new Image();
+                            img.src = window.URL && window.URL.createObjectURL(file);
+                            img.onload = () => {
+                                resolve(img);
+                            };
+                            img.onerror = () => {
+                                resolve(img);
+                            };
+                        })
+                    },
+                },
+            })
+        </script>
+    </body>
+
+</html>

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script src="https://cdn.bootcdn.net/ajax/libs/vue/3.2.47/vue.global.min.js"></script>
+        <!-- https://cdn.jsdelivr.net/npm/@varlet/ui@2.9.6/es/styles/ -->
+        <!-- <script src="https://cdn.jsdelivr.net/npm/@varlet/ui/umd/varlet.js"></script> -->
+        <script src="varlet.js"></script>
+        <title>Vue3-varlet</title>
+        <style>
+            body {
+                transition: background-color .25s, color .25s;
+                color: var(--color-text);
+                background-color: var(--color-body);
+            }
+
+            .pd15 {
+                padding: 15px;
+            }
+            .var-card{
+                margin-top: 15px;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div id="app">
+            <var-button block @click="toggleTheme">切换主题</var-button>
+            <!-- https://varlet.gitee.io/varlet-ui/#/zh-CN/home -->
+
+            <var-card title="按钮" subtitle="Button">
+                <template #description>
+                    <div class="pd15">
+                        <var-space :size="[10, 10]">
+                            <var-button>默认按钮</var-button>
+                            <var-button type="primary">主要按钮</var-button>
+                            <var-button type="info">信息按钮</var-button>
+                            <var-button type="success">成功按钮</var-button>
+                            <var-button type="warning">警告按钮</var-button>
+                            <var-button type="danger">危险按钮</var-button>
+                        </var-space>
+                    </div>
+                </template>
+            </var-card>
+            <var-card title="面包屑" subtitle="Breadcrumbs">
+                <template #description>
+                    <div class="pd15">
+                        <var-breadcrumbs>
+                            <var-breadcrumb>首页</var-breadcrumb>
+                            <var-breadcrumb>一级</var-breadcrumb>
+                            <var-breadcrumb>二级</var-breadcrumb>
+                        </var-breadcrumbs>
+                    </div>
+                </template>
+            </var-card>
+
+
+            <!-- 悬浮动作按钮 -->
+            <var-fab v-model:active="fabActive" type="danger" position="right-bottom" trigger="click" direction="top">
+                <var-button @click="fabActive = !fabActive" type="info" round>
+                    <var-icon name="account-circle"></var-icon>
+                </var-button>
+                <var-button @click="fabActive = !fabActive" type="success" round>
+                    <var-icon name="checkbox-marked-circle"></var-icon>
+                </var-button>
+                <var-button @click="fabActive = !fabActive" type="warning" round>
+                    <var-icon name="bell"></var-icon>
+                </var-button>
+                <var-button @click="fabActive = !fabActive" type="danger" round>
+                    <var-icon name="delete"></var-icon>
+                </var-button>
+            </var-fab>
+        </div>
+        <script>
+            const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+            function darkModeHandler() {
+                if (mediaQuery.matches) {
+                    Varlet.StyleProvider(Varlet.Themes.dark)
+                } else {
+                    Varlet.StyleProvider(null)
+                }
+            }
+
+            // 判断当前模式
+            darkModeHandler();
+            // 监听模式变化
+            mediaQuery.addListener(darkModeHandler);
+
+            const VueApp = {
+                data() {
+                    return {
+                        currentTheme: mediaQuery.matches ? Varlet.Themes.dark : null,
+                        fabActive: false
+                    }
+                },
+                mounted() {
+                    Varlet.Snackbar.success('mounted')
+                },
+                methods: {
+                    toggleTheme() {
+                        this.currentTheme = this.currentTheme ? null : Varlet.Themes.dark
+                        Varlet.StyleProvider(this.currentTheme)
+                    },
+                }
+            }
+            const app = Vue.createApp(VueApp);
+            app.use(Varlet);
+            app.mount('#app');
+        </script>
+    </body>
+
+</html>

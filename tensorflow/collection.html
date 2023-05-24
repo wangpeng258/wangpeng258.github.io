@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="utf-8">
+    <title>tensorflow</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <title>TensorFlow.js</title>
+    <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.2.0/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.bootcdn.net/ajax/libs/vue/2.6.11/vue.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/vue-resource/1.5.3/vue-resource.min.js"></script>
+    <!-- 引入机器学习库TensorFlow.js -->
+    <script src="https://cdn.bootcdn.net/ajax/libs/tensorflow/3.19.0/tf.min.js"></script>
+    <style>
+        body {
+            background-color: #efefef;
+        }
+
+        [v-cloak] {
+            opacity: 0 !important;
+        }
+
+        .writingboard {
+            margin: 10px;
+            position: relative;
+        }
+
+        .writingboard::before {
+            counter-increment: section;
+            content: counter(section);
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            font-size: 12px;
+            color: #000;
+            opacity: 0.5;
+            pointer-events: none
+        }
+
+        .noSection::before {
+            display: none;
+        }
+
+        .noSection>div {
+            margin: 0 auto;
+        }
+
+        .writingboard .drawArea {
+            position: relative;
+        }
+
+        .writingboard .drawArea::before {
+            content: attr(number);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: block;
+            color: #000;
+            font-size: 10em;
+            opacity: 0.05;
+            pointer-events: none
+        }
+
+        .writingboard canvas {
+            display: block;
+            margin: 0 auto;
+        }
+
+        .writingboard .draw {
+            border: 1px solid #000;
+        }
+
+        .writingboard .preview {
+            border: 1px solid red;
+            margin-top: 5px;
+            cursor: pointer;
+        }
+
+        .toast {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: flex;
+            -webkit-box-orient: vertical;
+            -webkit-box-direction: normal;
+            -webkit-flex-direction: column;
+            flex-direction: column;
+            -webkit-box-align: center;
+            -webkit-align-items: center;
+            align-items: center;
+            -webkit-box-pack: center;
+            -webkit-justify-content: center;
+            justify-content: center;
+            box-sizing: content-box;
+            width: 88px;
+            max-width: 70%;
+            min-height: 88px;
+            padding: 16px;
+            color: #fff;
+            font-size: 14px;
+            line-height: 20px;
+            white-space: pre-wrap;
+            text-align: center;
+            word-break: break-all;
+            background-color: rgba(0, 0, 0, .7);
+            border-radius: 8px;
+            -webkit-transform: translate3d(-50%, -50%, 0);
+            transform: translate3d(-50%, -50%, 0);
+            width: -webkit-fit-content;
+            width: fit-content;
+            min-width: 96px;
+            min-height: 0;
+            padding: 8px 12px;
+            z-index: 2007;
+        }
+
+        .dg textarea,
+        .dg button,
+        .dg input {
+            font: menu;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app" class="container" v-cloak>
+        <div class="card my-4 mx-auto">
+            <div class="card-header">采集数据</div>
+            <div class="card-body">
+                <writingboard class="noSection" ref="predict" :size="200"></writingboard>
+                <div class="text-center py-4">
+                    <select class="form-select my-2 mx-auto" v-model="targetNumber" style="max-width: 200px;">
+                        <option v-for="(item,index) in trainingScope" :key="index" :value="item.value" v-text="item.name"></option>
+                    </select>
+                    <button class="btn btn-primary" @click="collection" :disabled="collectionLoading" type="button">
+                        {{collectionLoading?'保存中':'保存'}}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        function Toast(content) {
+            document.querySelector('#toast') && document.querySelector('#toast').remove();
+            window['ToastDelayRem'] && clearTimeout(window['ToastDelayRem']);
+            document.body.insertAdjacentHTML('beforeEnd', `<div id="toast" class="toast">${content}</div>`);
+            document.querySelector('#toast').style.display = 'flex';
+            window['ToastDelayRem'] = setTimeout(() => {
+                document.querySelector('#toast') && document.querySelector('#toast').remove();
+            }, 2000);
+        }
+        Vue.component('writingboard', {
+            template: `<div class="writingboard">
+                            <div class="drawArea" ref="drawArea" :number="number" :style="{'width':(size+2)+'px'}">
+                                <canvas
+                                    class="draw"
+                                    ref="draw"
+                                    :width="size"
+                                    :height="size">
+                                </canvas>
+                            </div>
+                            <div :style="{'width':(size)+'px'}">
+                                <canvas
+                                    class="preview"
+                                    title="clear"
+                                    ref="preview"
+                                    width="28"
+                                    height="28"
+                                    @click="clear">
+                                </canvas>
+                            </div>
+                        </div>`,
+            props: ['size', 'number'],
+            data: {
+                drawing: false,
+                draw: null,
+                preview: null,
+            },
+            mounted() {
+                let c2d = this.draw = this.$refs.draw.getContext('2d');
+                this.preview = this.$refs.preview.getContext('2d');
+                c2d.lineWidth = 15;
+                c2d.strokeStyle = "#000"; //颜色
+                c2d.lineCap = 'round';
+                c2d.lineJoin = 'round';
+
+                let eventName = ['mousedown', 'mousemove', 'mouseup']; // [开始，移动，结束]
+                const isTouch = 'ontouchstart' in document.documentElement;
+                if (isTouch) {
+                    eventName = ['touchstart', 'touchmove', 'touchend']
+                }
+                this.$refs.draw.addEventListener(eventName[0], e => {
+                    if (isTouch) {
+                        if (e.targetTouches.length > 1) {
+                            return;
+                        }
+                        var touch = e.targetTouches[0];
+                        var x = touch.clientX - e.target.getBoundingClientRect().x;
+                        var y = touch.clientY - e.target.getBoundingClientRect().y;
+                        e.offsetX = x;
+                        e.offsetY = y;
+                    };
+                    this.drawing = true;
+                    this.draw.beginPath()
+                    this.draw.moveTo(e.offsetX, e.offsetY)
+                })
+                this.$refs.draw.addEventListener(eventName[1], e => {
+                    e.preventDefault();
+                    if (isTouch) {
+                        if (e.targetTouches.length > 1) {
+                            return;
+                        }
+                        var touch = e.targetTouches[0];
+                        var x = touch.clientX - e.target.getBoundingClientRect().x;
+                        var y = touch.clientY - e.target.getBoundingClientRect().y;
+                        e.offsetX = x;
+                        e.offsetY = y;
+                    }
+                    if (this.drawing) {
+                        this.draw.lineTo(e.offsetX, e.offsetY)
+                        this.draw.stroke()
+                    }
+                })
+                this.$refs.drawArea.addEventListener(eventName[2], e => {
+                    this.drawing = false
+                    this.preview.fillStyle = 'white' //实际是透明的,必须填充白色
+                    this.preview.fillRect(0, 0, 28, 28)
+                    this.preview.drawImage(this.$refs.draw, 0, 0, 28, 28);
+                })
+
+            },
+            methods: {
+                clear() {
+                    this.draw.clearRect(0, 0, 200, 200)
+                    this.preview.clearRect(0, 0, 28, 28)
+                },
+                getData() {
+                    let image = this.preview.getImageData(0, 0, 28, 28);
+                    let data = image.data;
+                    let pixelData = [];
+                    let color;
+                    for (let i = 0; i < data.length; i += 4) {
+                        color = (data[i] + data[i + 1] + data[i + 2]) / 3;
+                        pixelData.push(Math.round((255 - color) / 255))
+                    }
+                    return pixelData
+                },
+            }
+        });
+        new Vue({
+            el: '#app',
+            data: {
+                trainingScope: [{
+                    name: '0',
+                    value: 0,
+                }, {
+                    name: '1',
+                    value: 1,
+                }, {
+                    name: '2',
+                    value: 2,
+                }, {
+                    name: '3',
+                    value: 3,
+                }, {
+                    name: '4',
+                    value: 4,
+                }, {
+                    name: '5',
+                    value: 5,
+                }, {
+                    name: '6',
+                    value: 6,
+                }, {
+                    name: '7',
+                    value: 7,
+                }, {
+                    name: '8',
+                    value: 8,
+                }, {
+                    name: '9',
+                    value: 9,
+                }, {
+                    name: 'A',
+                    value: 10,
+                }, {
+                    name: 'B',
+                    value: 11,
+                }, {
+                    name: 'C',
+                    value: 12,
+                }, {
+                    name: 'D',
+                    value: 13,
+                }, {
+                    name: 'E',
+                    value: 14,
+                }, {
+                    name: 'F',
+                    value: 15,
+                }, {
+                    name: 'G',
+                    value: 16,
+                }, {
+                    name: 'H',
+                    value: 17,
+                }, {
+                    name: 'I',
+                    value: 18,
+                }, {
+                    name: 'J',
+                    value: 19,
+                }, {
+                    name: 'K',
+                    value: 20,
+                }, {
+                    name: 'L',
+                    value: 21,
+                }, {
+                    name: 'M',
+                    value: 22,
+                }, {
+                    name: 'N',
+                    value: 23,
+                }, {
+                    name: 'O',
+                    value: 24,
+                }, {
+                    name: 'P',
+                    value: 25,
+                }, {
+                    name: 'Q',
+                    value: 26,
+                }, {
+                    name: 'R',
+                    value: 27,
+                }, {
+                    name: 'S',
+                    value: 28,
+                }, {
+                    name: 'T',
+                    value: 29,
+                }, {
+                    name: 'U',
+                    value: 30,
+                }, {
+                    name: 'V',
+                    value: 31,
+                }, {
+                    name: 'W',
+                    value: 32,
+                }, {
+                    name: 'X',
+                    value: 33,
+                }, {
+                    name: 'Y',
+                    value: 34,
+                }, {
+                    name: 'Z',
+                    value: 35,
+                }], //训练范围
+                targetNumber: 0, //训练数字
+                collectionLoading: false, //保存中
+            },
+            async mounted() {
+
+            },
+            methods: {
+                collection() {
+                    let data = this.$refs['predict'].getData();
+                    let src = this.$refs['predict'].$refs['preview'].toDataURL();
+                    if (!data.includes(0)) {
+                        Toast('canvasData null');
+                        return
+                    };
+                    if (this.collectionLoading) return;
+                    this.collectionLoading = true;
+                    let XData = data;
+                    let YData = tf.oneHot(parseInt(this.targetNumber), this.trainingScope.length).arraySync();
+
+                    let name = this.trainingScope.find(e => e.value === this.targetNumber).name;
+
+                    console.log('XData', XData);
+                    console.log('YData', YData);
+
+                    this.$http.post(`http://192.168.1.100:8888/add?notKey=id`, {
+                        s: src,
+                        n: name,
+                        x: JSON.stringify(XData),
+                        y: JSON.stringify(YData),
+                    }, {
+                        emulateJSON: true
+                    }).then(res => {
+                        this.collectionLoading = false;
+                        if (res.statusText == "OK" && res.body && res.body.code === "ok") {
+                            Toast('保存成功');
+                            this.$refs['predict'].clear()
+                        } else {
+                            Toast(`${res.statusText}-${res.body.msg}`)
+                        }
+
+                    }, (err) => {
+                        this.collectionLoading = false;
+                        console.log(err);
+                        Toast(err);
+                    });
+                },
+            }
+
+        })
+    </script>
+</body>
+
+</html>

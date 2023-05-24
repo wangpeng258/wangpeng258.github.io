@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+    <head>
+        <meta charset="utf-8">
+        <title>KNN Classifier</title>
+        <meta name="viewport"
+            content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+        <!-- 引入机器学习库TensorFlow.js -->
+        <script src="https://cdn.bootcdn.net/ajax/libs/tensorflow/3.19.0/tf.min.js"></script>
+        <!-- Load MobileNet -->
+        <script src="https://unpkg.com/@tensorflow-models/mobilenet"></script>
+        <!-- Load KNN Classifier -->
+        <script src="https://unpkg.com/@tensorflow-models/knn-classifier"></script>
+        <script src="https://dcdn.it120.cc/2022/11/15/ce9227d8-7041-43e1-a0aa-1385ba308fe4.js"></script>
+    </head>
+
+    <body>
+        <img id='class0' src='./images/1.png' />
+        <img id='class1' src='./images/2.png' />
+        <img id='test' src='./images/3.png ' />
+        <video id="cameraVideo" width="200" height="200"></video>
+        <script>
+            // const cameraVideo = document.querySelector('#cameraVideo');
+            // const camera = new Camera(cameraVideo, {
+            //     width: 200,
+            //     height: 200
+            // });
+            // camera.open();
+
+            // https://github.com/tensorflow/tfjs-models/tree/master/knn-classifier
+
+            const init = async function () {
+                //创建分类器
+
+                const classifier = knnClassifier.create();
+                // Load mobilenet
+                console.log('加载中...');
+                const mobilenetModule = await mobilenet.load({
+                    version: 2,
+                    alpha: 1,
+                    modelUrl:`https://storage.googleapis.com/tfhub-tfjs-modules/google/imagenet/mobilenet_v2_100_224/classification/2/model.json`
+                });
+                console.clear();
+
+                // Add MobileNet activations to the model repeatedly for all classes.
+                const img0 = tf.browser.fromPixels(document.getElementById('class0'));
+                const logits0 = mobilenetModule.infer(img0, `conv_preds`);
+                classifier.addExample(logits0, 0);
+                const img1 = tf.browser.fromPixels(document.getElementById('class1'));
+                const logits1 = mobilenetModule.infer(img1, `conv_preds`);
+                classifier.addExample(logits1, 1);
+
+                // Make a prediction.
+                const x = tf.browser.fromPixels(document.getElementById('test'));
+                const xlogits = mobilenetModule.infer(x, `conv_preds`);
+
+                console.log('开始');
+                console.log('获取每个类的示例计数',await classifier.getClassExampleCount());
+                console.log('获取完整的数据集',await classifier.getClassifierDataset());
+                // 设置完整的数据集，对于恢复状态很有用。
+                // classifier.setClassifierDataset(dataset: {[label: string]: Tensor2D})
+                console.log('获取班级总数',await classifier.getNumClasses());
+                console.log('预测',await classifier.predictClass(xlogits));
+                console.log('mobilenetModule',mobilenetModule);
+                console.log('classifier',classifier);
+                // 清除 WebGL 内存
+                // await classifier.dispose();
+
+
+            };
+
+            // init();
+
+
+
+            var modelurl = {
+                    "1.00": {
+                        .25: {
+                            url: "https://storage.googleapis.com/tfhub-tfjs-modules/google/imagenet/mobilenet_v1_025_224/classification/1/model.json",
+                            inputRange: [0, 1]
+                        },
+                        "0.50": {
+                            url: "https://storage.googleapis.com/tfhub-tfjs-modules/google/imagenet/mobilenet_v1_050_224/classification/1/model.json",
+                            inputRange: [0, 1]
+                        },
+                        .75: {
+                            url: "https://storage.googleapis.com/tfhub-tfjs-modules/google/imagenet/mobilenet_v1_075_224/classification/1/model.json",
+                            inputRange: [0, 1]
+                        },
+                        "1.00": {
+                            url: "https://storage.googleapis.com/tfhub-tfjs-modules/google/imagenet/mobilenet_v1_100_224/classification/1/model.json",
+                            inputRange: [0, 1]
+                        }
+                    },
+                    "2.00": {
+                        "0.50": {
+                            url: "https://storage.googleapis.com/tfhub-tfjs-modules/google/imagenet/mobilenet_v2_050_224/classification/2/model.json",
+                            inputRange: [0, 1]
+                        },
+                        .75: {
+                            url: "https://storage.googleapis.com/tfhub-tfjs-modules/google/imagenet/mobilenet_v2_075_224/classification/2/model.json",
+                            inputRange: [0, 1]
+                        },
+                        "1.00": {
+                            url: "https://storage.googleapis.com/tfhub-tfjs-modules/google/imagenet/mobilenet_v2_100_224/classification/2/model.json",
+                            inputRange: [0, 1]
+                        }
+                    }
+                };
+
+
+/*
+                console.time();
+                var b =  await fetch(`https://unpkg.com/@mediapipe/face_mesh/face_mesh_solution_packed_assets.data`).then(r => r.blob());
+                console.log(b);
+                console.timeEnd();
+
+                https://unpkg.com/@mediapipe/face_mesh/face_mesh_solution_packed_assets.data
+                https://unpkg.com/@mediapipe/face_mesh/face_mesh_solution_packed_assets.data
+ */
+
+        </script>
+    </body>
+
+</html>

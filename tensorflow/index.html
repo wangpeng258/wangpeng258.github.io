@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="utf-8">
+    <title>TensorFlow.js</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.2.0/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.bootcdn.net/ajax/libs/vue/2.6.11/vue.min.js"></script>
+    <!-- 引入机器学习库TensorFlow.js  https://tensorflow.google.cn/js?hl=zh-cn-->
+    <script src="https://cdn.bootcdn.net/ajax/libs/tensorflow/3.19.0/tf.min.js"></script>
+     <!-- 引入机器学习库可视化。  https://js.tensorflow.org/api_vis/1.5.1/-->
+    <script src="https://unpkg.com/@tensorflow/tfjs-vis"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/dat-gui/0.7.9/dat.gui.min.js"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/gh/wangpeng1478/Tools@master/static/stats.min.js"></script> -->
+    <script src="https://wangpeng14789.gitee.io/static/stats.min.js"></script>
+    <style>
+        body {
+            background-color: #efefef;
+        }
+
+        [v-cloak] {
+            opacity: 0 !important;
+        }
+
+        .writingboard {
+            margin: 10px;
+            position: relative;
+        }
+
+        .writingboard::before {
+            counter-increment: section;
+            content: counter(section);
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            font-size: 12px;
+            color: #000;
+            opacity: 0.5;
+            pointer-events: none
+        }
+
+        .noSection::before {
+            display: none;
+        }
+
+        .noSection>div {
+            margin: 0 auto;
+        }
+
+        .writingboard .drawArea {
+            position: relative;
+        }
+
+        .writingboard .drawArea::before {
+            content: attr(number);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: block;
+            color: #000;
+            font-size: 10em;
+            opacity: 0.05;
+            pointer-events: none
+        }
+
+        .writingboard canvas {
+            display: block;
+            margin: 0 auto;
+        }
+
+        .writingboard .draw {
+            border: 1px solid #000;
+        }
+
+        .writingboard .preview {
+            border: 1px solid red;
+            margin-top: 5px;
+            cursor: pointer;
+        }
+
+        .toast>.overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 999;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .toast>.message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: flex;
+            -webkit-box-orient: vertical;
+            -webkit-box-direction: normal;
+            -webkit-flex-direction: column;
+            flex-direction: column;
+            -webkit-box-align: center;
+            -webkit-align-items: center;
+            align-items: center;
+            -webkit-box-pack: center;
+            -webkit-justify-content: center;
+            justify-content: center;
+            box-sizing: content-box;
+            width: 88px;
+            max-width: 70%;
+            min-height: 88px;
+            padding: 16px;
+            color: #fff;
+            font-size: 14px;
+            line-height: 20px;
+            white-space: pre-wrap;
+            text-align: center;
+            word-break: break-all;
+            background-color: rgba(0, 0, 0, .7);
+            border-radius: 8px;
+            -webkit-transform: translate3d(-50%, -50%, 0);
+            transform: translate3d(-50%, -50%, 0);
+            width: -webkit-fit-content;
+            width: fit-content;
+            min-width: 96px;
+            min-height: 0;
+            padding: 8px 12px;
+            z-index: 1000;
+        }
+
+        .dg textarea,
+        .dg button,
+        .dg input {
+            font: menu;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app" class="container" v-cloak>
+        <div class="card my-4 mx-auto">
+            <div class="card-header">写字板</div>
+            <div class="card-body">
+                <div class="d-flex flex-wrap justify-content-center" style="counter-reset: section;">
+                    <writingboard v-for="index in (controls.writingboardNumber||3)" :key="index" ref="artboard" :number="trainingScope.find(e=>e.value===targetNumber).name" :size="200">
+                    </writingboard>
+                </div>
+                <div class="text-center py-4">
+                    <select class="form-select my-2 mx-auto" v-model="targetNumber" style="max-width: 200px;">
+                            <option v-for="(item,index) in trainingScope" :key="index" :value="item.value"
+                                v-text="item.name"></option>
+                        </select>
+                    <button class="btn btn-primary" @click="startTraining" :disabled="trainingLoading" type="button">
+                            {{trainingLoading?'训练中':'开始训练'}}
+                    </button>
+                    <div class="py-1">
+                        <div id="logsChart"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card my-4 mx-auto">
+            <div class="card-header">预测</div>
+            <div class="card-body">
+                <writingboard class="noSection" ref="predict" :size="200"></writingboard>
+                <div class="text-center py-4">
+                    <button class="btn btn-danger" @click="onRegNum" type="button">预测</button>
+                </div>
+            </div>
+        </div>
+        <div class="card my-4 mx-auto">
+            <div class="card-header">预测结果</div>
+            <div class="card-body">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>文字</th>
+                            <th>概率</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(item,index) in predictData" :key="index" :class="{'table-danger':item.name==reg}">
+                            <td>{{item.name}}</td>
+                            <td>{{(item.probability*100).toFixed(4)}}%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <input type="file" id="upload-json" style="display:none">
+        <input type="file" id="upload-weights" style="display:none">
+
+        <!-- <button @click="loadLayersModel" type="button">导入</button> -->
+
+    </div>
+    <script>
+        window.addEventListener('storage', e=>console.log);
+        function ToastClear() {
+            document.querySelector('#toast') && document.querySelector('#toast').remove();
+        };
+
+        function Toast(content, time = 2000) {
+            document.querySelector('#toast') && document.querySelector('#toast').remove();
+            window['ToastDelayRem'] && clearTimeout(window['ToastDelayRem']);
+            document.body.insertAdjacentHTML('beforeEnd', `<div id="toast" class="toast"><div class="message">${content}</div><div style="display: ${time > 0 ? 'none' : 'block'};" class="overlay"></div></div>`);
+            document.querySelector('#toast').style.display = 'flex';
+            if (time > 0) {
+                window['ToastDelayRem'] = setTimeout(() => {
+                    document.querySelector('#toast') && document.querySelector('#toast').remove();
+                }, time);
+            }
+
+        }
+        Vue.component('writingboard', {
+            template: `<div class="writingboard">
+                            <div class="drawArea" ref="drawArea" :number="number" :style="{'width':(size+2)+'px'}">
+                                <canvas
+                                    class="draw"
+                                    ref="draw"
+                                    :width="size"
+                                    :height="size">
+                                </canvas>
+                            </div>
+                            <div :style="{'width':(size)+'px'}">
+                                <canvas
+                                    class="preview"
+                                    title="clear"
+                                    ref="preview"
+                                    width="28"
+                                    height="28"
+                                    @click="clear">
+                                </canvas>
+                            </div>
+                        </div>`,
+            props: ['size', 'number'],
+            data: {
+                drawing: false,
+                draw: null,
+                preview: null,
+            },
+            mounted() {
+                let c2d = this.draw = this.$refs.draw.getContext('2d');
+                this.preview = this.$refs.preview.getContext('2d');
+                c2d.lineWidth = 15;
+                c2d.strokeStyle = "#000"; //颜色
+                c2d.lineCap = 'round';
+                c2d.lineJoin = 'round';
+
+                let eventName = ['mousedown', 'mousemove', 'mouseup']; // [开始，移动，结束]
+                const isTouch = 'ontouchstart' in document.documentElement;
+                if (isTouch) {
+                    eventName = ['touchstart', 'touchmove', 'touchend']
+                }
+                this.$refs.draw.addEventListener(eventName[0], e => {
+                    if (isTouch) {
+                        if (e.targetTouches.length > 1) {
+                            return;
+                        }
+                        var touch = e.targetTouches[0];
+                        var x = touch.clientX - e.target.getBoundingClientRect().x;
+                        var y = touch.clientY - e.target.getBoundingClientRect().y;
+                        e.offsetX = x;
+                        e.offsetY = y;
+                    };
+                    this.drawing = true;
+                    this.draw.beginPath()
+                    this.draw.moveTo(e.offsetX, e.offsetY)
+                })
+                this.$refs.draw.addEventListener(eventName[1], e => {
+                    e.preventDefault();
+                    if (isTouch) {
+                        if (e.targetTouches.length > 1) {
+                            return;
+                        }
+                        var touch = e.targetTouches[0];
+                        var x = touch.clientX - e.target.getBoundingClientRect().x;
+                        var y = touch.clientY - e.target.getBoundingClientRect().y;
+                        e.offsetX = x;
+                        e.offsetY = y;
+                    }
+                    if (this.drawing) {
+                        this.draw.lineTo(e.offsetX, e.offsetY)
+                        this.draw.stroke()
+                    }
+                })
+                this.$refs.drawArea.addEventListener(eventName[2], e => {
+                    this.drawing = false
+                    this.preview.fillStyle = 'white' //实际是透明的,必须填充白色
+                    this.preview.fillRect(0, 0, 28, 28)
+                    this.preview.drawImage(this.$refs.draw, 0, 0, 28, 28);
+                })
+
+            },
+            methods: {
+                clear() {
+                    this.draw.clearRect(0, 0, 200, 200)
+                    this.preview.clearRect(0, 0, 28, 28)
+                },
+                getData() {
+                    let image = this.preview.getImageData(0, 0, 28, 28);
+                    let data = image.data;
+                    let pixelData = [];
+                    let color;
+                    for (let i = 0; i < data.length; i += 4) {
+                        color = (data[i] + data[i + 1] + data[i + 2]) / 3;
+                        //空白的地方保持为0,有颜色的地方才有值,特征才明显,训练出来的效果更好,转成只有0和1,效果最好
+                        pixelData.push(Math.round((255 - color) / 255))
+                    }
+                    //单通道图片 长度784
+                    return pixelData
+                },
+            }
+        });
+        /**
+         * @ 排序
+         * @param {Object} property
+         * @dome arr.sort(compare('date'))
+         */
+        function compare(property) {
+            return function(a, b) {
+                var value1 = a[property];
+                var value2 = b[property];
+                return value2 - value1;
+            }
+        };
+
+
+
+        new Vue({
+            el: '#app',
+            data: {
+                trainingScope: [{
+                    name: '0',
+                    value: 0,
+                }, {
+                    name: '1',
+                    value: 1,
+                }, {
+                    name: '2',
+                    value: 2,
+                }, {
+                    name: '3',
+                    value: 3,
+                }, {
+                    name: '4',
+                    value: 4,
+                }, {
+                    name: '5',
+                    value: 5,
+                }, {
+                    name: '6',
+                    value: 6,
+                }, {
+                    name: '7',
+                    value: 7,
+                }, {
+                    name: '8',
+                    value: 8,
+                }, {
+                    name: '9',
+                    value: 9,
+                }, {
+                    name: 'A',
+                    value: 10,
+                }, {
+                    name: 'B',
+                    value: 11,
+                }, {
+                    name: 'C',
+                    value: 12,
+                }, {
+                    name: 'D',
+                    value: 13,
+                }, {
+                    name: 'E',
+                    value: 14,
+                }, {
+                    name: 'F',
+                    value: 15,
+                }, {
+                    name: 'G',
+                    value: 16,
+                }, {
+                    name: 'H',
+                    value: 17,
+                }, {
+                    name: 'I',
+                    value: 18,
+                }, {
+                    name: 'J',
+                    value: 19,
+                }, {
+                    name: 'K',
+                    value: 20,
+                }, {
+                    name: 'L',
+                    value: 21,
+                }, {
+                    name: 'M',
+                    value: 22,
+                }, {
+                    name: 'N',
+                    value: 23,
+                }, {
+                    name: 'O',
+                    value: 24,
+                }, {
+                    name: 'P',
+                    value: 25,
+                }, {
+                    name: 'Q',
+                    value: 26,
+                }, {
+                    name: 'R',
+                    value: 27,
+                }, {
+                    name: 'S',
+                    value: 28,
+                }, {
+                    name: 'T',
+                    value: 29,
+                }, {
+                    name: 'U',
+                    value: 30,
+                }, {
+                    name: 'V',
+                    value: 31,
+                }, {
+                    name: 'W',
+                    value: 32,
+                }, {
+                    name: 'X',
+                    value: 33,
+                }, {
+                    name: 'Y',
+                    value: 34,
+                }, {
+                    name: 'Z',
+                    value: 35,
+                }], //训练范围
+                targetNumber: 0, //训练数字
+                reg: 'xxx',
+                stats: null,
+                gui: null,
+                controls: new Object(), //gui
+                trainingLoading: false, //学习中
+                predictData: [],
+            },
+            async mounted() {
+                this.initStats();
+                this.initGui();
+                this.tfInit();
+
+            },
+            methods: {
+                tfInit(){
+                    //定义线性回归的模型
+                    const model = tf.sequential();
+
+                    //输入层 28*28 = 784
+                    model.add(tf.layers.inputLayer({inputShape: [784]}));
+
+                    //输出空间,输出空间为训练范围的长度
+                    model.add(tf.layers.dense({units: this.trainingScope.length}));
+
+                    //输出空间所有值之和为1
+                    model.add(tf.layers.softmax());
+
+                    //准备训练模型：指定损失和优化器。
+                    model.compile({
+                        optimizer: 'sgd', //优化器
+                        loss: 'categoricalCrossentropy', //损失函数
+                        metrics: ['accuracy'] //logs里的acc
+                    })
+                    this.model = model;
+                },
+                initGui() {
+                    const gui = new dat.GUI();
+                    this.controls = new function() {
+                        this.writingboardNumber = 3; //写字板数量
+                        this.clearAll = () => {};
+
+                        this.startTarget = () => {};
+                        this.lossTarget = 0.1; //损失函数（loss）
+                        this.startAuroTarget = () => {};
+
+                        this.saveModel = () => {}; //保存模型
+                        this.removeModel = () => {}; //删除模型
+                        this.loadModel = () => {}; //加载模型
+                        this.downloadsModel = () => {}; //下载模型
+
+                        this.upJsonModel = () => {}; //上传json模型
+                        this.upWeightsModel = () => {}; //上传权重模型
+                        this.loadlocalModel = () => {}; //加载本地模型
+
+                        this.loadHttplModel = () => {}; //加载本地模型
+
+                        this.statsShow = true; //开关
+                        this.api1 = () => {};
+                        this.api2 = () => {};
+
+                    };
+                    console.log(this.controls);
+                    const writingboardFolder = gui.addFolder(`写字板`);
+
+                    writingboardFolder.add(this.controls, 'writingboardNumber', 1, 20).name(`数量`).step(1);
+                    writingboardFolder.add(this.controls, 'clearAll').name(`清除写字板`).onChange(value => {
+                        gui.close();
+                        this.$refs['artboard'].forEach(e => e.clear());
+                        Toast('success');
+                    });
+
+                    const trainingFolder = gui.addFolder(`训练`);
+
+                    trainingFolder.add(this.controls, 'lossTarget',0.01,1).name(`损失函数loss`).step(0.01);
+                    trainingFolder.add(this.controls, 'startTarget').name(`开始训练`).onChange(value => {
+                        gui.close();
+                        this.training();
+                        Toast('开始');
+                    });
+                    trainingFolder.add(this.controls, 'startAuroTarget').name(`训练本地数据(0-9)`).onChange(value => {
+                        gui.close();
+                        this.startAuroTarget();
+                    });
+
+
+                    const modelFolder = gui.addFolder(`模型`);
+                    modelFolder.add(this.controls, 'saveModel').name(`保存模型(localstorage)`).onChange(async value => {
+                        await this.model.save('localstorage://trainData');
+                        console.log('所有模型', await tf.io.listModels());
+                        Toast('success');
+                    });
+                    modelFolder.add(this.controls, 'removeModel').name(`删除模型(localstorage)`).onChange(async value => {
+                        if (window.localStorage.getItem('tensorflowjs_models/trainData/info')) {
+                            await tf.io.removeModel('localstorage://trainData');
+                            console.log('所有模型', await tf.io.listModels());
+                            Toast('success');
+                        } else {
+                            Toast('model null');
+                        }
+                    });
+                    modelFolder.add(this.controls, 'loadModel').name(`加载模型(localstorage)`).onChange(async value => {
+                        if (window.localStorage.getItem('tensorflowjs_models/trainData/info')) {
+                            const loadedModel = await tf.loadLayersModel('localstorage://trainData');
+                            this.model = loadedModel;
+                            console.log('所有模型', await tf.io.listModels());
+                            Toast('success');
+                        } else {
+                            Toast('model null');
+                        }
+
+                    });
+                    modelFolder.add(this.controls, 'downloadsModel').name(`下载到本地`).onChange(async value => {
+                        await this.model.save('downloads://model');
+                        Toast('success');
+                    });
+
+                    modelFolder.add(this.controls, 'upJsonModel').name(`上传json模型(本地)`).onChange(async value => {
+                        document.querySelector("#upload-json").click();
+                    });
+                    modelFolder.add(this.controls, 'upWeightsModel').name(`上传权重模型(本地)`).onChange(async value => {
+                        document.querySelector("#upload-weights").click();
+                    });
+                    modelFolder.add(this.controls, 'loadlocalModel').name(`加载模型(本地)`).onChange(async value => {
+                        this.loadlocalModel();
+                    });
+
+                    modelFolder.add(this.controls, 'loadHttplModel').name(`加载训练完成模型(0-9)`).onChange(async value => {
+                        Toast('加载中', 0);
+                        this.model = await tf.loadLayersModel('./model.json');
+                        Toast('success');
+                    });
+
+
+
+                    const otherFolder = gui.addFolder(`其他`);
+                    otherFolder.add(this.controls, 'statsShow').name(`监视器显示`).onChange((value) => {
+                        this.stats.dom.querySelectorAll('canvas').forEach(el => {
+                            el.style.display = value ? "block" : "none";
+                        })
+                    });
+                    otherFolder.add(this.controls, 'api1').name(`tensorflow文档`).onChange(value => {
+                        window.open(`https://tensorflow.google.cn/`);
+                    });
+                    otherFolder.add(this.controls, 'api1').name(`tensorflow文档(保存和加载模型)`).onChange(value => {
+                        window.open(`https://tensorflow.google.cn/js/guide/save_load`);
+                    });
+                    otherFolder.add(this.controls, 'api1').name(`tensorflow文档(加载本地文件)`).onChange(value => {
+                        window.open(`https://js.tensorflow.org/api/latest/#io.browserFiles`);
+                    });
+                    //打开文件夹
+                    writingboardFolder.open();
+                    trainingFolder.open();
+                    modelFolder.open();
+                    otherFolder.open();
+                    gui.close();
+                    this.gui = gui;
+
+                },
+                initStats() {
+                    const stats = new Stats();
+                    stats.showPanel(1); // 0: fps, 1: ms, 2: mb, 3+: custom
+                    stats.domElement.style = `position: fixed;
+                                    left: 0px;
+                                    top: 50%;
+                                    transform: translateY(-50%);
+                                    cursor: pointer;
+                                    z-index: 10000;
+                                    pointer-events: none;`
+                    document.body.appendChild(stats.dom);
+                    requestAnimationFrame(function loop() {
+                        stats.update();
+                        requestAnimationFrame(loop)
+                    });
+                    stats.dom.querySelectorAll('canvas').forEach(el => {
+                        el.style.display = "block";
+                    })
+                    this.stats = stats;
+                },
+                //导入本地文件
+                async loadlocalModel() {
+                    const uploadJSONInput = document.getElementById('upload-json');
+                    const uploadWeightsInput = document.getElementById('upload-weights');
+                    if (uploadJSONInput.value && uploadWeightsInput.value) {
+                        const model = await tf.loadLayersModel(tf.io.browserFiles([uploadJSONInput.files[0], uploadWeightsInput.files[0]]));
+                        this.model = model;
+                        console.log(model);
+                        console.log('所有模型', await tf.io.listModels());
+                        Toast('success')
+                        uploadJSONInput.value = '';
+                        uploadWeightsInput.value = '';
+                    } else {
+                        Toast('上传json模型和权重模型')
+                    }
+                },
+                //训练本地数据
+                async startAuroTarget() {
+                    Toast('获取数据中', 0)
+                    if (this.trainingLoading) return;
+                    this.trainingLoading = true;
+                    let XData = [];
+                    let YData = [];
+                    await fetch(`./mode(0-9).json`)
+                        .then(response => response.json())
+                        .then(json => {
+                            ToastClear();
+                            json.data.forEach(element => {
+                                XData.push(JSON.parse(element.x));
+                                YData.push(JSON.parse(element.y));
+                            });
+                            console.log('XData', XData);
+                            console.log('YData', YData);
+                        }).catch(err => {
+                            Toast('加载模型失败');
+                        });
+                    if (XData.length === 0 || YData.length === 0) {
+                        Toast('加载模型失败');
+                        this.trainingLoading = false;
+                        return;
+                    }
+                    await this.train(XData,YData);
+                },
+                //开始训练
+                async startTraining() {
+                    if (this.trainingLoading) return;
+                    this.trainingLoading = true;
+                    setTimeout(async() => {
+                        // 训练数字，训练范围
+
+                        //生成上面的一阶张量
+                        let targetTensor = tf.oneHot(parseInt(this.targetNumber), this.trainingScope.length)
+                        let array = this.$refs['artboard'];
+                        let XData = [];
+                        let YData = [];
+                        for (let index = 0; index < array.length; index++) {
+                            const element = array[index];
+                            let data = element.getData();
+                            if (data.includes(0)) {
+                                XData.push(data);
+                                YData.push(targetTensor.arraySync());
+                            } else {
+                                console.log(index + 1, 'null')
+                            }
+                        };
+                        if (XData.length === 0 || YData.length === 0) {
+                            Toast('写字板数据为空')
+                            this.trainingLoading = false;
+                            return;
+                        }
+                        this.train(XData,YData);
+
+                    }, 0);
+                },
+                //训练
+               async train(XData,YData){
+                    this.trainingLoading = true;
+                    console.log('start train');
+                    var _this = this;
+                    const logsValues = [[], []];
+                    let index = 0;
+                    let isContinue = true;
+                    while(isContinue){
+                        // 使用数据训练模型。
+                        await this.model.fit(tf.tensor(XData), tf.tensor(YData), {
+                            epochs:1, //训练次数
+                            callbacks: { //每次的回调
+                                onEpochEnd(epoch, logs) {
+                                    // acc 准确率
+                                    // loss 损失函数
+                                    index++;
+                                    logsValues[0].push({'x': index, 'y': logs.acc});
+                                    logsValues[1].push({'x': index, 'y': logs.loss});
+                                    console.log('onEpochEnd:',index, logs);
+                                    _this.tfvisInit(logsValues);
+                                    if(_this.controls.lossTarget>=logs.loss){
+                                        isContinue = false;
+                                    }
+                                }
+                            }
+                        });
+                    };
+                    console.log('end train',logsValues);
+                    Toast(`训练完成（${index}次）`);
+                    //清除画布
+                    this.$refs['artboard'].forEach(e => e.clear());
+                    this.trainingLoading = false;
+                },
+                //图形化
+                tfvisInit(values){
+                    const container = document.getElementById('logsChart');
+                    const width = container.offsetWidth>450?450:container.offsetWidth;
+                    tfvis.render.linechart(container, {
+                        values,
+                        series: ['准确率（acc）','损失函数（loss）']
+                    }, {
+                        width,
+                        height: width*0.78,
+                        xLabel: 'x',
+                        yLabel: 'y',
+                    });
+                },
+                //预测
+                async onRegNum() {
+                    let data = this.$refs['predict'].getData();
+                    if (!data.includes(0)) {
+                        Toast('canvasData null');
+                        return
+                    }
+                    let predictions = this.model.predict(tf.tensor([data])) //结果也是tensor
+                        //获取tensor第一层里的最大值的index,正好就是数字本身
+                    let result = predictions.argMax(1).arraySync();
+                    let predictResults = predictions.arraySync()[0]; //预测结果
+                    console.log(predictResults);
+                    console.log(result[0]);
+                    let trainingScope = JSON.parse(JSON.stringify(this.trainingScope));
+                    trainingScope.map((e, i) => {
+                        e.probability = predictResults[i]
+                        return e
+                    })
+                    this.predictData = trainingScope.sort(compare('probability'));
+                    this.reg = this.predictData[0].name;
+                    Toast(this.reg);
+                    console.log(this.predictData);
+                }
+            }
+
+        })
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+    <head>
+        <meta charset="utf-8">
+        <title>目录</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+        <link href="/static/icon/favicon.ico" rel="shortcut icon" />
+        <!-- 书签icon -->
+        <link href="/static/icon/57x0w.png" rel="Bookmark" />
+        <!-- 隐藏浏览器的地址栏和toolbar -->
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <!-- 控制状态栏显示样式 [default、black、black-translucent] [即白色、黑色、灰色半透明] -->
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+        <!-- 添加到主屏后的标题 -->
+        <meta name="apple-mobile-web-app-title" content="目录">
+        <link rel="apple-touch-icon" sizes="57x57" href="/static/icon/57x0w.png" />
+        <link rel="apple-touch-icon" sizes="72x72" href="/static/icon/72x0w.png" />
+        <link rel="apple-touch-icon" sizes="114x114" href="/static/icon/114x0w.png" />
+        <link rel="apple-touch-icon" sizes="144x144" href="/static/icon/144x0w.png" />
+        <meta name="format-detection" content="telephone=no">
+        <link href="https://cdn.bootcdn.net/ajax/libs/vant/2.12.25/index.min.css" rel="stylesheet">
+        <link href="/static/css/index.css" rel="stylesheet">
+        <script src="https://cdn.bootcdn.net/ajax/libs/eruda/2.4.1/eruda.min.js"></script>
+        <script>location.search.includes('bug') && eruda.init()</script>
+        <script src="https://res.wx.qq.com/open/js/jweixin-1.6.0.js"></script>
+        <script src="https://cdn.bootcdn.net/ajax/libs/vue/2.6.11/vue.min.js"></script>
+        <script src="https://cdn.bootcdn.net/ajax/libs/vant/2.12.25/vant.min.js"></script>
+        <script src="https://cdn.bootcdn.net/ajax/libs/vue-resource/1.5.2/vue-resource.min.js"></script>
+        <script src="/static/js/index.js"></script>
+        <style>
+            #app{
+                max-width:500px;
+                margin: 0 auto;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div id="app" v-cloak>
+            <div v-if="loading" style="padding:20px 0;">
+                <van-loading color="#0094ff" size="24px" vertical>加载中</van-loading>
+            </div>
+            <template v-else>
+                <div class="userInfo" v-if="!isObjEmpty(user)" style="text-align: center;padding: 15px;">
+                    <van-image :src="user.headimgurl" width="50px" height="50px" round></van-image>
+                    <h4 v-text="user.nickname"></h4>
+                    <p v-text="user.openid"></p>
+                </div>
+                <h2 class="doc-block__title">应用</h2>
+                <van-cell-group inset>
+                    <van-cell title="微信JS-SDK" url="/web/wxSdk.html" is-link></van-cell>
+                    <van-cell title="地理位置" url="/web/location.html" is-link></van-cell>
+                    <van-cell title="发送消息" :url="base+'/wx/message.html'" is-link></van-cell>
+                    <van-cell title="上传到本地" :url="base+'/upload/'" is-link></van-cell>
+                    <van-cell title="上传到COS" :url="base+'/upload/cos.html'" is-link></van-cell>
+                </van-cell-group>
+                <h2 class="doc-block__title"></h2>
+            </template>
+        </div>
+        <script>
+            new Vue({
+                el: '#app',
+                data: {
+                    loading:true,
+                    user:JSON.parse(localStorage.getItem('user')||"{}"),
+                    base:`http://101.34.52.7`,
+                },
+                async mounted(){
+                    this.loading = true;
+                    if(this.isObjEmpty(this.user)){
+                        this.user = await getUser();
+                    };
+                    await wxConfig();
+                    console.log('user',this.user);
+                    this.loading = false;
+                },
+                methods: {
+                    isObjEmpty(obj) {
+                        return isObjEmpty(obj)
+                    },
+                }
+            });
+        </script>
+    </body>
+
+</html>
