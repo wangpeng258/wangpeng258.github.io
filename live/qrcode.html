@@ -233,7 +233,6 @@
                     count: 0,//计数器
                 },
                 mounted() {
-                    this.initStats();
                     this.compatible();
                     this.openMedia();
                     this.devicesInit();
@@ -248,20 +247,6 @@
                             obj.length === 0 ||
                             (typeof obj === "object" && Object.keys(obj).length === 0)
                         );
-                    },
-                    //查看性能统计
-                    initStats() {
-                        const stats = new Stats();
-                        window['discernCount'] = stats.addPanel( new Stats.Panel( 'count', '#ff8', '#221' ) );
-                        stats.showPanel(1); // 0: fps, 1: ms, 2: mb, 3+: custom
-                        stats.domElement.style.position = 'absolute';
-                        stats.domElement.style.left = '0px';
-                        stats.domElement.style.top = '0px';
-                        document.body.appendChild(stats.dom);
-                        requestAnimationFrame(function loop() {
-                            stats.update();
-                            requestAnimationFrame(loop)
-                        });
                     },
                     // 一堆兼容代码
                     compatible() {
@@ -394,8 +379,7 @@
                             this.qRCodeRecognitionTask = null;
                         } else {
                             this.qRCodeRecognitionTask = setInterval(() => {
-                                this.count++;
-                                window['discernCount'].update(this.count);
+
 
                                 // ------裁剪图片--------
                                 const video = this.$refs['video'];
