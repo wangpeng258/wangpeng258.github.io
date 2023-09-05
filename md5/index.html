@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+    <head>
+        <meta charset="utf-8">
+        <title>blueimp-md5</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎲</text></svg>">
+        <meta name="format-detection" content="telephone=no">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+        <style>
+            [v-cloak] {
+                opacity: 0 !important;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div id="app" v-cloak>
+            <div style="padding: 15px;max-width: 400px;margin: 0 auto;">
+                <h1>blueimp-md5</h1>
+                <p>
+                    <textarea style="padding:1em;width: calc(100% - 2em);" @input="toMd5($event)" placeholder="原始值"></textarea>
+                </p>
+                <p>
+                    <textarea style="padding:1em;width: calc(100% - 2em);" id="results" readonly placeholder="MD5加密值"></textarea>
+                </p>
+            </div>
+        </div>
+        <script src="https://cdn.bootcdn.net/ajax/libs/blueimp-md5/2.19.0/js/md5.min.js"></script>
+        <script src="https://cdn.bootcdn.net/ajax/libs/vue/2.6.11/vue.min.js"></script>
+        <script>
+            //https://www.npmjs.com/package/blueimp-md5
+            new Vue({
+                el: '#app',
+                data: {
+
+                },
+                mounted() {
+
+                },
+                methods: {
+                    toMd5(event){
+                        const v = event.target.value;
+                        results.value = v?md5(v):'';
+                    }
+                }
+            });
+        </script>
+    </body>
+
+</html>
