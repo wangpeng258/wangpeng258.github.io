@@ -1,0 +1,3645 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+    <head>
+        <meta charset="utf-8">
+        <title>konva</title>
+        <meta name="viewport"
+            content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+        <meta name="format-detection" content="telephone=no">
+        <script src="https://cdn.bootcdn.net/ajax/libs/vue/2.6.11/vue.min.js"></script>
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+        <style>
+            [v-cloak] {
+                opacity: 0 !important;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div id="app" style="padding: 15px;" v-cloak>
+            <ol style="opacity: 0.9;">
+                <li v-for="(item, index) in arr" :key="index">
+                    <h5>[{{item.ExamType}}] {{item.Name}}</h5>
+
+                    <p v-html="item.Answer"></p>
+                    <hr>
+                </li>
+            </ol>
+        </div>
+        <script>
+            const arr = [
+                {
+                    "Course": "计算机专业英语",
+                    "ExamType": "单选",
+                    "Name": "The control unit fetches _________ from memory and decodes them.",
+                    "Answer": "instructions"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "After I finished the last paragraph, I moved the ＿＿＿＿＿＿＿＿ back to the third paragraph and del＿eted",
+                    "Answer": "cursor"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "A(n) ＿＿＿＿＿＿＿＿ is a connecting device that only regenerates the signal.",
+                    "Answer": "repeater"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Windows gives you more control over the (    ) you work.",
+                    "Answer": "operation"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "A ＿＿＿＿＿＿＿＿＿＿is used to communicate with another computer over telephone lines.",
+                    "Answer": "modem"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "In SQL,(    )causes an object (a table, for example) to be creaｔed within the database.",
+                    "Answer": "creaｔe"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "There are ____ separate products that form the Windows 2000。",
+                    "Answer": "four"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "To access a page on the WWW, one needs a (    ) that usually consists of three parts: a controller, a method, and an interpreter.",
+                    "Answer": "browser"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "The distinction between the two terms gateway and ＿＿＿＿＿＿＿＿ is disappearing. They are now used interchangeably.",
+                    "Answer": "router"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "＿＿＿＿＿ is an architectural framework.",
+                    "Answer": "www"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "＿＿＿＿＿＿＿＿ refers to the parts of the computer that you can see and touch.",
+                    "Answer": "Hardware"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "We’ll go to Paris for our holiday,   ( \t  )  it isn’t too expensive.",
+                    "Answer": "unless"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "(    ) is an architectural framework.",
+                    "Answer": "www"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Chemical energy, (    ) from fuel or other matters, can be transformed into heat energy.",
+                    "Answer": "whether"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "What does Tim Berners-Lee's description about Web 2.0 mean? __________",
+                    "Answer": "web 2.0 is an revolution in the World Wide Web"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "The history of programming languages can be traced back almost to the invention of the (    )computer in th 1940s.",
+                    "Answer": "digital"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "The _________ hidden in the infected system does not break out immediately;  instead, it needs certain time or some condition before it breaks out.",
+                    "Answer": "virus"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Just a minute, I’m waiting for the computer to (    ) up. It won’t take long to start it.",
+                    "Answer": "boot"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Each_________ is a unit of both atomicity and consistency.",
+                    "Answer": "transaction"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Most system boards have two kinds of power connectors: _________ .",
+                    "Answer": "AT and ATX styles"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "A (    ) is a set of rules that controls the interaction of different devices in a network or internetwork.",
+                    "Answer": "protocol"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "The raw data are stored on the disk using the _________ .",
+                    "Answer": "file system"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Confidentiality of the message is not enough in a secure communication; ＿＿＿＿＿＿＿＿ is also needed. The receiver needs to be sure of the sender’s identity.",
+                    "Answer": "authentication"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "The most commonly used tool in the design phase is the ＿＿＿＿＿＿＿＿.",
+                    "Answer": "structure chart"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "A (    ) copy is a copy of a current file made in order to protect against loss or damage.",
+                    "Answer": "backup"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "A Web site is often more effective as a(n) ＿＿＿＿＿＿＿ tool than a selling tool.",
+                    "Answer": "Marketing"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "In the system development process, the system analyst defines the user, needs, requirements and methods in the ＿＿＿＿＿＿＿＿ phase.",
+                    "Answer": "analysis"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "According to BusinessWeek, the attacks reported in the first half of 2003 nearly match previous year's total number .",
+                    "Answer": "76,404"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Which of the following is WRONG about the terminology used in software engineering? __________",
+                    "Answer": "Smalltalk-Language"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Which one is not a computer languages?",
+                    "Answer": "word 2000"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Why does the author give the example of Bliss? __________",
+                    "Answer": "To argue that other operating systems may run viruses, not just Windows."
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "In the case of a(n) ＿＿＿＿＿＿＿＿＿, a  program is translated into eｘecutable form and eｘecuted one statment at a time rather than being translated completely before eｘecution.",
+                    "Answer": "interpreter"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "A virus is a (    ) .",
+                    "Answer": "program"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "The _______ serves as an interface between hardware and software.",
+                    "Answer": "operating system"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Which of the following is NOT an effective countermeasure to viruses. __________",
+                    "Answer": "Using different operating system on the same file system."
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "The attributes of the stack are (       ).",
+                    "Answer": "FIFO"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Which one is not a computer languages? ____",
+                    "Answer": "PASCAL"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "A (    ) is a device that enables the computer to handle sounds.",
+                    "Answer": "sound card"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "A (    )is used to communicate with another computer over telephone lines.",
+                    "Answer": "modem"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "A machine language is a(n) (    ) language in binary code that the computer can understand and eｘecute directly.",
+                    "Answer": "low-level"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Which of the following events did happen latest in the development of Painter? _______",
+                    "Answer": "Corel Painter Sketch Pad was launched"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "The basic units of a computer system are as follows:  _________",
+                    "Answer": "CPU, memory and I/O system"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Though  (  \t  )   by what he said ,she didnˊt believe in him.",
+                    "Answer": "have been attracted"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "When a _________ is used, all the devices in the network are connected to a single cable.",
+                    "Answer": "bus network"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "A(n) (    ) is usually a computer installed with the necessary software and allows two networks, each with a completely different set of protocols, to communicate.",
+                    "Answer": "gateway"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "E-commerce do business through _________.",
+                    "Answer": "Internet and EDI"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "(    )is a word processing tool that helps you to creaｔe quality documents.",
+                    "Answer": "Wor<br />D"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Videodisc and laser technology provide the ability to_________",
+                    "Answer": "store large amounts of data"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "A ＿＿＿＿＿＿＿＿ is a set of rules that controls the interaction of different devices in a network or internetwork.",
+                    "Answer": "protocol"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Which of the following items is NOT the traditional tools for artists in Painter? __________",
+                    "Answer": "Color pencil"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Whereas a repeater operates only in the physical layer of the OSI model, a bridge operates in both the physical layer and the (    ) layer of the OSI model.",
+                    "Answer": "data-link"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Which of the following RDBMS is not open source according to this article? __________",
+                    "Answer": "SQL Server"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "In the following devices, which is NOT included in the list of the core components of modern computers __________",
+                    "Answer": "Transistor  (晶体管)"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "To access a page on the WWW, one needs a ＿＿＿＿＿＿＿＿ that usually consists of three parts: a controller, a method, and an interpreter.",
+                    "Answer": "browser"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "A machine language is a(n) ＿＿＿＿＿＿＿ language in binary code that the computer can understand and eｘecute directly.",
+                    "Answer": "low-level"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Antivirus program can scan and virus.",
+                    "Answer": "clean"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "A characteristic of operating system is _________.",
+                    "Answer": "resource management"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Multimedia will become increasingly ____ throughout every aspect of our lives.",
+                    "Answer": "pervasive"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Chemical energy, (    ) from fuel or other matters, can be transformed into heat energy.",
+                    "Answer": "whether"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "J2EE is a single-language platform; calls from/to objects in other languages are possible through (    ), but this kind of support is not a ubiquitous part of the platform.",
+                    "Answer": "CORB<br />A"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "A mouse is a small device that a computer user pushes across a desk surface in order to point to a place on a _________ and to select one or more action to take from that position.",
+                    "Answer": "display"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "(   \t)that ,I could do it much better.",
+                    "Answer": "Were I do"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Some restaurants have provided touch ＿＿＿＿＿＿＿＿ computers to enable their customers to order food via the computer without having to tell someone.",
+                    "Answer": "screen"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "An ISP supplies a _________ that you can dial from your computer to log on the internet server.",
+                    "Answer": "service number"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "In the system development process, modularity is a very well-established principle used in the (    ) phase.",
+                    "Answer": "design"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "what does \" neural network \"  mean?",
+                    "Answer": "神经网络"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "What does the phrase “frame-based” mean appearing at the beginning of the article? __________",
+                    "Answer": "All generations of Ethernet are built on improving infrastructure from coaxial cable to twisted pair."
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "A(n) (    ) is a connecting device that only regenerates the signal.",
+                    "Answer": "repeater"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Hardware components are used for the purpose of (    ).",
+                    "Answer": "all of the above"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "_________ uses commands that are easier for programmers to understand than machine language commands.",
+                    "Answer": "Assembly language"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "A companyˊs ability to deploy and support customer-oriented ＿＿＿＿＿＿＿＿＿＿＿ systems will be of vital importance to its prosperity.",
+                    "Answer": "e-Business"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "primary memory which is stored on chips located ＿＿＿＿＿＿＿＿.",
+                    "Answer": "on the motherboard"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "primary memory which is stored on chips located ____.",
+                    "Answer": "on the motherboard"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "The display screen is the most common ____ device used to show you what the computer is doing.",
+                    "Answer": "output"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Just a minute, I’m waiting for the computer to ＿＿＿＿＿＿＿＿ up. It won’t take long to start it.",
+                    "Answer": "boot"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "The history of programming languages can be traced back almost to the invention of the ＿＿＿＿＿＿＿＿＿computer in th 1940s.",
+                    "Answer": "digital"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "It looks as though there (    ) some problems with my computer. Because it is so slow.",
+                    "Answer": "were"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "The data, when they are not encrypted, are called (    ).",
+                    "Answer": "plaintext"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Which of the following is NOT attached to the motherboard via edge connectors and cables in a typical desktop computer? __________",
+                    "Answer": "Microprocessors"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "A ____ is used to communicate with another computer over telephone lines.",
+                    "Answer": "modem"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "High-level languages must first be translated into a(n) ＿＿＿＿＿＿＿＿＿＿ language before they can be understood and processed by a computer",
+                    "Answer": "Machine"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Whereas the decimal system is based on 10, the (    ) system is based on 2. There are only two digits in the latter system, 0 and 1.",
+                    "Answer": "binary"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "The attributes of the stack are (       ).",
+                    "Answer": "FIFO"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "To open Internet Explorer, just click Start, point to _________ , and then click Internet Explorer.",
+                    "Answer": "Programs"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "The OSI model has ____ layers.",
+                    "Answer": "seven"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "In 2000, the number of viruses topped (    ).",
+                    "Answer": "50000"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "The abbreviation HTTP stands for Hypertext ＿＿＿＿＿＿＿＿ Protocol.",
+                    "Answer": "Transfer"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "The OSI model has ＿＿＿＿＿ layers.",
+                    "Answer": "seven"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "The OSI model has (    ) layers.",
+                    "Answer": "seven"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Which of the following descriptions is WRONG according to this article? __________",
+                    "Answer": "“Mouse” obtained its name from the feature of its figure."
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "He insisted on leaving early (    ) I told him not to.",
+                    "Answer": "although"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "A ____ is a device that enables the computer to handle sounds.",
+                    "Answer": "sound card"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Data (    ) can reduce the amount of data sent or stored by partially eliminating inherent redundancy.",
+                    "Answer": "compression"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Small as it is, a personal computer can perform the same program instructions as (    ).",
+                    "Answer": "larger computers"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "＿＿＿＿＿＿＿＿＿＿＿＿, such as those supplied for OLE DB and ODBC, allow you to use data libraries designed for earlier data access technologies.",
+                    "Answer": "Bridge providers"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "(            )as a significant majority of market share in the desktop",
+                    "Answer": "Microsoft Windows"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Which one is not a computer languages?",
+                    "Answer": "word 2000"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "When most people think of opening a Web business,the first thing that springs to mind is selling products or ＿＿＿＿＿＿＿＿＿＿＿＿online.",
+                    "Answer": "services"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "A ＿＿＿＿＿＿＿＿ copy is a copy of a current file made in order to protect against loss or damage.",
+                    "Answer": "backup"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "A(n) ＿＿＿＿＿＿＿＿ is usually a computer installed with the necessary software and allows two networks, each with a completely different set of protocols, to communicate.",
+                    "Answer": "gateway"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "The purpose of the ____  is to provide fully integrated analog services to users.",
+                    "Answer": "ISDN"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "The data, when they are not encrypted, are called ＿＿＿＿＿＿＿＿.",
+                    "Answer": "plaintext"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "The largest and fastest computers are (    ).",
+                    "Answer": "supercomputers"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Software engineering is some certain _______.",
+                    "Answer": "methods"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "In order to solve a computational problem, you can let a person or a_________  to do it.",
+                    "Answer": "computer"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "All computers can perform basic machine operations under the control of (    ).",
+                    "Answer": "programs"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "“Multimedia” means that _________  .",
+                    "Answer": "it can do all above at the same time."
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "The ____ turns the object file into an executable program.",
+                    "Answer": "interpreter"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "ADO.NET is the (    ) model for .NET-based applications. (data access)",
+                    "Answer": "data access"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "how to translate the word \"中央处理器\"",
+                    "Answer": "central processing unit"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "An advantage of a ring network is that it needs less _________ .",
+                    "Answer": "cable"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Communication through the Internet, the____  performs the reverse function.",
+                    "Answer": "Data communications equipment (DCE)"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "The larger the system of the computer, the greater its (    ).",
+                    "Answer": "storage capacity"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "ADO.NET is the ＿＿＿＿＿＿＿＿ model for .NET-based applications. (data access)",
+                    "Answer": "data access"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "The purpose of the   A  is to provide fully integrated analog services to users.",
+                    "Answer": "ISDN"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "A companyˊs ability to deploy and support customer-oriented (    ) systems will be of vital importance to its prosperity.",
+                    "Answer": "e-Business"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "J2EE is a single-language platform; calls from/to objects in other languages are possible through ＿＿＿＿＿＿＿＿, but this kind of support is not a ubiquitous part of the platform.",
+                    "Answer": "CORBA"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "After I finished the last paragraph, I moved the (    ) back to the third paragraph and deleｔed",
+                    "Answer": "cursor"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "You can come with me to the museum this afternoon (    ) you don’t mind walking for half an hour.",
+                    "Answer": "if"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Visual Basic has  ＿＿＿＿＿＿＿versions.",
+                    "Answer": "three"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Many companies use _________ to train their employees.",
+                    "Answer": "multimedia applications"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "The abbreviation USB stands for Universal (    ) Bus.",
+                    "Answer": "Serial"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Anti-Virus protects your computer from viruses by ____ your computer's memory and disk devices",
+                    "Answer": "scanning"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Computer programming is the process of planning and creating a sequence of _________ for a computer to follow.",
+                    "Answer": "steps"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "If you want to solve the computational problem with a computer, you should learn how to _________",
+                    "Answer": "program"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Whereas a repeater operates only in the physical layer of the OSI model, a bridge operates in both the physical layer and the ＿＿＿＿＿＿＿＿ layer of the OSI model.",
+                    "Answer": "data-link"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "The term coder is used to describe _________",
+                    "Answer": "person"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Only when you have told him  ( \t  )  take this book out of the library.",
+                    "Answer": "can you"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "A hardware or software malfunction can cause a system to ＿＿＿＿＿＿＿＿.",
+                    "Answer": "crash"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "A virus is a _____.",
+                    "Answer": "program"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "＿＿＿＿is a word processing tool that helps you to creaｔe quality documents.",
+                    "Answer": "Word"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "The infamous “Michelangelo” (    ) strikes thousands of computers every year on March 6th.",
+                    "Answer": "virus"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "In the system development process, the system analyst defines the user, needs, requirements and methods in the (    ) phase.",
+                    "Answer": "analysis"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "________ refers to the process of a two dimensional picture by a digital computer .",
+                    "Answer": "Digital image processing"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Which of the following type of wireless devices has the highest power consumption? __________",
+                    "Answer": "Wi-Fi"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Which of the following items is not included in the “three companion  application ” in Painter Series? __________",
+                    "Answer": "Sketch Pad"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "primary memory which is stored on chips located (    ).",
+                    "Answer": "on the motherboar<br />D"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Among the following products, which appeared the earliest during the computer software development history? __________",
+                    "Answer": "WordStar"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "These days it is not uncommon for one to see people using ＿＿＿＿＿＿＿＿ everywhere--even on airplanes.",
+                    "Answer": "laptops"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Which of the following is RIGHT about the infection strategies of viruses? __________",
+                    "Answer": "The success of viruses all relies on their fast infection rate to sprea"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "The prisoners’ request  (   )  more and better food is now  consideration.",
+                    "Answer": "for, under"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "___ is a fast and powerful operating system, based on the UNIX O.S.",
+                    "Answer": "Linux"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "The abbreviation HTTP stands for Hypertext (    ) Protocol.",
+                    "Answer": "Transfer"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Which of the following is RIGHT about the current trends in software engineering? __________",
+                    "Answer": "Agile software development is a light and change-driven process."
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "(            )as a significant majority of market share in the desktop",
+                    "Answer": "Microsoft Windows"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "A(n) ＿＿＿＿＿＿ is a sequence of code in a program eｘecuted repeatedly,either fro a fixed number of times or until a certain condition is met.",
+                    "Answer": "Loop"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "The distinction between the two terms gateway and (    ) is disappearing. They are now used interchangeably.",
+                    "Answer": "router"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "According to Intel,there are (    )stages in the evlolution of e(    )Business.",
+                    "Answer": "Four"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "The purpose of the   A  is to provide fully integrated analog services to users.",
+                    "Answer": "ISDN"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Which of the following description is WRONG about Wi-Fi? __________",
+                    "Answer": "Communications between two devices need the involvement of an access point with WI-Fi."
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "The Whale will creaｔe (    ) different versions of itself when it infects files.",
+                    "Answer": "33"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "A(n) ＿＿＿＿＿＿＿＿ translates all the source code of a program written in a high-level language into object code prior to the eｘecution of th program.",
+                    "Answer": "compiler"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "if we want to retrieve data from the database with SQL,we should use the comand of (   )",
+                    "Answer": "selecｔ"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "____ is a word processing tool that helps you to create quality documents.",
+                    "Answer": "Word 2000"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "A periodic refresh is needed to restore the information for the _________ .",
+                    "Answer": "DRAM"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Many viruses go resident in the memory like a (      ).",
+                    "Answer": "tsr program"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Most operating system have a standard set of _________ to handle the processing of all input and output instructions.",
+                    "Answer": "control instructions"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Hardware components are used for the purpose of (    ).",
+                    "Answer": "all of the above"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "In the system development process, the code is written in the ＿＿＿＿＿＿＿＿ phase.",
+                    "Answer": "implementation"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "The girl I saw(    )brown hair and blue eyes.",
+                    "Answer": "had"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Assembly-language instructions are a series of _________.",
+                    "Answer": "abstract codes"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Trojan Horses .",
+                    "Answer": "allow hackers to take control over a particular system or to steal very important data"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "what does \" neural network \"  mean?",
+                    "Answer": "神经网络"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Whereas the decimal system is based on 10, the ＿＿＿＿＿＿＿＿ system is based on 2. There are only two digits in the latter system, 0 and 1.",
+                    "Answer": "binary"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "_________ is a storage location inside the processor.",
+                    "Answer": "A register"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Visual Basic has  (    )versions.",
+                    "Answer": "three"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "For some time, we’ve been experiencing some ＿＿＿＿＿＿＿＿ in this particular program. It cannot run in a normal way.",
+                    "Answer": "bugs"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Worm spread itself except by .",
+                    "Answer": "Hardware"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "A processor is composed of two functional units, they are _________.",
+                    "Answer": "a control unit and an arithmetic/logic unit"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Windows gives you more control over the ____ you work.",
+                    "Answer": "operation"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Two common applications of LANs are _________ resource sharing and information resource sharing.",
+                    "Answer": "hardware"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "The abbreviation USB stands for Universal ＿＿＿＿＿＿＿＿ Bus.",
+                    "Answer": "Serial"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "A computer virus is a computer program that is created to make and spread of itself.",
+                    "Answer": "copies"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "With Internet Explorer and an Internet connection, you can search for and view information on the _________ .",
+                    "Answer": "World Wide Web"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "C might best be ____ as a 'medium-level language'.",
+                    "Answer": "described"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "The most important program on any computer is ____.",
+                    "Answer": "Operating System"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Now, about (    ) different viruses account for all the viruses that actually spread in the wild.",
+                    "Answer": "1800"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "All computers can perform basic machine operations under the control of (    ).",
+                    "Answer": "programs"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "(    ) refers to the parts of the computer that you can see and touch.",
+                    "Answer": "Hardware"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Please find the item that is not belong to the DBA _________.",
+                    "Answer": "DDL"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Anti-Virus protects your computer from viruses by  ＿＿＿＿＿＿＿＿  your computerˊs memory and disk devices.",
+                    "Answer": "scanning"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "According to Intel,there are ＿＿＿＿＿＿＿＿＿＿＿＿＿stages in the evlolution of e＿Business.",
+                    "Answer": "Four"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "The larger the system of the computer, the greater its (    ).",
+                    "Answer": "storage capacity"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "I didnˊt hear the phone last night, I (    )   asleep.",
+                    "Answer": "should have been"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "The largest and fastest computers are (    ).",
+                    "Answer": "supercomputers"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "A virus is a ＿＿＿＿＿＿＿＿＿ .",
+                    "Answer": "program"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Which of the following is not the stages of programming?",
+                    "Answer": "Print  the program."
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "(    )is a network protocol used to transfer data from one computer to another through a network such as the Internet.",
+                    "Answer": "FTP"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "The control unit fetches _________ from memory and decodes them.",
+                    "Answer": "instructions"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "The most commonly used tool in the design phase is the (    ).",
+                    "Answer": "structure chart"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "In SQL,＿＿＿＿＿＿causes an object (a table, for example) to be creaｔed within the database.",
+                    "Answer": "creaｔe"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "In the system development process, ＿＿＿＿＿＿＿＿ and pseudocode are tools used by programmers in the implementation phase.",
+                    "Answer": "flowcharts"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "if we want to retrieve data from the database with SQL,we should use the comand of",
+                    "Answer": "sel＿ect"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Some restaurants have provided touch (    ) computers to enable their customers to order food via the computer without having to tell someone.",
+                    "Answer": "screen"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Windows gives you more control over the ＿＿＿＿＿＿＿＿ you work.",
+                    "Answer": "operation"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "In the system development process, modularity is a very well-established principle used in the ＿＿＿＿＿＿＿＿ phase.",
+                    "Answer": "design"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "The most important program on any computer is＿＿＿＿＿＿＿＿.",
+                    "Answer": "Operating System"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Which of the following is WRONG about the comparison between the early version and the current version of Ethernet? __________",
+                    "Answer": "The running speed of the current Ethernet is 100 times and beyond as fast as that of the early versions."
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Small as it is, a personal computer can perform the same program instructions as (    ).",
+                    "Answer": "larger computers"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "One of the differences between C# and Java is that Java runs on any platform with a Java Virtual (    ) while C# only runs in Windows for the foreseeable future.",
+                    "Answer": "Machine"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "These days it is not uncommon for one to see people using (    ) everywhere--even on airplanes.",
+                    "Answer": "laptops"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "He doesn’t mind  ( \t  )  her birthday party.",
+                    "Answer": "being not invited to"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "In the system development process, the code is written in the (    ) phase.",
+                    "Answer": "implementation"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "A hardware or software malfunction can cause a system to (    ).",
+                    "Answer": "crash"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "The infamous “Michelangelo” ＿＿＿＿＿＿＿＿ strikes thousands of computers every year on March 6th.",
+                    "Answer": "virus"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "He was glad to find the fire(  \t  )  brightly.",
+                    "Answer": "burning"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "In the system development process, (    ) and pseudocode are tools used by programmers in the implementation phase.",
+                    "Answer": "flowcharts"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Which of the following facts is(are) mentioned about the usage on Web 2.0 in this article? __________",
+                    "Answer": "All above"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "With Windows, you can run several powerful applications at once and switch quickly ( \t  ) them.",
+                    "Answer": "among"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Which of the following components can be used to attach peripheral devices to the motherboard as plug-in cards or via cables? __________",
+                    "Answer": "Expansion Card Slots  (扩展插槽)"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "The RGB value is composed of ____ components.",
+                    "Answer": "one"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "＿＿＿＿＿＿＿＿＿＿, such as the SQL Server and Oracle providers, typically offer performance improvements due, in part, to the fact that there is one less layer of abstraction.",
+                    "Answer": "Native providers"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Which of the following emerged first in the history of software engineering? __________",
+                    "Answer": "Optimizing inspections"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Data ＿＿＿＿＿＿＿＿ can reduce the amount of data sent or stored by partially eliminating inherent redundancy.",
+                    "Answer": "compression"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "＿＿＿＿＿ is built around hypertext and hypermedia.",
+                    "Answer": "The Web"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Which of the following descriptions in WRONG about the uses of Wi-Fi? __________",
+                    "Answer": "The hardware provides indication to the sender about whether the transmission was delivered"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "For some time, we’ve been experiencing some (    ) in this particular program. It cannot run in a normal way.",
+                    "Answer": "bugs"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "(    ) is built around hypertext and hypermedia.",
+                    "Answer": "The Web"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "In the following descriptions, which is RIGHT about the functions of CPU socket? _______",
+                    "Answer": "All above."
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Which of the following is WRONG about Web 2.0? __________",
+                    "Answer": "Web 2.0 enables business to embrace the Web as a platform and user its strengths more effectively."
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "It looks as though there (    ) some problems with my computer. Because it is so slow.",
+                    "Answer": "were"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "When power is removed, information in the semiconductor memory is _________",
+                    "Answer": "lost"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Which of the following has been outdated among wired LAN technology? __________",
+                    "Answer": "The coaxial cable"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Which of the following items need not have unique values in the referencing  relation?  __________",
+                    "Answer": "Foreign key"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "A ＿＿＿＿＿＿ is a device that enables the computer to handle sounds.",
+                    "Answer": "sound card"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Every transaction in electronic commerce includes information flow, commercial flow, _______ and material flow.",
+                    "Answer": "currency flow"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Confidentiality of the message is not enough in a secure communication; (    ) is also needed. The receiver needs to be sure of the sender’s identity.",
+                    "Answer": "authentication"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "＿＿＿＿＿＿＿＿ printers are being phased out and replaced by printers that can produce clean type.",
+                    "Answer": "Dot-matrix"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "____ refers to the parts of the computer that you can see and touch.",
+                    "Answer": "Hardware"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Which of the following items should be used for collecting and customizing common operations? __________",
+                    "Answer": "Stored Procedures"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "The most important program on any computer is(    ).",
+                    "Answer": "Operating System"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "One of the differences between C# and Java is that Java runs on any platform with a Java Virtual ＿＿＿＿＿＿＿＿＿＿＿＿＿＿ while C# only runs in Windows for the foreseeable future.",
+                    "Answer": "Machine"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "Anti-Virus protects your computer from viruses by  (    )  your computerˊs memory and disk devices.",
+                    "Answer": "scanning"
+                },
+                {
+                    "ExamType": "单选",
+                    "Name": "＿＿＿＿＿＿＿＿＿＿is a network protocol used to transfer data from one computer to another through a network such as the Internet.",
+                    "Answer": "FTP"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "The three desiderata of memory system are__________",
+                    "Answer": "closely approximated today<br />exclusive"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Viruses can delay their attack for (    ).",
+                    "Answer": "years<br />weeks<br />days<br />months"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "The Application layer in TCP/IP Model  is correspond to ＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿ in OSI Model",
+                    "Answer": "Application Layer<br />Session Layer<br />Presentation Layer"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Computer programs fall into two major classes: ＿＿＿＿＿＿ and ＿＿＿＿＿＿.",
+                    "Answer": "application programs<br />operating systems"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "which is the threat to computer security in the following choices ?",
+                    "Answer": "Computer Crime<br />earthquake<br />Human Errors<br />Computer Criminals"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Before you turn the power on with a new computer, you should make sure__________",
+                    "Answer": "appropriate cables are correctly connected<br />the computer system has been set up<br />the computer is already out of the box<br />appropriate software have been installed"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Microsoft Windows currently supports ＿＿＿＿＿＿＿ and ＿＿＿＿＿＿＿file systems",
+                    "Answer": "NTFS<br />FAT"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "The following products of software are belong to middleware__________",
+                    "Answer": "J2EE<br />IBM’s Web Sphere MQ<br />Java 2 Platform"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "You want to (     ) maybe wake up a virus that has residented in memory.",
+                    "Answer": "access a diskette<br />eｘecute a program<br />copy a file"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Viruses can delay their attack for (    ).",
+                    "Answer": "years<br />weeks<br />months<br />days"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Software includes (       ) etc",
+                    "Answer": "mobile application<br />video games<br />websites<br />programs"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "The two most common types of scanners are ＿＿＿＿＿＿＿ and ＿＿＿＿＿",
+                    "Answer": "auto scanners<br />flatbed scanners"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "We can classify programming languages under two types:(       ) languages and (       )languages.",
+                    "Answer": "high-level<br />low-level"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "The basic hardware components of any computer include__________",
+                    "Answer": "main memory<br />input devices<br />CPU<br />output devices"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "The attributes of the stack are__________.",
+                    "Answer": "queue"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Applications in the Internet can be found everywhere: __________",
+                    "Answer": "at home<br />in libraries<br />in conference rooms"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Some commentators say the outcome of the information revolution is likely to be as profound as the shift in ＿＿＿＿＿＿＿＿＿＿＿",
+                    "Answer": "industrial<br />Service Industry<br />handicraft industry<br />agricultural"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "A processor is composed of：__________.",
+                    "Answer": "an arithmetic<br />logic unit<br />Registers<br />a control unit"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "DTE is (       ).",
+                    "Answer": "data terminal equipment<br />the last piece of equipment that belonged to the subscriber in a data link system"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "The function of computer hardware is typically divided into three main categories.They are(       ).",
+                    "Answer": "storage<br />output<br />input"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Hypermedia include (            )",
+                    "Answer": "images<br />flash<br />text<br />sounds<br />video clips<br />vidoe"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Queues that occur everyday life can be seen (     ).",
+                    "Answer": "as people waiting for service at a bank<br />in an emergency room of a hospital<br />as automobiles waiting for a traffic light<br />in certain societies lacking equality"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Electronic commerce may be defined as the entire set of processes that suport (       )activities on a(n) (       ) and involve information analysis.",
+                    "Answer": "commercial,network"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Windows 2000 is (    ).",
+                    "Answer": "an inventive technology"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Today Microsoft’s operating system Windows has a variety of versions, they are__________",
+                    "Answer": "Windows 2007<br />Windows 2003<br />Windows XP<br />Windows vista"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "The end equipment in a communication system includes (       ).",
+                    "Answer": "printers<br />CRTs<br />keyboards<br />computers"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Instruction format in RISC has__________",
+                    "Answer": "one kind<br />one or a few kinds<br />many kinds"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Many viruses do harmful things such as (    ).",
+                    "Answer": "simulating typos<br />changing random data on your disk<br />slowing your PC down<br />deleting files"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Windows 2000 is__________",
+                    "Answer": "used for building a scalable network<br />the same as Windows NT<br />new lease of Windows"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "There are a number of processes, activities and practices that are unique to maintainers, for example:",
+                    "Answer": "Service Level Agreements (SLAs) and specialized (domain-specific) maintenance contracts negotiated by maintainers<br />Modification Request and Problem Report Help Desk: a problem-handling process used by maintainers to prioritize, documents and route the requests they receive<br />Modification Request acceptance/rejection: modification request work over a certain size/effort/complexity may be rejected by maintainers and rerouted to a developer<br />Transition: a controlled and coordinated sequence of activities during which a system is transferred progressively from the developer to the maintainer"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "You want to (     ) maybe wake up a virus that has residented in memory.",
+                    "Answer": "access a diskette<br />eｘecute a program<br />copy a file"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "The processor performance would be high as we      reference instructions and data from__________",
+                    "Answer": "memory<br />floppy disk"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "One machine cycle in RISC has __________",
+                    "Answer": "one machine instruction"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "The operations of a structured data type might act on (     ).",
+                    "Answer": "a queue<br />component elements of the data structure<br />the values of the data type<br />a stack"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Some common applications related to electronic commerce are the following:",
+                    "Answer": "Online banking<br />Email<br />Shopping cart software<br />Enterprise content management<br />Newsgroups<br />Teleconferencing<br />Instant messaging"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Electronic commerce that is conducted between businesses and consumers, on the other hand, is referred to as",
+                    "Answer": "B2C"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Security is usually enforced through (       ).",
+                    "Answer": "access control<br />auditing<br />encryption"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "A general purpose computer has four main sections: ＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿.",
+                    "Answer": "the memory<br />the arithmetic and logic unit (ALU),<br />the input and output devices<br />the control unit"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "To enhance performance of a computer system we should__________",
+                    "Answer": "use IF and LOOP instructions as many as possible<br />improve the pattern of referencing operand<br />optimize the basic sequence control mechanism"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "A stack protocol can be used for (    ).",
+                    "Answer": "removing the latest element ins(       )erted"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "What make it is difficult to agree on how to count viruses?",
+                    "Answer": "new virus arise from an existing virus<br />some viruses can creaｔe different versions when they infect other programs<br />some viruses can use polymorphic technique<br />just a trivial change may creaｔe a new virus"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "According to the physical size of computers we can classify the __________       computers into",
+                    "Answer": "supercomputer<br />mainframe<br />microcomputer<br />minicomputer"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "A working GIS contains five key componets.They are ＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿.",
+                    "Answer": "hardware<br />methods<br />software<br />people<br />data"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Their company used international lawyers to prosecute a crime ring involving software ＿＿＿＿＿＿＿＿ in Thailand.",
+                    "Answer": "piracy"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "According to the text,the author mentions three of the most commonly used types of printer.They are (       ).",
+                    "Answer": "dot-matrix printers;<br />inkjet printers<br />laser printer"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "One of trends in computer development is (       ),the effort to compress more circuit elements into smaller and smaller (       )space",
+                    "Answer": "microminiaturization<br />chip"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "The software that controls the interaction between the input and output hardware is called BIOS,which stands of ＿＿＿＿＿＿＿＿＿＿",
+                    "Answer": "Basic Input Output System"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "A user interface we said here is __________",
+                    "Answer": "an interaction between an operating system and a user<br />an interface between a computer and its peripheral device<br />a text-based user interface or GUI"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "(    ) maybe a certain cause that some viruses infect upon.",
+                    "Answer": "an external event on your PC<br />a day<br />a counter within the virus<br />a time"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Newer ideas in computing such as(       ) have radically altered the traditional concepts that once determined program form and function",
+                    "Answer": "parallel computing<br />data mining<br />artificial intelligence<br />distributed computing"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Some common applications related to electronic commerce are the following:",
+                    "Answer": "Enterprise content management<br />Email<br />Instant messaging<br />Teleconferencing<br />Shopping cart software<br />Newsgroups<br />Online banking"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "The Windows 2000 product line includes__________.",
+                    "Answer": "Windows 2000 Server<br />Windows 2000 Advanced Server<br />Windows 2000 Professional<br />Windows 2000 Datacenter Server"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "A digital computer is generally made up of five dstinct elements: a central processing unit,().",
+                    "Answer": "input devices<br />a bus<br />output devices<br />memeory storage devices"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Some viruses use (    ) and (    ) techniques to hide their existence.",
+                    "Answer": "polymorphic<br />stealth"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "With middleware we can__________",
+                    "Answer": ". keep computations largely isolated from undesirable interactions<br />. allow computations to communicate with one another<br />run programs on different computer system"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "High-level languages are commonly classified as ＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿.",
+                    "Answer": "functional<br />logic languages<br />object-oriented<br />procedure-oriented"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "The following devices are belong to the mass storages__________",
+                    "Answer": "disk<br />mouse<br />DVD"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "A digital computer is generally made up of five dstinct elements: a central processing unit,().",
+                    "Answer": "memeory storage devices<br />input devices<br />a bus<br />output devices"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "The web browsers which is normal used, such as(       ).",
+                    "Answer": "Opra<br />Apple Safari<br />Firefox<br />Internet Explorer"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Computer programming  is the process of ＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿ the source code of computer programs.",
+                    "Answer": "writing<br />debugging<br />testing<br />maintaining"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "In electronic commerce ,information search and discovery services include (       ).",
+                    "Answer": "directories<br />electronic  catalogs<br />software agents<br />search engines<br />information  filters"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "With an Internet connection you can get some of the basic services available are：__________",
+                    "Answer": "Usenet news<br />E-mail<br />FTP<br />Telnet"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "RISC is__________",
+                    "Answer": "guided to be built from studying the execution behavior of high-level  language programs<br />used for many computer manufacturers nowadays<br />abbreviation of reduced instruction set  computer"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "The end equipment in a communication system includes __________",
+                    "Answer": "computers<br />DCE<br />keyboards"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "A virus is a program that reproduces its own code by (     ).",
+                    "Answer": "ins(       )erting into the middle of a file<br />simply placing a pointer<br />adding to the end of a file"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "A program is a sequence of ＿＿＿＿＿＿＿＿ that can be eｘecuted by a computer.It can either be built into the hardware or exist independently in the form of ＿＿＿＿＿＿＿＿.",
+                    "Answer": "instructions<br />software"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Many viruses do harmful things such as ______________.",
+                    "Answer": "slowing your PC down<br />changing random data on your disk<br />simulating typos<br />deleting files"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "＿＿＿＿＿＿＿＿＿＿ provides transparent transfer of data between end users, providing reliable data transfer services to the upper layers.",
+                    "Answer": "The Transport Layer"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Active Directory can help you (    ).",
+                    "Answer": "get off the limits of down level networks<br />manage every resource with a single logon<br />build a complex international network"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "The Internet is__________.",
+                    "Answer": "constrained by a set of IP suite<br />defined as the network of networks<br />as a common internet"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Some viruses use (    ) and (    ) techniques to hide their existence.",
+                    "Answer": "polymorphic<br />stealth"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "An asleep state is__________",
+                    "Answer": "used for saving energy<br />used to lessen wear-and tear on the computer<br />a low power standby mode"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "What make it is difficult to agree on how to count viruses?",
+                    "Answer": "new virus arise from an existing virus<br />some viruses can use polymorphic technique<br />some viruses can creaｔe different versions when they infect other programs<br />just a trivial change may creaｔe a new virus"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "We can define a computer as a device that ＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿",
+                    "Answer": "produces output<br />accepts input<br />stores data<br />processes data"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Information Systems has a number of different areas of work:",
+                    "Answer": "Information Systems Management<br />Information Systems Development<br />Information Systems Strategy"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Newer ideas in computing such as＿＿＿＿＿＿ have radically altered the traditional concepts that once determined program form and function",
+                    "Answer": "parallel computing<br />data mining<br />distributed computing<br />artificial intelligence"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Electronic payments include (       ).",
+                    "Answer": "digital  currencies<br />credit card payments<br />cash payment<br />electronic checks"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "ADO.NET relies on the services of .NET data providers.There are",
+                    "Answer": "Data Adapter<br />Command<br />DataReader<br />Connection"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Software engineering is related to the disciplines of (       ).",
+                    "Answer": "project management<br />systems engineering<br />computer science"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "C++ include the following pillars: __________.",
+                    "Answer": "polymorphism<br />inheritance<br />encapsulation<br />data hiding"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "(    )is a type of eｘecutable file .",
+                    "Answer": "COM file<br />EXE file"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Electronic payments include ＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿.",
+                    "Answer": "electronic checks<br />digital  currencies<br />credit card payments<br />cash payment"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Some viruses, with no attack phase, often damage the programs or disks they infect because they (     ).",
+                    "Answer": "have bugs in them<br />contain poor quality code"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "(    ) maybe a certain cause that some viruses infect upon.",
+                    "Answer": "a counter within the virus<br />an external event on your PC<br />a time<br />a day"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Microsoft Windows currently supports (       ) and (       )file systems",
+                    "Answer": "NTFS<br />FAT"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "The core of SQL is formed by a command language that allows the ＿＿＿＿＿＿＿＿  and performing management and administrative functions.",
+                    "Answer": "retrieval of data<br />updating of data<br />deletion  of data<br />ins＿ertion of data"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "The two most common types of scanners are (       ) and (       )",
+                    "Answer": "flatbed scanners<br />auto scanners"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "The types (classes, structs, enums, and so on) associated with each .NET data provider are located in their own namespaces are:",
+                    "Answer": "System.Data.OleDb. Contains the OLE DB .NET Data Provider types.<br />System.Data. Contains provider-independent types such as the DataSet and DataTable.<br />System.Data.OracleClient. Contains the Oracle .NET Data Provider<br />System.Data.Odbc. Contains the ODBC .NET Data Provider types.<br />System.Data.SqlClient. Contains the SQL Server .NET Data Provider types."
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "(    )is a type of eｘecutable file .",
+                    "Answer": "EXE file<br />COM file"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "According to the text,modern digital computers can be divided into four major categories on the basis of cost and performance.They are ＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿.",
+                    "Answer": "microcomputers<br />mainframes<br />minicomputers<br />workstation"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Computer programs fall into two major classes: (       ) and (       ).",
+                    "Answer": "operating systems<br />application programs"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "The development process in the software life cycle involves four phases: analysis, design, implementation, and ＿＿＿＿＿＿＿＿.",
+                    "Answer": "design<br />testing<br />analysis<br />implementation"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "A working GIS contains five key componets.They are (       ).",
+                    "Answer": "people<br />hardware<br />data<br />methods<br />software"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "The end equipment in a communication system includes ＿＿＿＿＿＿.",
+                    "Answer": "CRTs<br />computers<br />keyboards<br />printers"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Early computer solved__________ problems.",
+                    "Answer": "mathematical<br />business applications"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Input devices include: __________.",
+                    "Answer": "the keyboard<br />microphone<br />the mouse<br />touch screen"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "The system manager used by a fast processor can__________",
+                    "Answer": "monitor processor’s core temperature<br />reset a system<br />monitor processor’s supply voltages"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Software includes ＿＿＿＿＿＿＿＿＿＿＿＿＿ etc",
+                    "Answer": "video games<br />websites<br />mobile application<br />programs"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "The web browsers which is normal used, such as＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿.",
+                    "Answer": "Firefox<br />Internet Explorer<br />Apple Safari<br />Opra"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "The operations of a structured data type might act on (     ).",
+                    "Answer": "component elements of the data structure<br />the values of the data type<br />a stack<br />a queue"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "If a virus simply reproduce and have no cause for an attack phase, but it will still (     ) without your permission.",
+                    "Answer": "pilfer CPU cycles<br />stealing storage"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Electronic commerce that is conducted between businesses and consumers, on the other hand, is referred to as",
+                    "Answer": "B2C"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "A general purpose computer has four main sections: (       ).",
+                    "Answer": "the input and output devices<br />the arithmetic and logic unit (ALU),<br />the memory<br />the control unit"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Computer programming  is the process of (       ) the source code of computer programs.",
+                    "Answer": "writing<br />testing<br />maintaining<br />debugging"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "With .NET, Microsoft is opening up a channel both to ＿＿＿＿＿＿＿＿ in other programming languages and to non-.NET ＿＿＿＿＿＿＿＿. (developers; components)",
+                    "Answer": "developers<br />components"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "According to the text,the author mentions three of the most commonly used types of printer.They are ＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿.",
+                    "Answer": "inkjet printers<br />laser printer<br />dot-matrix printers;"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Cache is__________",
+                    "Answer": "high cost<br />fast<br />slow"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Operating systems and middleware__________",
+                    "Answer": "both can support application programs<br />both can support other software<br />have much in common"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "There are a number of processes, activities and practices that are unique to maintainers, for example:",
+                    "Answer": "Modification Request acceptance/rejection: modification request work over a certain size/effort/complexity may be rejected by maintainers and rerouted to a developer<br />Transition: a controlled and coordinated sequence of activities during which a system is transferred progressively from the developer to the maintainer<br />Service Level Agreements (SLAs) and specialized (domain-specific) maintenance contracts negotiated by maintainers<br />Modification Request and Problem Report Help Desk: a problem-handling process used by maintainers to prioritize, documents and route the requests they receive"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Windows 2000’s advantages are lies in the sections that follow: __________",
+                    "Answer": "Storage<br />Active Directory<br />Networking<br />Enterprise Management"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "which aspect have to be  considered in the design of a piece of software.",
+                    "Answer": "Maintainability<br />Marketability<br />Compatibility<br />Modularity<br />Packaging<br />Fault-tolerance<br />Extensibility"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "The equipment (       ).",
+                    "Answer": "manipulates digital information internally in word units<br />transfers the number of bits in serial form"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "We can say a bus is simply__________         .",
+                    "Answer": "a group of wires<br />a wire<br />a 16-bit bus"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "The World Wide Web is a huge set of (       ), linked by hyperlinks and URLs.",
+                    "Answer": "flash<br />images<br />all kinds of data<br />interlinked documents"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "The Internet carries various information resources and services, such as ＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿ and the inter-linked hypertext documents",
+                    "Answer": "online gaming<br />online chat<br />file sharing<br />electronic mail<br />file transfer"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "The software that controls the interaction between the input and output hardware is called BIOS,which stands of (       )",
+                    "Answer": "Basic Input Output System"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "The equipment ＿＿＿＿＿＿.",
+                    "Answer": "transfers the number of bits in serial form<br />manipulates digital information internally in word units"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Similar to viruses, you can also find malicious code in (    ).",
+                    "Answer": "worms<br />logic bombs<br />Trojan Horses"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "A mechanism for translating Internet hostnames into IP addresses is__________",
+                    "Answer": "as a middleware by author’s definition<br />typically outside of operating system kernel<br />typically inside of operating system kernel"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Windows 2000 is (    ).",
+                    "Answer": "an inventive technology"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "A stack protocol can be used for (    ).",
+                    "Answer": "removing the latest element ins＿erted"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Modem is __________.",
+                    "Answer": "a modulator<br />a modulator/demodulator<br />a demodulator"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Microsoft Office Professional 2000 include__________.",
+                    "Answer": "Excel  2000<br />Word 2000<br />PowerPoint 2000<br />Outlook 2000"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "(       ) provides transparent transfer of data between end users, providing reliable data transfer services to the upper layers.",
+                    "Answer": "The Transport Layer"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Security is usually enforced through ＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿.",
+                    "Answer": "access control<br />encryption<br />auditing"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Viruses can delay their attack for__________.",
+                    "Answer": "days<br />months<br />years<br />weeks"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "The tools which Programming software usually provides include:",
+                    "Answer": "interpreters<br />debuggers<br />text editors<br />compilers<br />linkers"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "which aspect have to be  considered in the design of a piece of software.",
+                    "Answer": "Extensibility<br />Marketability<br />Maintainability<br />Fault-tolerance<br />Compatibility<br />Packaging<br />Modularity"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "C++ is __________.",
+                    "Answer": "object-oriented<br />extended from C<br />procedure-oriented"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Functions of the compiler used in RISC are __________",
+                    "Answer": "to maximize register usage<br />to allocate registers to those variables that will be used the most in a given time period<br />to optimize register usage"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Computer software, or just software is a general term used to describe a collection of computer programs, procedures and documentation that perform some tasks on a computer system.The term includes:",
+                    "Answer": "Application software such as word processors which perform productive tasks for users.<br />Middleware which controls and co-ordinates distributed systems.<br />Firmware which is software programmed resident to electrically programmable memory devices on board mainboards or other types of integrated hardware carriers."
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Windows 2000 has the key technologies, they are (     ).",
+                    "Answer": "enterprise management<br />active directory<br />security<br />flat directory"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "We use paged virtual memory to__________",
+                    "Answer": "store large program and data set<br />reduce latency of the disk<br />extend the size of memory<br />increase bandwidth of the disk"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "A virus is a program that reproduces its own code by (     ).",
+                    "Answer": "ins＿erting into the middle of a file<br />adding to the end of a file<br />simply placing a pointer"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Some viruses, with no attack phase, often damage the programs or disks they infect because they (     ).",
+                    "Answer": "have bugs in them<br />contain poor quality code"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "An operating system provides the services in its API by  __________",
+                    "Answer": "offering fixed-length blocks of data<br />using the features of the hardware<br />using disk drive’s ability"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "The Windows 2000 product line includes (    ).",
+                    "Answer": "Windows 2000 Datacenter Server<br />Windows 2000 Professional<br />Windows 2000 Advanced Server<br />Windows 2000 Server"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Information stored in semiconductor RAM is__________",
+                    "Answer": "volatile<br />non permanent"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "A large main memory can be used for __________storing",
+                    "Answer": "data<br />applications<br />operating system"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "The Application layer in TCP/IP Model  is correspond to (       ) in OSI Model",
+                    "Answer": "Presentation Layer<br />Session Layer<br />Application Layer"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Computer software, or just software is a general term used to describe a collection of computer programs, procedures and documentation that perform some tasks on a computer system.The term includes:",
+                    "Answer": "Middleware which controls and co-ordinates distributed systems.<br />Application software such as word processors which perform productive tasks for users.<br />Firmware which is software programmed resident to electrically programmable memory devices on board mainboards or other types of integrated hardware carriers."
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "The Windows 2000 product line includes (    ).",
+                    "Answer": "Windows 2000 Server<br />Windows 2000 Professional<br />Windows 2000 Datacenter Server<br />Windows 2000 Advanced Server"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "One of trends in computer development is ＿＿＿＿＿＿＿＿＿,the effort to compress more circuit elements into smaller and smaller ＿＿＿＿＿＿space",
+                    "Answer": "microminiaturization<br />chip"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Database connection (       ) allows an application to reuse an existing connection from a pool instead of repeatedly establishing a new connection with the database.",
+                    "Answer": "pooling"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "GIS work with two fundamentally different types of geographic models.They are the ＿＿＿＿＿＿＿＿＿＿＿＿＿＿.",
+                    "Answer": "raster model<br />vector model"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "In electronic commerce ,information search and discovery services include ＿＿＿＿＿＿＿＿＿＿＿＿＿.",
+                    "Answer": "search engines<br />electronic  catalogs<br />software agents<br />information  filters<br />directories"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "DTE is ＿＿＿＿＿＿.",
+                    "Answer": "the last piece of equipment that belonged to the subscriber in a data link system<br />data terminal equipment"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "With .NET, Microsoft is opening up a channel both to (       ) in other programming languages and to non-.NET (       ). (developers; components)",
+                    "Answer": "components<br />developers"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Queues that occur everyday life can be seen (     ).",
+                    "Answer": "as automobiles waiting for a traffic light<br />in certain societies lacking equality<br />in an emergency room of a hospital<br />as people waiting for service at a bank"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "During the boot procedure we can see on the screen. __________",
+                    "Answer": "the number of attached devices<br />the operating system being used<br />amount of memory"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "High-level languages are commonly classified as (       ).",
+                    "Answer": "logic languages<br />object-oriented<br />procedure-oriented<br />functional"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "ADO.NET relies on the services of .NET data providers.There are",
+                    "Answer": "DataReader<br />Connection<br />Command<br />Data Adapter"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "which is the type of electronic commerce in the following choice",
+                    "Answer": "B2B<br />B2C"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Windows 2000 has the key technologies, they are (     ).",
+                    "Answer": "flat directory<br />security<br />enterprise management<br />active directory"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "There are three types of application programs to translate source code into object code.They are ＿＿＿＿＿＿＿＿＿＿",
+                    "Answer": "interpreters<br />compilers<br />assemblers"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "The types (classes, structs, enums, and so on) associated with each .NET data provider are located in their own namespaces are:",
+                    "Answer": "System.Data.OleDb. Contains the OLE DB .NET Data Provider types.<br />System.Data. Contains provider-independent types such as the DataSet and DataTable.<br />System.Data.SqlClient. Contains the SQL Server .NET Data Provider types.<br />System.Data.OracleClient. Contains the Oracle .NET Data Provider<br />System.Data.Odbc. Contains the ODBC .NET Data Provider types."
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "The World Wide Web is a huge set of ＿＿＿＿＿＿＿＿, linked by hyperlinks and URLs.",
+                    "Answer": "flash<br />interlinked documents<br />images<br />all kinds of data"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Electronic commerce may be defined as the entire set of processes that suport ＿＿＿＿＿＿＿＿＿＿＿＿＿activities on a(n) ＿＿＿＿＿＿＿＿ and involve information analysis.",
+                    "Answer": "commercial,network"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Viruses all have two phases to their eｘecution, the (   ) and the (    ).",
+                    "Answer": "attack phase<br />infection phase"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Common contemporary operating systems include ＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿.",
+                    "Answer": "Linux<br />Solaris<br />Mac OS<br />Microsoft Windows"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "A computer system user generally more cares for__________",
+                    "Answer": "efficiency of the computer<br />speed of computation<br />storage size"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Active Directory can help you (    ).",
+                    "Answer": "manage every resource with a single logon<br />build a complex international network<br />get off the limits of down level networks"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "We can classify programming languages under two types:＿＿＿＿＿＿＿＿＿＿＿＿＿＿ languages and ＿＿＿＿＿＿＿＿＿＿＿＿languages.",
+                    "Answer": "low-level<br />high-level"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Middleware has mechanisms to support controlled interaction through__________",
+                    "Answer": "persistent storage<br />naming<br />communication<br />coordination"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "In order to increase our computer’s performance we need to__________",
+                    "Answer": "have a much larger main memory<br />have a L2 cache<br />buy a L2 cache"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Electronic commerce that is conducted between businesses is referred to as business-to-business or",
+                    "Answer": "B2B"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Active Directory supports ( ).",
+                    "Answer": "delegation of administrative task<br />inheritance<br />encapsulation<br />granular access control"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "GIS work with two fundamentally different types of geographic models.They are the (       ).",
+                    "Answer": "vector model<br />raster model"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Office automation is__________.",
+                    "Answer": "the application of computer<br />used to improve the productivity of people"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "which is the threat to computer security in the following choices ?",
+                    "Answer": "earthquake<br />Computer Criminals<br />Computer Crime<br />Human Errors"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "The development process in the software life cycle involves four phases: analysis, design, implementation, and (       ).",
+                    "Answer": "implementation<br />design<br />testing<br />analysis"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Viruses all have two phases to their eｘecution, the (   ) and the (    ).",
+                    "Answer": "attack phase<br />infection phase"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "If a virus simply reproduce and have no cause for an attack phase, but it will still (     ) without your permission.",
+                    "Answer": "pilfer CPU cycles<br />stealing storage"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Types of media include__________.",
+                    "Answer": "audio<br />text<br />full-motion video"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Information Systems has a number of different areas of work:",
+                    "Answer": "Information Systems Development<br />Information Systems Management<br />Information Systems Strategy"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Their company used international lawyers to prosecute a crime ring involving software (       ) in Thailand.",
+                    "Answer": "piracy"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Active Directory supports ( ).",
+                    "Answer": "delegation of administrative task<br />encapsulation<br />inheritance<br />granular access control"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "The function of computer hardware is typically divided into three main categories.They are＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿.",
+                    "Answer": "output<br />input<br />storage"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "which is the type of electronic commerce in the following choice",
+                    "Answer": "B2B<br />B2C"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "The core of SQL is formed by a command language that allows the (       )  and performing management and administrative functions.",
+                    "Answer": "updating of data<br />ins(       )ertion of data<br />deletion  of data<br />retrieval of data"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "CISC machine instructions compared with RISC machine are__________",
+                    "Answer": "more complicated<br />more slower to be executed"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "There are AB＿ between the DTEs.",
+                    "Answer": "will be replaced by an upd＿ated standard<br />communications equipment"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "The Internet carries various information resources and services, such as (       ) and the inter-linked hypertext documents",
+                    "Answer": "online gaming<br />file transfer<br />file sharing<br />electronic mail<br />online chat"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Middleware lies in__________",
+                    "Answer": "the middle of interactions between different application programs<br />the middle of the layering vertical stack<br />the top of an operating system"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Software engineering is related to the disciplines of ＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿.",
+                    "Answer": "project management<br />computer science<br />systems engineering"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "The tools which Programming software usually provides include:",
+                    "Answer": "linkers<br />interpreters<br />debuggers<br />compilers<br />text editors"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Some commentators say the outcome of the information revolution is likely to be as profound as the shift in (       )",
+                    "Answer": "agricultural<br />industrial<br />handicraft industry<br />Service Industry"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "The World Wide Web also subsumes previous Internet information systems such as (   ).",
+                    "Answer": "FTP<br />Gopher"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Database connection ＿＿＿＿＿＿＿＿ allows an application to reuse an existing connection from a pool instead of repeatedly establishing a new connection with the database.",
+                    "Answer": "pooling"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Static graphics include__________.",
+                    "Answer": "animators<br />photographs"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "There are three types of application programs to translate source code into object code.They are (       )",
+                    "Answer": "interpreters<br />compilers<br />assemblers"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "There are AB(       ) between the DTEs.",
+                    "Answer": "will be replaced by an upd(       )ated standard<br />communications equipment"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Electronic commerce that is conducted between businesses is referred to as business-to-business or",
+                    "Answer": "B2B"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "The major functional components of an office automation system include: __________.",
+                    "Answer": "text processing<br />electronic mail<br />information storage and retrieval<br />personal assistance features"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "The World Wide Web also subsumes previous Internet information systems such as (   ).",
+                    "Answer": "FTP<br />Gopher"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Similar to viruses, you can also find malicious code in (    ).",
+                    "Answer": "logic bombs<br />Trojan Horses<br />worms"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "According to the text,modern digital computers can be divided into four major categories on the basis of cost and performance.They are (       ).",
+                    "Answer": "minicomputers<br />mainframes<br />workstation<br />microcomputers"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "A program is a sequence of (       ) that can be executed by a computer.It can either be built into the hardware or exist independently in the form of (       ).",
+                    "Answer": "instructions<br />software"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Hypermedia include (            )",
+                    "Answer": "images<br />flash<br />video clips<br />vidoe<br />text<br />sounds"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Common contemporary operating systems include (       ).",
+                    "Answer": "Microsoft Windows<br />Linux<br />Mac OS<br />Solaris"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "We can define a computer as a device that (       )",
+                    "Answer": "stores data<br />processes data<br />accepts input<br />produces output"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "Many viruses do harmful things such as (    ).",
+                    "Answer": "deleting files<br />slowing your PC down<br />simulating typos<br />changing random data on your disk"
+                },
+                {
+                    "ExamType": "多选",
+                    "Name": "The register file is__________",
+                    "Answer": "one the same chip as the CPU<br />addressed by much shorter addresses<br />physically small"
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "neural network",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "论述",
+                    "Name": "用英文请谈谈你对现在互联网应用的一些认识",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "The TCP/IP Internet protocol suite is formed from five standards",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "A successful test is to exhibit the absence of errors in the programs being   tested",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Three techniques have been adopted for use of the medium access control in the LANs.",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "A LAN is generally limited to the size of a department or an organization and often consists of 2 to 100 devices.",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "The surfing is you can sel＿ect paths to browse online resource.",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Database security denotes the system, processes, and procedures that protect a database software from unintended activity.",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Microsoft Word 2000 allows you to create many types of personal and business  communications",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "In a relational database, all data are stored and accessed via relations",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Control token is the only way of controlling access to a shared transmission medium.",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "A computer database relies upon DBMS to organize the storage of data.",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Previously the Web provides a wealth of additional capabilities.",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Operating systems are unique to their manufacturers",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "The TCP/IP Internet protocol suite is formed from three standards.",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "CDs usually store about 650GB.",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "A centralized database system can be highly responsive to differences in data gathering, storage, and access",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "The OSI model is a network architecture.",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Many operating systems have similar characteristics",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "The World Wide Web is an architectural framework.",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "The most common bugs are poor logic and syntactic error.",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Programs were thought of as a series of procedures",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Computers can be classified into microcomputer, mainframe and supercomputer by its program.",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "ENIAC I was made with the technology of vacuum tube",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "The network architecture is a layer-based",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "IBM was the first company who initiated the computer business",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Within software engineering, programming  is regarded as one phase in a software development process.",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Operating systems are unique to their manufacturers.",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "According to computers’ power and size, we have desktop, laptop and handheld PCs.",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "The OSI model is a foundation for all comparing protocols.",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "The Internet is a computer network which allows computers with distinctive software and hardware to communicate.",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Online shopping is the process consumers go through to purchase products or services over the Internet.",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Coding in computer security makes data be unintelligible to the outside   observer",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "A system board is a heart of a computer",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Floppy disks are the smallest type of storage, holding only 2.44MB.",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "One of the five functions of an operating system is memory management.",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "For information about using Internet Explorer, click the Help menu in Internet Explorer",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "In the e-mail a user needs a message transfer agent.",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "A LAN (Local area data networks) is a group of computers and the network devices connected together usually within the different buildings.",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "There are three general types of compression",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Secondary memory holds all of the essential memory that tells your computer how to be a computer.",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "A database is a collection of logically related data elements that are structured in various ways to meet the multiple processing and retrieval needs of organizations and individuals",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "A DVD holds even less information than a CD.",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "A microcomputer, also called personal computer, is a computer designed for an individual.",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Enforcing security is one of the major tasks of the DBA.",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "A powerful debugger can find nearly all of bugs.",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "A computer’s operational software defines the schedule of jobs awaiting       execution",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "All virus scanners can kill most known viruses",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Computer virus may affect the your phisical  health .",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Multimedia is not only a product, but also a technology",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "All of these databases can not take advantage of indexing to increase their speed.",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Multimedia is just two media: sound and pictures",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Corel Painter Sketch Pad is the newest product with more drawing tools",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Before 1936,all devices which had the computing power had to rely on other electronics",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "The World Wide Web ties the information together into a big collection of interactive multimedia resources.",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "A processor can do everything without a program to provide control.",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "In the e-mail a user needs a message transfer agent",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "A computer is a multi-functional electronic data processing machine and is made up of electronic components.",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Apple produced the first computer with a GUI",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Design of a network and its logical structure should comply with a set of design principles.",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "It was estimated that at this rapid growth everyone in the world would have an e-mail address in the near future.",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Metadata means data about data",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "The heart of any computer system is the central processing unit (CPU)",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "In modern computer it is increasingly common to integrate some peripherals into the motherboard itself",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Runtime bugs are easy to find.",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "When you send an e-mail you should provide the sender's e-mail address",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "A motherboard provides physical sockets and slots as some peripheral interfaces",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Hypertext extends the concept of hypermedia to other forms of information.",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "The four topologies in common use are star, router, ring and hub.",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Using debugger you can see each instruction as it eｘecutes.",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "With high-powered debuggers you should put your source code into the debugger.",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Workstation is a multi-user computer capable of supporting many hundreds or thousands of users simultaneously.",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "a relational database is just only a collection of relations.",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "A program can use a device if that hardware is unavailable.",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "DBMS are categorized according to the database model that they support.",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "The aspect of that,New capabilities can be added to the software without major changes to the underlying architecture is called Extensibility .",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "A high-level language can be designed to only process scientific calculation",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Without an operating system, we could not execute a user program",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "CD-ROM is rewritable",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Office 2000 is an incredible set of business tools",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Michelangelo is a file sector.",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "The earlier in the development process you find a problem, the more it costs to fix",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Using debugger you cannot examine your variables.",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "A painter emulates the visual characteristics of traditional media",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Computers cannot work without the instructions sets.",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Programs were thought of as a series of procedures.",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Computer virus is remote from us.",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "In the future, computers are capable of original thoughts.",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Computer is able to do different kinds of tasks.",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "A processor can do everything without a program to provide control",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "There are no differences between the information processor and human (人类的) nervous system.",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "In general, shopping has always catered to middle class and upper class women.",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "One of the functions of an operating system is memory management.",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Operating systems are not unique to their manufacturers.",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "In a computer system, these records that are logically contiguous in one           applications must be physically stored together",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Painter was acquired by Corel Corporation and was replaced by “Procreate”",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "The Memory addresses are expressed as binary numbers",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "One of the functions of an operating system is memory management",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Only a few bugs can trouble a program",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Software engineers develop software tools and collections of tools called programming environments to improve the development process.",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "The development of videodisc is useful for distance education",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "The revolution of the software industry is producing good, solid, bulletproof programs at low cost and on time.",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "A table is organized  into rows and columns in a relational database",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "We can use multimedia in Education, Entertainment and so on",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "ISDN does not include that element that provides one kind of service",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "With LANs, the limited physical separation of the subscriber DTEs allows simpler topologies to be used.",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "The term “relational database” often refers to “relational database management system” for short",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Designers of online shops should consider the effects of information load.",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "An index is one way of providing quicker access to data",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Multiprogramming allows time sharing",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Requirements analysis is not critical to the success of a development project",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Any computer which is connected to the Internet can communicate with any other Internet computer thanks to the rules of IP.",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Error recovery does not belong to operating system",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "The author thinks that understanding how an attacker approaches your computer system can help you protect it",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Operating system sets up a directory of programs undergoing eｘecution and the devices.",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "The OSI model was not creaｔed by the ISO.",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "The relational database terms “tuple” is equivalent to “column” in SQL",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Viruses can cause programs crashing but can’t cause entire hard disk deleting",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Online content providers make money in two ways:advertisements and selling.",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "If a person read a hypermedia document about mobile phones, then he might sel＿ect a video show of a phone, but not hear the ring of it.",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "The computer can do nothing without a program.",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "In Web pages, you can search database of mailing lists, but you can see pictures of your favorite band and their concert schedule.",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "LAN may be used to interconnect computer-based equipment distributed around a factory or hospital complex.",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "By combining many functions on one PCB, highly-integrated motherboards are more complex and more expensive",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Error recovery does not belong to operating system.",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "The motherboard is sometimes alternatively known as the main-board, system -board, the logic board and backplane",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "In its more general usage, a personal computer is a computer designed for using by one person at a time.",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Office 2000 is an incredible set of business tools.",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "All of us expect the programs robust, bug-free.",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Information can be input only by people.",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "A register is a storage location inside the processor",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Most wide area networks, such as the PSTN, not use a mesh (sometimes referred to as a network) topology.",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "FTP is a distributed bulletin board which offers a combination news and discussion service on thousands of topics.",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Electronic money is also called digital  cash  or electronic  token",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Because the Internet is made up of many diverse computers, so together they work like one world-wide computer system.",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "The dataflow diagram is a graphical chart that depicts the flow of data among internal process, external entities, and data stores",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "TCP means it is on the network layer and IP means it is on the transport layer separately.",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "The network architecture is a layer-based.",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Prior to the high level programming language,”assembly” or binary is difficult to write and understand for the majority",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Your computer uses two types of memory: primary memory and secondary memory",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "When you purchase a new computer, an operating software suitable to the hardware must be bought.",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Corel Painter offers both conventional and unconventional materials and tools for artists",
+                    "Answer": "错误"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Data communications equipment (DCE) accepts the serial data stream from the DTE",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "BIOS is stored in non-volatile memory chips",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "判断",
+                    "Name": "Computer security is a branch of technology known as information security as applied to computers.",
+                    "Answer": "正确"
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "executable file",
+                    "Answer": "可执行文件"
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "database management system (DBMS)",
+                    "Answer": "数据库管理系统"
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "command button",
+                    "Answer": "命令按钮"
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "ISP",
+                    "Answer": "互联网服务提供商"
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "decision support system",
+                    "Answer": "决策支持系统"
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "transport layer",
+                    "Answer": "传输层"
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "ROM",
+                    "Answer": "只读存储器"
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "SQL",
+                    "Answer": "结构化查询语言"
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "linear model",
+                    "Answer": "线性模型"
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "Copy command",
+                    "Answer": "复制命令"
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "Arithmetic Logical operations",
+                    "Answer": "算术逻辑运算"
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "Hypertext Transport Protocol",
+                    "Answer": "超文本传输协议"
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "intelligence",
+                    "Answer": "智能"
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "software crisis",
+                    "Answer": "软件危机"
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "extensible Markup Language",
+                    "Answer": "可扩展标记语言"
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "Internet Service Provider",
+                    "Answer": "互联网服务提供商"
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "Structured Query Language",
+                    "Answer": "结构化查询语言"
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "executable program",
+                    "Answer": "可执行程序"
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "simulation",
+                    "Answer": "模拟"
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "machine language",
+                    "Answer": "机器语言"
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "home page",
+                    "Answer": "主页"
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "network security",
+                    "Answer": "网络安全"
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "artificial intelligence",
+                    "Answer": "人工智能"
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "Random Access Memory",
+                    "Answer": "随机存取存储器"
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "interpreter",
+                    "Answer": "解释器"
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "assembly language",
+                    "Answer": "汇编语言"
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "database administrator",
+                    "Answer": "数据库管理员"
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "storage server",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "OOP",
+                    "Answer": "面向对象编程"
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "requirements analysis",
+                    "Answer": "需求分析"
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "laser technology",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "API",
+                    "Answer": "应用程序编程接口"
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "unit testing",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "two-dimensional table",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "element distance",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "device driver",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "wide area network (WAN)",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "Basic Input/output Unit",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "office automation",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "design constraint",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "instruction",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "expanded memory",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "physical address",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "machine code",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "Web browser",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "storage register",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "relational database",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "sound card",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "memory location",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "operating instructions",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "local area network (LAN)",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "middle-ware",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "CAD",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "computer virus",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "USB",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "email attachment",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "system evolution",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "browser",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "search engine",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "E-commerce",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "input device",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "access control",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "numerical analysis",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "database object",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "compiled language",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "touch screen",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "desktop operating system",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "operation code",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "memory unit",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "removable storage device",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "utility software",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "data definition language",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "wireless network",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "information superhighway",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "W3C",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "software reliability",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "bandwidth",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "DBMS",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "source file",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "private key",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "pattern matching",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "central processing unit ( CPU )",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "data structure",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "optical computer",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "relational structure",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "function statement",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "CPU",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "procedural language",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "output devices",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "system call",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "communication",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "general-purpose computer",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "portability",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "store and retrieve information",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "program unit",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "BIOS",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "IT",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "encrypting",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "gateway",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "DMA",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "DVD",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "video conferencing",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "software engineering",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "HTTP",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "hardcopy",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "flowchart",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "digital image processing",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "TCP",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "processor chip",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "debugging program",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "hypermedia",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "semiconductor memory",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "manufacturing process",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "operating system",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "WWW",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "HTML",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "paper-tape reader",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "IP address",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "user interface",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "MDI",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "programming environment",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "graphics technology",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "data set",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "Web community",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "service-oriented",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "GUI",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "silicon",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "VCD",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "Wide Area Network",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "Net Technology",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "integrated circuits",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "fiber-optic table",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "翻译",
+                    "Name": "high-speed printer",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "论述",
+                    "Name": "用英语描述一下计算机操作系统的工作原理",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "论述",
+                    "Name": "试用英文阐述CPU对于计算机组成部件的作用。",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "论述",
+                    "Name": "用英文写一篇短文介绍计算机语言的发展历史和特点，要求简单介绍机器语言、汇编语言、高级语言的简单发展历程和各自的特点。",
+                    "Answer": ""
+                },
+                {
+                    "ExamType": "论述",
+                    "Name": "用英文介绍办公自动化及其在现代办公中的的重要作用。",
+                    "Answer": ""
+                }
+            ];
+            new Vue({
+                el: '#app',
+                data: {
+                    arr,
+                },
+                mounted() {
+                    console.log(arr);
+                },
+                methods: {
+
+                }
+            });
+        </script>
+    </body>
+
+</html>
