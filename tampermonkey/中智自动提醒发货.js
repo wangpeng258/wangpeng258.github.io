@@ -14,7 +14,7 @@
 (function () {
     'use strict';
     const W = typeof unsafeWindow === 'undefined' ? window : unsafeWindow;
-    const interval = 1000 * 5;
+    const interval = 1000 * 5; //执行间隔
 
     $('body').append(`<label style="position: fixed;top: 1vh;left: 50%;transform: translateX(-50%);display: flex;align-items: center;line-height: 1;background-color: #f60;color: #fff;padding: 7px 10px;"><input onchange="changeTask()" id="taskCheckbox" type="checkbox" /><span style="margin-left: 5px;">开始任务</span></label>`);
     W['changeTask'] = ()=>{
@@ -37,31 +37,22 @@
         }
         document.title = `运行中(${count})`;
         $.ajax({
-            url: "/selleradmin/order/getSellerOrderListByCondition",
+            url: "/selleradmin/loadOrderStatistics",
             type: "POST",
             dataType: 'json',
             async: false,
-            searchParam: {
-                "dimension": "17",
-                "sortType": "2",
-                "threeMonthOrder": 0,
-                // "includeCloseOrder": null, //待备货
-                // "orderStatus": "2", //待备货
-                "includeCloseOrder": 1, //全部
-                "orderStatus": '', //全部
-                "pageIndex": 1,
-                "pageSize": "500"
-            },
+            searchParam: {},
             success: function (result) {
-                console.log(result);
-                if (result.code === 0 && result.data && result.data.totalCount > 0) {
-                    const dataList = result.data.dataList||[];
-                    const totalCount = dataList.filter(e=>e.tradeStatus=='2');
-                    // const totalCount = dataList;
-                    if(totalCount&&totalCount.length>0){
-                        getPager($('#pageNum').val());
+                if (result.code === 0 && result.data) {
+                    const { waitPayCount, waitStockCount, waitDeliveryCount, deliveryCount} = result.data||{};
+                    // waitPayCount      //待付款
+                    // waitStockCount    //待备货
+                    // waitDeliveryCount //待发货
+                    // deliveryCount     //已发货
+                    console.clear();
+                    console.log(`第${count}次运行\n\n待付款:${waitPayCount}\n待备货:${waitStockCount}\n待发货:${waitDeliveryCount}\n已发货:${deliveryCount}`);
+                    if(waitStockCount>0){
                         const text = `你有${totalCount.length}条待备货，请及时处理！`;
-                        document.title = text;
                         try {
                             GM_notification({
                                 title: `中智自动提醒发货提醒`,
@@ -70,18 +61,14 @@
                                 highlight: true, //是否突出显示发送通知的选项卡
                                 timeout: 0, //通知将被隐藏的时间（0 =禁用）
                                 onclick: _ => {
-                                    $("#taskCheckbox").prop("checked", false);
+                                    // $("#taskCheckbox").prop("checked", false);
                                     window.focus();
                                 },
                             })
                         } catch (error) {
                             console.log(error);
-                            $("#taskCheckbox").prop("checked", false);
-                            alert(`你有${totalCount.length}条待备货，请及时处理！`);
-                            window.focus();
                         }
                     }
-
                 }
             }
         });
