@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+    <head>
+        <meta charset="utf-8">
+        <title>摇一摇</title>
+        <meta name="viewport"
+            content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+        <meta name="format-detection" content="telephone=no">
+        <script src="https://cdn.staticfile.net/vue/2.6.11/vue.min.js"></script>
+        <script src="https://cdn.staticfile.net/eruda/2.4.1/eruda.min.js"></script>
+        <script>eruda.init()</script>
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+        <style>
+            html,
+            body,
+            #app {
+                margin: 0;
+                padding: 0;
+                background-color: aliceblue;
+            }
+
+            * {
+                padding: 0;
+                margin: 0;
+            }
+
+            [v-cloak] {
+                opacity: 0 !important;
+            }
+
+
+            @keyframes shakeX {
+
+                0%,
+                to {
+                    -webkit-transform: translateZ(0);
+                    transform: translateZ(0)
+                }
+
+                10%,
+                30%,
+                50%,
+                70%,
+                90% {
+                    -webkit-transform: translate3d(-5vw, 0, 0);
+                    transform: translate3d(-5vw, 0, 0)
+                }
+
+                20%,
+                40%,
+                60%,
+                80% {
+                    -webkit-transform: translate3d(5vw, 0, 0);
+                    transform: translate3d(5vw, 0, 0)
+                }
+            }
+
+            .animate__shakeX {
+                background-color: red !important;
+                color: #fff;
+                animation: shakeX 1s linear infinite;
+            }
+
+            .authorise,
+            .box {
+                text-align: center;
+                width: 60%;
+                border: 1px solid #000;
+                margin: 10vw auto;
+                padding: 5vw;
+                border-radius: 3vw;
+                background-color: #fff;
+            }
+
+            .authorise p {
+                font-size: 4vw;
+            }
+
+            .authorise button,
+            .box button {
+                padding: 1vw 10vw;
+                font-size: 4.800000vw;
+                margin-top: 5vw;
+            }
+
+            .box table {
+                width: 100%;
+                table-layout: fixed;
+                font-size: 3vw;
+            }
+
+            pre {
+                width: 90%;
+                padding: 1vw;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div id="app" v-cloak>
+            <div class="authorise" v-if="shakeConfig.isAuthorise">
+                <p>摇一摇需要使用陀螺仪权限</p>
+                <button @click="getAuthorise('click')" type="button">授权</button>
+            </div>
+            <div class="box" :class="{'animate__shakeX':shakeConfig.animateShow}" v-else>
+                <h3>摇一摇</h3>
+                <p>{{shakeConfig.motion}}</p>
+            </div>
+        </div>
+        <!-- <script src="./mobileDeviceMotion.umd.js"></script> -->
+        <script>
+            // export default class MobileDeviceMotion
+            class MobileDeviceMotion {
+                constructor(options) {
+                    this.minResponseMotion = options.minResponseMotion || 10; // Default to 10 if not provided
+                    this.callback = options.callback;
+                    this.onChange = options.onChange;
+                    this.isStart = false;
+                    this.handleMotion = (event) => { }; // Initialize as an empty function
+                }
+                init() {
+                    if (!window.DeviceMotionEvent) {
+                        console.error(
+                            "Error: 初始化失败\nTips: \n可以尝试切换到https协议\n或者\n切换到localhost环境."
+                        );
+                        return {
+                            status: 0,
+                            msg: "设备不支持DeviceMotion或将http切换到https或切换到localhost环境",
+                        };
+                    } else {
+                        if (!this.isStart) {
+                            this.handleMotion = (event) => {
+                                let motion = event.acceleration || event.accelerationIncludingGravity;
+                                if (this.onChange) {
+                                    this.onChange(motion);
+                                }
+                                const { x, y, z } = motion;
+                                let countMotion = Math.abs(x) + Math.abs(y) + Math.abs(z);
+                                if (countMotion >= this.minResponseMotion) {
+                                    this.callback({ x, y, z });
+                                }
+                            };
+                            window.removeEventListener("devicemotion", this.handleMotion, false);
+                            window.addEventListener("devicemotion", this.handleMotion);
+                            this.isStart = true;
+                            return {
+                                status: 1,
+                                msg: "init success",
+                            };
+                        } else {
+                            console.warn("Warn: 你已初始化，请勿重复触发");
+                            return {
+                                status: 0,
+                                msg: "你已初始化，请勿重复触发",
+                            };
+                        }
+                    }
+                }
+                removeEvent() {
+                    window.removeEventListener("devicemotion", this.handleMotion, false);
+                    this.isStart = false;
+                    return {
+                        status: 1,
+                        msg: "remove success",
+                    };
+                }
+            }
+        </script>
+        <script>
+
+            new Vue({
+                el: '#app',
+                data: {
+                    shakeConfig: {
+                        isAuthorise: (window.DeviceOrientationEvent && typeof window.DeviceOrientationEvent.requestPermission === "function"), //需要授权
+                        mobileDeviceMotionObj: null,
+                        clearMotion: null,
+                        motion: 0,
+                        minResponseMotion: 4,//最小响应值，内部会判断 x+y+z >= minResponseMotion，才会调用 callback 函数
+                        maxMotion: 45,//最大运动
+                        duration: 800,//毫秒
+                        animateTask: null,
+                        animateTime: 1000,
+                        animateShow: false,//动画
+                    },
+
+                },
+                mounted() {
+                    this.getAuthorise();
+                },
+                methods: {
+                    getAuthorise(type) {
+                        if (window.DeviceOrientationEvent && typeof window.DeviceOrientationEvent.requestPermission === "function") {
+                            window.DeviceOrientationEvent.requestPermission()
+                                .then(state => {
+                                    if (state === "granted") {
+                                        this.monitorDeviceOrientation();
+                                    } else if (state === "denied") {
+                                        (type === 'click') && alert(`拒绝使用陀螺仪-请关闭APP,重新进入网页`)
+                                    } else if (state === "prompt") {
+                                        (type === 'click') && alert(`用户进行其他操作：-${state}`)
+                                    }
+                                })
+                                .catch((err) => {
+                                    (type === 'click') && alert(`获取陀螺仪失败-${err}`)
+                                });
+                        } else {
+                            this.monitorDeviceOrientation();
+                        }
+                    },
+
+                    monitorDeviceOrientation() {
+                        const { minResponseMotion, duration, maxMotion, animateTime } = this.shakeConfig;
+                        this.shakeConfig.isAuthorise = false;
+                        this.shakeConfig.mobileDeviceMotionObj = new MobileDeviceMotion({
+                            minResponseMotion,
+                            callback: () => {
+                                this.shakeConfig.animateShow = false;
+                                this.shakeConfig.motion++;
+                                this.shakeConfig.clearMotion && clearTimeout(this.shakeConfig.clearMotion);
+                                if (this.shakeConfig.motion >= maxMotion) {
+                                    if ('vibrate' in navigator) {
+                                        navigator.vibrate(300)
+                                    };
+                                    this.shakeConfig.motion = 0;
+                                    this.shakeConfig.mobileDeviceMotionObj.removeEvent();//移除监听
+                                    this.shakeConfig.animateShow = true;
+                                    this.shakeConfig.animateTask && clearTimeout(this.shakeConfig.animateTask);
+                                    this.shakeConfig.animateTask = setTimeout(() => {
+                                        this.shakeConfig.animateShow = false;
+                                        this.shakeConfig.mobileDeviceMotionObj.init();
+                                    }, animateTime);
+
+                                } else {
+                                    this.shakeConfig.clearMotion = setTimeout(() => {
+                                        this.shakeConfig.motion = 0;
+                                    }, duration);
+                                }
+
+                            },
+                            // onChange: (e) => {
+                            //     console.log("change:", e);
+                            // }
+                        });
+                        this.shakeConfig.mobileDeviceMotionObj.init()
+                        // this.shakeConfig.mobileDeviceMotionObj.removeEvent(); //移除监听
+                    },
+
+
+                }
+            });
+        </script>
+    </body>
+
+</html>

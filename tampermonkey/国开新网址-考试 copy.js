@@ -69,18 +69,10 @@
                         const type = element.type;//题目类型
                         const description = element.description;//题目标题
                         const score = Number(submissionScoreData[id]);
-
-                        const correctAnswersInfo = correctAnswers.find(s=>s.subject_id===id); //答案信息
-                        // answerState === 0 错误
-                        if ((score > 0 || submissionScoreData.length===0) || (correctAnswersInfo&&correctAnswersInfo.answer_option_ids&&correctAnswersInfo.answer_option_ids.length>0)) {
-                            console.log('[element]', element);
+                        if (score > 0 || submissionScoreData.length===0) {
                             let answerIdArr = [];
                             let answer = "";
-                            let answerInfo = submissionData.find(e => e.subject_id === id) || {};
-                            if(correctAnswersInfo&&correctAnswersInfo.answer_option_ids&&correctAnswersInfo.answer_option_ids.length>0){
-                                answerInfo.answer_option_ids = correctAnswersInfo.answer_option_ids;
-                            }
-
+                            const answerInfo = submissionData.find(e => e.subject_id === id) || {};
                             //判断题 单选题  多选题
                             if (element.type == "true_or_false" || element.type == "single_selection" || element.type == "multiple_selection") {
                                 answerIdArr = JSON.stringify(answerInfo.answer_option_ids)
